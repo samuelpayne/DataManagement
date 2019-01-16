@@ -15,7 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.urls import include
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls), 
+    path('records/', include('Records.urls')),
+    #temporary redirect, while we only have a records app
+    path('', RedirectView.as_view(url='/records/', permanent = False)),
 ]
