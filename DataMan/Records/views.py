@@ -34,6 +34,7 @@ def add_sample(request):
     form =forms.AddSampleForm(request.POST)
     if form.is_valid():
         #do cool and important things with the information
+        new_Sample = form.save()
         return redirect('archive')
 
     context = {
@@ -43,7 +44,10 @@ def add_sample(request):
     return render(request, 'add-sample.html', context)
 
 """To edit a sample
-    _sample = django.shortcuts.get_object_or_404(sample, ID=pk)#get pk from url"""
+    sample = Sample.objects.get(pk=pk) #get pk from url
+    form =forms.AddSampleForm(request.POST, instance = sample)
+    form.save()
+    """
 
 ###   
 #These classes would currently (1/15/19) cause

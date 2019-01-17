@@ -21,26 +21,28 @@ class Dataset (models.Model):
         return reverse('model-detail-view', args=[str(self.id)])
 
     def __str__(self):
-        return self.my_field_name
+        return self.datasetName
 
 class Sample (models.Model):
     sampleName = models.TextField(help_text='Sample Name')
     sampleID = models.IntegerField(help_text='Integer Field')
-    experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE, null = True)
-    datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
+                                   blank = True, null = True)
+    datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE,
+                                 blank = True, null = True)
     # preceedingSample = models.TextField(help_text='Preceeding Sample')
     storageCondition = models.TextField(help_text='Storage Condition')
     storageLocation = models.TextField(help_text='Path to storage location')
     treatmentProtocol = models.TextField(help_text='Treatment Protocol')
     dateCreated = models.DateTimeField()
     organism = models.TextField(help_text='Organism')
-    organismModifications = models.TextField(help_text='Organism Modifications')
+    organismModifications = models.TextField(help_text='Organism Modifications', default = 'None')
 
     def get_absolute_url(self):
         return reverse('sample-detail', args=[str(self.id)])
 
     def __str__(self):
-        return self.my_field_name
+        return self.sampleName
 
 class Experiment(models.Model):
     experimentName = models.TextField(help_text='Experiment Name')
@@ -56,4 +58,4 @@ class Experiment(models.Model):
         return reverse('model-detail-view', args=[str(self.id)])
 
     def __str__(self):
-        return self.my_field_name
+        return self.experimentName

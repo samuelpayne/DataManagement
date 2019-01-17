@@ -1,25 +1,10 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from Records.models import *
 
-class AddSampleForm(forms.Form):
-    name = forms.CharField(help_text ="Sample Name")
-    ID = forms.IntegerField(help_text ="Sample ID")
-    experiment = forms.IntegerField(help_text="Experiment ID")
-    """dataset
-    preceeding_sample
-    storage_condition
-    location
-    container
-    treatment_protocal
-    created
-    organism
-    modifications"""
-
-    def check_name(self):
-        valname = self.cleaned_data['name']
-
-        #replace with checking for pre-existing names
-        if name=="ERROR-FAIL-FAIL-ERROR-FAIL":
-            raise ValidationError('You had one job.')
-
-        return valname
+class AddSampleForm(forms.ModelForm):
+    class Meta:
+        model = Sample
+        fields = ['sampleName', 'sampleID', 'experiment', 'datasets',
+                  'storageCondition', 'storageLocation', 'treatmentProtocol',
+                  'dateCreated', 'organism', 'organismModifications']

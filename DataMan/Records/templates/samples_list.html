@@ -3,17 +3,17 @@
 {% extends "generic.html" %}
 
 {% block content %}
-<h1>Samples</h1>
-    {% if samples_list %}
-<ul>
-    {% for Sample in Sample_list %}
-    <li>
-        <a href="{% url 'samples-detail' Sample.sampleID %}"> {{ Sample }}</a>
-    </li>
+    <h1>Samples</h1>
+    {% if Sample_list %}
+    <ul>
+        {% for Sample in Sample_list %}
+          <li>
+            <a href="{% url 'samples-detail' Sample.sampleID %}"> {{ Sample }}</a>
+          </li>
     {% endfor %}
-</ul>
+    </ul>
     {% else %}
-<p>No samples found.</p>
+        <p>No samples found.</p>
     {% endif %}
 {% endblock %}
 
