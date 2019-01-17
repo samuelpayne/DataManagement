@@ -4,13 +4,13 @@
 
 {% block content %}
     <h1>Samples</h1>
-    {% if Sample_list %}
+    {% if sample_list %}
     <ul>
-        {% for Sample in Sample_list %}
+        {% for Sample in sample_list %}
           <li>
             <a href="{% url 'samples-detail' Sample.sampleID %}"> {{ Sample }}</a>
           </li>
-    {% endfor %}
+        {% endfor %}
     </ul>
     {% else %}
         <p>No samples found.</p>
