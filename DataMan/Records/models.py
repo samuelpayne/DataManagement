@@ -19,14 +19,14 @@ class Dataset (models.Model):
     fileHash = models.TextField(help_text='File Hash')
 
     def get_absolute_url(self):
-        return reverse('model-detail-view', args=[str(self.id)])
+        return reverse('dataset-detail', args=[str(self.id)])
 
     def __str__(self):
         return self.datasetName
 
 class Sample (models.Model):
     sampleName = models.TextField(help_text='Sample Name')
-    sampleID = models.IntegerField(help_text='Integer Field')
+    sampleID = models.IntegerField(help_text='Integer Field', primary_key = True)
     experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank = True, null = True)
     #datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE,
@@ -39,8 +39,12 @@ class Sample (models.Model):
     organism = models.TextField(help_text='Organism')
     organismModifications = models.TextField(help_text='Organism Modifications', default = 'None')
 
+    #this sets the default sort
+    class Meta:
+        ordering = ['sampleName']
+        
     def get_absolute_url(self):
-        return reverse('sample-detail', args=[str(self.id)])
+        return reverse('sample-detail', args=[self.sampleID])
 
     def __str__(self):
         return self.sampleName
@@ -56,7 +60,7 @@ class Experiment(models.Model):
     experimentalDesign = models.TextField(help_text='Experimental Design')
 
     def get_absolute_url(self):
-        return reverse('model-detail-view', args=[str(self.id)])
+        return reverse('experiment-detail', args=[str(self.id)])
 
     def __str__(self):
         return self.experimentName

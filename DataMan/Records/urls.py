@@ -17,6 +17,10 @@ urlpatterns = [
     path('experiments/', views.ExperimentView.as_view(), name = 'experiments'),
     #path('patients/', views.PatientView.as_view(), name = 'patients'),
     
-    path('samples/<int:sampleID>/', views.SampleDetailView.as_view(), 
-         name = 'samples-detail'),
+    path('samples/<int:pk>/', views.SampleDetailView.as_view(), 
+         name = 'sample-detail'),
+    path('datasets/<int:pk>/', views.DatasetDetailView.as_view(), 
+         name = 'dataset-detail'),
+    path('experiments/<int:pk>/', views.ExperimentDetailView.as_view(), 
+         name = 'experiment-detail'),
 ]

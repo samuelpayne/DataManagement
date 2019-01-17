@@ -88,7 +88,15 @@ pages generated for the specific record
 Ex: sample 1234, dataset 3"""
 class SampleDetailView(DetailView):
     model = Sample
-    template = 'samples_detail.html'
+    template = 'sample_detail.html'
     #"""
 
+class DatasetDetailView(DetailView):
+    model = Dataset
+    template = 'dataset_detail.html'
+
+
+class ExperimentDetailView(DetailView):
+    model = Experiment
+    template = 'experiment_detail.html'
 

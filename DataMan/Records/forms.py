@@ -8,3 +8,9 @@ class AddSampleForm(forms.ModelForm):
         fields = ['sampleName', 'sampleID', 'experiment',
                   'storageCondition', 'storageLocation', 'treatmentProtocol',
                   'dateCreated', 'organism', 'organismModifications']
+        
+class AddDatasetForm(forms.ModelForm):
+    class Meta:
+        model = Dataset
+        fields = ['datasetName','datasetID','sample']
+        #add the rest before it will work--none are null-enabled
