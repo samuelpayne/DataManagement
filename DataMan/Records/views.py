@@ -4,7 +4,7 @@ from django.views.generic import DetailView
 from django.http import HttpResponseRedirect
 from . import forms
 
-from Records.models import Sample
+from Records.models import Sample, Dataset, Experiment
 
 # Create your views here.
 
@@ -58,7 +58,26 @@ class SampleView(ListView):
 
     #DataMan\Records\templates\Records\samples_list.html
     template_name = 'samples_list.html'
+    paginate_by = 'records_per_page'
+
+class DatasetView(ListView):
+    model = Dataset
+    queryset = Dataset.objects.all()
+    template_name = 'dataset_list.html'
     paginate_by = 25
+
+class ExperimentView(ListView):
+    model = Experiment
+    queryset = Experiment.objects.all()
+    template_name = 'experiment_list.html'
+    paginate_by = 25
+
+"""class PatientView(ListView):
+    model = Patient
+    queryset = Patient.objects.all()
+    template_name = 'patient_list.html'
+    paginate_by = 25
+    #"""
 
 """named (type)-detail, these are the detail view
 pages generated for the specific record

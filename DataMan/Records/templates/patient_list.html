@@ -1,0 +1,19 @@
+
+
+{% extends "generic.html" %}
+
+{% block content %}
+<h1>Patient</h1>
+    {% if Patient_list %}
+<ul>
+    {% for Patient in Patient_list %}
+    <li>
+        <a href="{% url 'patient-detail' Patient.patientID %}"> {{ Patient }}</a>
+    </li>
+    {% endfor %}
+</ul>
+    {% else %}
+<p>No patients found.</p>
+    {% endif %}
+{% endblock %}
+

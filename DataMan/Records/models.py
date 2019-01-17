@@ -26,7 +26,7 @@ class Dataset (models.Model):
 class Sample (models.Model):
     sampleName = models.TextField(help_text='Sample Name')
     sampleID = models.IntegerField(help_text='Integer Field')
-    experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE)
+    experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE, null = True)
     datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     # preceedingSample = models.TextField(help_text='Preceeding Sample')
     storageCondition = models.TextField(help_text='Storage Condition')

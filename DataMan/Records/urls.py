@@ -14,6 +14,13 @@ urlpatterns = [
          
     path('samples/', views.SampleView.as_view(),
          {'records_per_page' : 25}, name = 'samples'),
+    path('datasets/', views.SampleView.as_view(),
+         {'records_per_page' : 25}, name = 'datasets'),
+    path('experiments/', views.SampleView.as_view(),
+         {'records_per_page' : 25}, name = 'experiments'),
+    path('patients/', views.SampleView.as_view(),
+         {'records_per_page' : 25}, name = 'patients'),
+    
     path('samples/<int:pk>/', views.SampleDetailView.as_view(), 
          name = 'samples-detail'),
 ]

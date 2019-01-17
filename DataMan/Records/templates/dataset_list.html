@@ -1,0 +1,19 @@
+
+
+{% extends "generic.html" %}
+
+{% block content %}
+<h1>DataSet</h1>
+    {% if Dataset_list %}
+<ul>
+    {% for Dataset in Dataset_list %}
+    <li>
+        <a href="{% url 'dataset-detail' Dataset.datasetID %}"> {{ Dataset }}</a>
+    </li>
+    {% endfor %}
+</ul>
+    {% else %}
+<p>No datasets found.</p>
+    {% endif %}
+{% endblock %}
+
