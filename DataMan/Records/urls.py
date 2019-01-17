@@ -12,14 +12,10 @@ urlpatterns = [
     path('samples/add/', views.add_sample, name = 'add-sample'),
     path('archive/', views.archive, name = 'archive'),
          
-    path('samples/', views.SampleView.as_view(),
-         {'records_per_page' : 25}, name = 'samples'),
-    path('datasets/', views.SampleView.as_view(),
-         {'records_per_page' : 25}, name = 'datasets'),
-    path('experiments/', views.SampleView.as_view(),
-         {'records_per_page' : 25}, name = 'experiments'),
-    path('patients/', views.SampleView.as_view(),
-         {'records_per_page' : 25}, name = 'patients'),
+    path('samples/', views.SampleView.as_view(), name = 'samples'),
+    path('datasets/', views.DatasetView.as_view(), name = 'datasets'),
+    path('experiments/', views.ExperimentView.as_view(), name = 'experiments'),
+    #path('patients/', views.PatientView.as_view(), name = 'patients'),
     
     path('samples/<int:pk>/', views.SampleDetailView.as_view(), 
          name = 'samples-detail'),

@@ -58,7 +58,7 @@ class SampleView(ListView):
 
     #DataMan\Records\templates\Records\samples_list.html
     template_name = 'samples_list.html'
-    paginate_by = 'records_per_page'
+    paginate_by = 25
 
 class DatasetView(ListView):
     model = Dataset
