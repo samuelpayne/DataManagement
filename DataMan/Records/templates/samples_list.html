@@ -1,0 +1,19 @@
+
+
+{% extends "generic.html" %}
+
+{% block content %}
+<h1>Samples</h1>
+    {% if samples_list %}
+<ul>
+    {% for Sample in Sample_list %}
+    <li>
+        <a href="{% url 'samples-detail' Sample.sampleID %}"> {{ Sample }}</a>
+    </li>
+    {% endfor %}
+</ul>
+    {% else %}
+<p>No samples found.</p>
+    {% endif %}
+{% endblock %}
+

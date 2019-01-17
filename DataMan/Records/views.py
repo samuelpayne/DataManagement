@@ -1,4 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.views.generic import ListView
+from django.views.generic import DetailView
+from django.http import HttpResponseRedirect
+from . import forms
+
+from Records.models import Sample
 
 # Create your views here.
 
@@ -22,27 +28,44 @@ def archive(request):
         #or whatever you want this page to know"""
     return render(request, 'archive.html', context = data)
 
+"""Page to add a sample"""
+def add_sample(request):
+    #check anything you want checked
+    form =forms.AddSampleForm(request.POST)
+    if form.is_valid():
+        #do cool and important things with the information
+        return redirect('archive')
+
+    context = {
+        'form':form,
+    }
+        
+    return render(request, 'add-sample.html', context)
+
+"""To edit a sample
+    _sample = django.shortcuts.get_object_or_404(sample, ID=pk)#get pk from url"""
+
 ###   
 #These classes would currently (1/15/19) cause
 #issues since none of the models are defined
 #yet
 ###
 """(type)Views will generate the list view pages
-i.e., the list of samples""
-class samplesView(ListView):
-    model = sample
-    queryset = tree.objects.all()
+i.e., the list of samples"""
+class SampleView(ListView):
+    model = Sample
+    queryset = Sample.objects.all()
 
     #DataMan\Records\templates\Records\samples_list.html
     template_name = 'samples_list.html'
-    paginate_by = records_per_page
+    paginate_by = 25
 
-""named (type)-detail, these are the detail view
+"""named (type)-detail, these are the detail view
 pages generated for the specific record
-Ex: sample 1234, dataset 3""
-class samplesDetailView(DetailView):
-    model = sample
-    template = 'samples.html'
+Ex: sample 1234, dataset 3"""
+class SampleDetailView(DetailView):
+    model = Sample
+    template = 'samples_detail.html'
     #"""
 
 

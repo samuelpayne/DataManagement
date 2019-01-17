@@ -1,4 +1,4 @@
-from django.db.import models
+from django.db import models
 
 class Dataset (models.Model):
     datasetName = models.TextField(help_text='Dataset Name')
@@ -26,7 +26,7 @@ class Dataset (models.Model):
 class Sample (models.Model):
     sampleName = models.TextField(help_text='Sample Name')
     sampleID = models.IntegerField(help_text='Integer Field')
-    # experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE)
+    experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE)
     datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     # preceedingSample = models.TextField(help_text='Preceeding Sample')
     storageCondition = models.TextField(help_text='Storage Condition')
@@ -37,7 +37,7 @@ class Sample (models.Model):
     organismModifications = models.TextField(help_text='Organism Modifications')
 
     def get_absolute_url(self):
-        return reverse('model-detail-view', args=[str(self.id)])
+        return reverse('sample-detail', args=[str(self.id)])
 
     def __str__(self):
         return self.my_field_name
@@ -48,7 +48,7 @@ class Experiment(models.Model):
     projectLead = models.TextField(help_text='Project Lead')
     teamMembers = models.TextField(help_text='Team Members')
     IRB = models.IntegerField(help_text='IRB Number')
-    samples = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    #samples = models.ForeignKey(Sample, on_delete=models.CASCADE)
     datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     experimentalDesign = models.TextField(help_text='Experimental Design')
 
