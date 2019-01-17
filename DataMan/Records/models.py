@@ -3,7 +3,8 @@ from django.db import models
 class Dataset (models.Model):
     datasetName = models.TextField(help_text='Dataset Name')
     datasetID = models.IntegerField(help_text='Dataset ID')
-    # sample = models.ForeignKey('Sample', on_delete=models.CASCADE)
+    sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
+                                 blank = True, null = True)
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
     instrumentSetting = models.TextField(help_text='link to instrument settings')
     type = models.TextField(help_text='Type of data generated')
@@ -28,9 +29,9 @@ class Sample (models.Model):
     sampleID = models.IntegerField(help_text='Integer Field')
     experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank = True, null = True)
-    datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE,
-                                 blank = True, null = True)
-    # preceedingSample = models.TextField(help_text='Preceeding Sample')
+    #datasets = models.OneToOneField(Dataset, on_delete=models.CASCADE,
+    #                              blank = True, null = True)
+    #preceedingSample = models.TextField(help_text='Preceeding Sample')
     storageCondition = models.TextField(help_text='Storage Condition')
     storageLocation = models.TextField(help_text='Path to storage location')
     treatmentProtocol = models.TextField(help_text='Treatment Protocol')
@@ -50,8 +51,8 @@ class Experiment(models.Model):
     projectLead = models.TextField(help_text='Project Lead')
     teamMembers = models.TextField(help_text='Team Members')
     IRB = models.IntegerField(help_text='IRB Number')
-    #samples = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    # samples = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    # datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     experimentalDesign = models.TextField(help_text='Experimental Design')
 
     def get_absolute_url(self):

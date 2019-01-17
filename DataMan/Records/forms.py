@@ -5,6 +5,6 @@ from Records.models import *
 class AddSampleForm(forms.ModelForm):
     class Meta:
         model = Sample
-        fields = ['sampleName', 'sampleID', 'experiment', 'datasets',
+        fields = ['sampleName', 'sampleID', 'experiment',
                   'storageCondition', 'storageLocation', 'treatmentProtocol',
                   'dateCreated', 'organism', 'organismModifications']
