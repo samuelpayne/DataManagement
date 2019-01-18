@@ -21,7 +21,7 @@ class Dataset(models.Model):
     fileHash = models.TextField(verbose_name='File Hash')
 
     def get_absolute_url(self):
-        return reverse('dataset-detail', args=[str(self.id)])
+        return reverse('dataset-detail', args=[str(self.datasetID)])
 
     def __str__(self):
         return self.datasetName
@@ -68,7 +68,7 @@ class Experiment(models.Model):
     experimentalDesign = models.TextField(verbose_name='Experimental Design')
 
     def get_absolute_url(self):
-        return reverse('experiment-detail', args=[str(self.id)])
+        return reverse('experiment-detail', args=[str(self.experimentID)])
 
     def __str__(self):
         return self.experimentName
