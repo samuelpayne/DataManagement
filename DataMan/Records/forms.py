@@ -12,5 +12,13 @@ class AddSampleForm(forms.ModelForm):
 class AddDatasetForm(forms.ModelForm):
     class Meta:
         model = Dataset
-        fields = ['datasetName','datasetID','sample']
-        #add the rest before it will work--none are null-enabled
+        fields = ['datasetName','datasetID','sample','instrumentSetting','type',
+                  'operator','status','dateCreated','fileLocation',
+                  'fileName','acquisitionStart','acquisitionEnd',
+                  'fileSize','fileHash',]
+
+class AddExperimentForm(forms.ModelForm):
+    class Meta:
+        model = Experiment
+        fields = ['experimentName','experimentID','projectLead','teamMembers',
+                  'IRB','experimentalDesign',]

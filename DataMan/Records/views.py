@@ -42,7 +42,7 @@ def add_sample(request):
         'model':'Sample'
     }
 
-    return render(request, 'add-sample.html', context)
+    return render(request, 'add-record.html', context)
 
 def add_dataset(request):
     #check anything you want checked
@@ -57,8 +57,22 @@ def add_dataset(request):
         'model':'Dataset'
     }
 
-    return render(request, 'add-dataset.html', context)
+    return render(request, 'add-record.html', context)
 
+def add_experiment(request):
+    #check anything you want checked
+    form =forms.AddExperimentForm(request.POST)
+    if form.is_valid():
+        #do cool and important things with the information
+        new_Experiment = form.save()
+        return redirect('experiments')
+
+    context = {
+        'form':form,
+        'model':'Experiment'
+    }
+
+    return render(request, 'add-record.html', context)
 """To edit a sample
     sample = Sample.objects.get(pk=pk) #get pk from url
     form =forms.AddSampleForm(request.POST, instance = sample)
