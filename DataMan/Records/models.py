@@ -2,9 +2,8 @@ from django.db import models
 
 class Dataset (models.Model):
     datasetName = models.TextField(help_text='Dataset Name')
-    datasetID = models.IntegerField(help_text='Dataset ID')
-    sample = models.OneToOneField('Sample',
-                                  on_delete=models.CASCADE,
+    datasetID = models.IntegerField(help_text='Dataset ID',primary_key = True)
+    sample = models.OneToOneField('Sample',on_delete=models.CASCADE,
                               blank = True, null = True)
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
     instrumentSetting = models.TextField(help_text='link to instrument settings')
@@ -26,7 +25,7 @@ class Dataset (models.Model):
         return self.datasetName
 
 class Sample (models.Model):
-    sampleName = models.TextField(help_text='Sample Name')
+    sampleName = models.TextField(verbose_name = "Sample Name")
     sampleID = models.IntegerField(help_text='Integer Field', primary_key = True)
     experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank = True, null = True)
@@ -52,12 +51,12 @@ class Sample (models.Model):
 
 class Experiment(models.Model):
     experimentName = models.TextField(help_text='Experiment Name')
-    experimentID = models.IntegerField(help_text='Experiment ID')
+    experimentID = models.IntegerField(help_text='Experiment ID', primary_key = True)
     projectLead = models.TextField(help_text='Project Lead')
     teamMembers = models.TextField(help_text='Team Members')
     IRB = models.IntegerField(help_text='IRB Number')
     #samples = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
+    #datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
     experimentalDesign = models.TextField(help_text='Experimental Design')
 
     def get_absolute_url(self):
