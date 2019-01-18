@@ -1,3 +1,3 @@
+*.sqlite3
 *.pyc
 *.pyo
-DataMan/db.sqlite3
