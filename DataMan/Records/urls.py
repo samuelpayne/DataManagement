@@ -6,22 +6,22 @@ from . import views
 
 urlpatterns = [
     path('', views.records, name = 'records'),
-    
+
     #add pages with form
     #probably seperate pages for each type ...?
     path('samples/add/', views.add_sample, name = 'add-sample'),
     path('datasets/add/', views.add_dataset, name = 'add-dataset'),
     path('archive/', views.archive, name = 'archive'),
-         
+
     path('samples/', views.SampleView.as_view(), name = 'samples'),
     path('datasets/', views.DatasetView.as_view(), name = 'datasets'),
     path('experiments/', views.ExperimentView.as_view(), name = 'experiments'),
     #path('patients/', views.PatientView.as_view(), name = 'patients'),
-    
-    path('samples/<int:pk>/', views.SampleDetailView.as_view(), 
+
+    path('samples/<int:pk>/', views.SampleDetailView.as_view(),
          name = 'sample-detail'),
-    path('datasets/<int:pk>/', views.DatasetDetailView.as_view(), 
+    path('datasets/<int:pk>/', views.DatasetDetailView.as_view(),
          name = 'dataset-detail'),
-    path('experiments/<int:pk>/', views.ExperimentDetailView.as_view(), 
+    path('experiments/<int:pk>/', views.ExperimentDetailView.as_view(),
          name = 'experiment-detail'),
 ]

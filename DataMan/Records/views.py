@@ -13,7 +13,7 @@ from Records.models import Sample, Dataset, Experiment
      -view Archives
      -add records"""
 def records(request):
-    return render(request, 'records.html')
+    return render(request, 'home.html')
 
 """Archive home named 'archive'
     Allow type selection"""
@@ -41,7 +41,7 @@ def add_sample(request):
         'form':form,
         'model':'Sample'
     }
-        
+
     return render(request, 'add-sample.html', context)
 
 def add_dataset(request):
@@ -56,7 +56,7 @@ def add_dataset(request):
         'form':form,
         'model':'Dataset'
     }
-        
+
     return render(request, 'add-dataset.html', context)
 
 """To edit a sample
@@ -65,7 +65,7 @@ def add_dataset(request):
     form.save()
     """
 
-###   
+###
 #These classes would currently (1/15/19) cause
 #issues since none of the models are defined
 #yet
@@ -115,4 +115,3 @@ class DatasetDetailView(DetailView):
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
-
