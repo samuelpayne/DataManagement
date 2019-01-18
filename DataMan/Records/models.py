@@ -4,7 +4,7 @@ class Dataset (models.Model):
     datasetName = models.TextField(help_text='Dataset Name')
     datasetID = models.IntegerField(help_text='Dataset ID',primary_key = True)
     sample = models.OneToOneField('Sample',on_delete=models.CASCADE,
-                              blank = False, null = False)
+                              blank = True, null = True)
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
     instrumentSetting = models.TextField(help_text='link to instrument settings')
     type = models.TextField(help_text='Type of data generated')
@@ -26,9 +26,9 @@ class Dataset (models.Model):
 
 class Sample (models.Model):
     sampleName = models.TextField(verbose_name = "Sample Name")
-    sampleID = models.IntegerField(help_text='Integer Field', primary_key = True)
+    sampleID = models.IntegerField(primary_key = True)
     experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
-                                   blank = False, null = False)
+                                   blank = True, null = True)
     #dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE,
     #                            blank = True, null = True)
     # preceedingSample = models.TextField(help_text='Preceeding Sample')

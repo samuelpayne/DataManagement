@@ -13,7 +13,7 @@ from Records.models import Sample, Dataset, Experiment
      -view Archives
      -add records"""
 def records(request):
-    return render(request, 'home.html')
+    return render(request, 'records.html')
 
 """Archive home named 'archive'
     Allow type selection"""
@@ -34,6 +34,7 @@ def add_sample(request):
     form =forms.AddSampleForm(request.POST)
     if form.is_valid():
         #do cool and important things with the information
+        #form.check_date()
         new_Sample = form.save()
         return redirect('samples')
 
@@ -41,14 +42,12 @@ def add_sample(request):
         'form':form,
         'model':'Sample'
     }
-
+        
     return render(request, 'add-record.html', context)
 
 def add_dataset(request):
-    #check anything you want checked
     form =forms.AddDatasetForm(request.POST)
     if form.is_valid():
-        #do cool and important things with the information
         new_Dataset = form.save()
         return redirect('datasets')
 
@@ -56,14 +55,12 @@ def add_dataset(request):
         'form':form,
         'model':'Dataset'
     }
-
+        
     return render(request, 'add-record.html', context)
 
 def add_experiment(request):
-    #check anything you want checked
     form =forms.AddExperimentForm(request.POST)
     if form.is_valid():
-        #do cool and important things with the information
         new_Experiment = form.save()
         return redirect('experiments')
 
@@ -71,7 +68,7 @@ def add_experiment(request):
         'form':form,
         'model':'Experiment'
     }
-
+        
     return render(request, 'add-record.html', context)
 """To edit a sample
     sample = Sample.objects.get(pk=pk) #get pk from url
@@ -79,11 +76,6 @@ def add_experiment(request):
     form.save()
     """
 
-###
-#These classes would currently (1/15/19) cause
-#issues since none of the models are defined
-#yet
-###
 """(type)Views will generate the list view pages
 i.e., the list of samples"""
 class SampleView(ListView):
@@ -129,3 +121,4 @@ class DatasetDetailView(DetailView):
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
+

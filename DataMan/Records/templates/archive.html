@@ -1,10 +1,12 @@
 {% extends "generic.html" %}
 
 {% block content %}
-<h1>Archives</h1>
+<h1>ARCHIVE</h1>
 <li><a href="{% url 'experiments' %}">Experiments</a></li>
 <li><a href="{% url 'samples' %}">Samples</a></li>
 <li><a href="{% url 'datasets' %}">Datasets</a></li>
-<li><br></li>
+<br>
+<li><a href="{% url 'add-experiment' %}">Add Experiment</a></li>
 <li><a href="{% url 'add-sample' %}">Add Sample</a></li>
+<li><a href="{% url 'add-dataset' %}">Add Dataset</a></li>
 {% endblock %}

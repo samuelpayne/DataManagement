@@ -1,14 +1,19 @@
 {% extends "generic.html" %}
 
 {% block content %}
-<h2>Experiment {{ Experiment }}</h2>
-<p>We will eventually put more data in here.</p>
-<p><Strong>Title:</Strong> {{experiment.experimentName}} </p>
+<h2>{{ experiment }}</h2>
+<p><Strong>Experiment ID:</Strong> {{experiment.experimentID}} </p>
+<p><Strong>Project Lead:</Strong> {{experiment.projectLead}} </p>
+<p><Strong>IRB Number:</Strong> {{experiment.IRB}} </p>
+<p><Strong>Experimental Design:</Strong> {{experiment.experimentalDesign}} </p>
 {% if experiment.sample_set.all.count != 0 %}
+    <Strong>Samples:</Strong>
+    <ul style="margin-left: 5px;">
     {% for Sample in experiment.sample_set.all %}
         <li><a href="{% url 'sample-detail' Sample.sampleID %}"> {{ Sample }}</a></li>
-    {% endfor %}
+    {% endfor %} </ul>
 {% else %}
-   <p>No samples found.</p>
+    <p>No samples found.</p>
 {% endif %}
+
 {% endblock %}

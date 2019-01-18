@@ -1,10 +1,9 @@
 {% extends "generic.html" %}
 
 {% block content %}
-<h2>Dataset {{ Dataset }}</h2>
-<p>We will eventually put more data in here.</p>
-<p><Strong>Name:</Strong> {{dataset.datasetName}} </p>
-<!--{% if sample.otherStuff != "" %}
-<p>{{sample.otherStuff}}</p>
-  {% endif %} -->
+<h2>{{ dataset }}</h2>
+<p><Strong>Dataset ID:</Strong> {{dataset.datasetID}} </p>
+<p><Strong>Sample Name:</Strong>
+    <a href="{% url 'sample-detail' dataset.sample.sampleID %}"> {{dataset.sample}} </a></p>
+<p><Strong>Sample ID:</Strong> {{dataset.sample.sampleID}} </p>
 {% endblock %}
