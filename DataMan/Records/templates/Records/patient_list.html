@@ -4,9 +4,9 @@
 
 {% block content %}
 <h1>Patient</h1>
-    {% if Patient_list %}
+    {% if patient_list %}
 <ul>
-    {% for Patient in Patient_list %}
+    {% for Patient in patient_list %}
     <li>
         <a href="{% url 'patient-detail' Patient.patientID %}"> {{ Patient }}</a>
     </li>
