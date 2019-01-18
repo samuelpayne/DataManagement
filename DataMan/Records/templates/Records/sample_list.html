@@ -8,7 +8,7 @@
     <ul>
         {% for Sample in sample_list %}
           <li>
-            <a href="{% url 'samples-detail' Sample.sampleID %}"> {{ Sample }}</a>
+            <a href="{% url 'sample-detail' Sample.sampleID %}"> {{ Sample }}</a>
           </li>
         {% endfor %}
     </ul>

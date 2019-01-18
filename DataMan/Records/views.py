@@ -35,13 +35,29 @@ def add_sample(request):
     if form.is_valid():
         #do cool and important things with the information
         new_Sample = form.save()
-        return redirect('archive')
+        return redirect('samples')
 
     context = {
         'form':form,
+        'model':'Sample'
     }
         
     return render(request, 'add-sample.html', context)
+
+def add_dataset(request):
+    #check anything you want checked
+    form =forms.AddDatasetForm(request.POST)
+    if form.is_valid():
+        #do cool and important things with the information
+        new_Dataset = form.save()
+        return redirect('datasets')
+
+    context = {
+        'form':form,
+        'model':'Dataset'
+    }
+        
+    return render(request, 'add-dataset.html', context)
 
 """To edit a sample
     sample = Sample.objects.get(pk=pk) #get pk from url
