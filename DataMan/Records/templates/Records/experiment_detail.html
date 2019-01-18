@@ -3,8 +3,12 @@
 {% block content %}
 <h2>Experiment {{ Experiment }}</h2>
 <p>We will eventually put more data in here.</p>
-<p><Strong>Title:</Strong> {{Experiement.name}} </p>
-<!--{% if sample.otherStuff != "" %}
-<p>{{sample.otherStuff}}</p>
-  {% endif %} -->
+<p><Strong>Title:</Strong> {{experiment.experimentName}} </p>
+{% if experiment.sample_set.all.count != 0 %}
+    {% for Sample in experiment.sample_set.all %}
+        <li><a href="{% url 'sample-detail' Sample.sampleID %}"> {{ Sample }}</a></li>
+    {% endfor %}
+{% else %}
+   <p>No samples found.</p>
+{% endif %}
 {% endblock %}
