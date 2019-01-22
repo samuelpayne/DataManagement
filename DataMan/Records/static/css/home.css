@@ -49,9 +49,8 @@
 .nav-block__icon {
     height: 150px;
     width: 150px;
-    color: #fff;
+    color: #ccd5df;
     margin: 0 auto;
-    opacity: .8;
 }
 
 .nav-block:hover {

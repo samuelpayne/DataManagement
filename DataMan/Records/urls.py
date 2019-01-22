@@ -13,7 +13,7 @@ urlpatterns = [
     path('datasets/add/', views.add_dataset, name = 'add-dataset'),
     path('experiments/add/', views.add_experiment, name = 'add-experiment'),
     path('archive/', views.archive, name = 'archive'),
-
+    #url(regex=r'type=(.*)$', view='views.archive'),
     path('samples/', views.SampleView.as_view(), name = 'samples'),
     path('datasets/', views.DatasetView.as_view(), name = 'datasets'),
     path('experiments/', views.ExperimentView.as_view(), name = 'experiments'),

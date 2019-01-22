@@ -3,8 +3,9 @@ from django.views.generic import ListView
 from django.views.generic import DetailView
 from django.http import HttpResponseRedirect
 from . import forms
-
+import re
 from Records.models import Sample, Dataset, Experiment
+from django.forms.models import model_to_dict
 
 # Create your views here.
 
@@ -18,10 +19,31 @@ def records(request):
 """Archive home named 'archive'
     Allow type selection"""
 def archive(request):
-    #get general data
-    data ={}
-    #num_samples = samples.objects.all().count()
-    #num_datasets = datasets.objects.all().count()
+    #get the url parameter for what type of data to display, if any
+    param = re.sub('/records/archive/','',request.get_full_path())
+    param = re.sub('\?type=','',param)
+    if param == 'experiments' :
+        model = Experiment
+    elif param == 'samples':
+        model = Sample
+    elif param == 'datasets':
+        model = Dataset
+    else:
+        model = None
+    if model is not None:
+        query_results = model.objects.all()
+        results = [model_to_dict(r) for r in query_results]
+        col_names = [re.sub(r'\w+\.\w+\.', '', str(i)) for i in model._meta.get_fields()]
+        col_names = col_names[1:]  #using the [1:] so it skips the first item which just declares it is one to many or one to one
+    else:
+        results = []
+        col_names = []
+    data = {
+    'type' : param,
+    'show_table': param not in ['experiments','samples','datasets'],
+    'query_results': results,
+    'col_names': col_names,
+    }
     """or:
     for type in RecordTypes:
         data[type] = type.objects.all().count()
@@ -42,7 +64,7 @@ def add_sample(request):
         'form':form,
         'model':'Sample'
     }
-        
+
     return render(request, 'add-record.html', context)
 
 def add_dataset(request):
@@ -55,7 +77,7 @@ def add_dataset(request):
         'form':form,
         'model':'Dataset'
     }
-        
+
     return render(request, 'add-record.html', context)
 
 def add_experiment(request):
@@ -68,7 +90,7 @@ def add_experiment(request):
         'form':form,
         'model':'Experiment'
     }
-        
+
     return render(request, 'add-record.html', context)
 """To edit a sample
     sample = Sample.objects.get(pk=pk) #get pk from url
@@ -121,4 +143,3 @@ class DatasetDetailView(DetailView):
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
-
