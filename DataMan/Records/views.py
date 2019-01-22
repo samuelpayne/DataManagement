@@ -50,6 +50,39 @@ def archive(request):
         #or whatever you want this page to know"""
     return render(request, 'archive.html', context = data)
 
+def create_new(request):
+    # get the url parameter for what type of data to display, if any
+    param = re.sub('/records/archive/', '', request.get_full_path())
+    param = re.sub('\?type=', '', param)
+    if param == 'experiments':
+        model = Experiment
+    elif param == 'samples':
+        model = Sample
+    elif param == 'datasets':
+        model = Dataset
+    else:
+        model = None
+    if model is not None:
+        query_results = model.objects.all()
+        results = [model_to_dict(r) for r in query_results]
+        col_names = [re.sub(r'\w+\.\w+\.', '', str(i)) for i in model._meta.get_fields()]
+        col_names = col_names[
+                    1:]  # using the [1:] so it skips the first item which just declares it is one to many or one to one
+    else:
+        results = []
+        col_names = []
+    data = {
+        'type': param,
+        'show_table': param not in ['experiments', 'samples', 'datasets'],
+        'query_results': results,
+        'col_names': col_names,
+    }
+    """or:
+    for type in RecordTypes:
+        data[type] = type.objects.all().count()
+        #or whatever you want this page to know"""
+    return render(request, 'create-new.html', context = data)
+
 """Page to add a sample"""
 def add_sample(request):
     #check anything you want checked
