@@ -16,9 +16,8 @@ h1{
 }
 
 li {
-    font-size: 12px;
+    font-size: 0px;
 }
-
 
 table {
 }
@@ -71,6 +70,5 @@ input.nav-block {
     margin-bottom: 18px;
     border: 0px;
 }
-
 
 
