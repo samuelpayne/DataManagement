@@ -16,6 +16,9 @@ from django.forms.models import model_to_dict
 def records(request):
     return render(request, 'records.html')
 
+def about(request):
+    return render(request, 'about.html')
+
 """Archive home named 'archive'
     Allow type selection"""
 def archive(request):
