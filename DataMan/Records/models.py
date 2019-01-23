@@ -20,10 +20,10 @@ class Dataset(models.Model):
     fileSize = models.IntegerField(verbose_name='File Size')
     fileHash = models.TextField(verbose_name='File Hash')
 
-    def intrumentSetting(self, value):
-        if value == 'fail-fail-fail':
+    def getInstrumentSetting(self):
+        if self.instrumentSetting == 'fail-fail-fail':
             return "Failed"
-        return instrumentSetting
+        return self.instrumentSetting
 
     def get_absolute_url(self):
         return reverse('dataset-detail', args=[str(self.datasetID)])
