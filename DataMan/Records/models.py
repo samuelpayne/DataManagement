@@ -40,7 +40,7 @@ class Sample(models.Model):
     storageCondition = models.TextField(verbose_name='Storage Condition')
     storageLocation = models.TextField(verbose_name='Storage Location')
     treatmentProtocol = models.TextField(verbose_name='Treatment Protocol')
-    dateCreated = models.DateTimeField(help_text='Date the sample was taken')
+    dateCreated = models.DateTimeField(verbose_name='Date Created')
     organism = models.TextField(verbose_name='Organism')
     organismModifications = models.TextField(verbose_name='Organism Modifications', default='None')
 
