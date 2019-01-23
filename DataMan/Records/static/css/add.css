@@ -4,7 +4,7 @@
     grid-template-columns: 1fr 1fr 1fr;
 }
 body {
-    min-height: 240vh;
+    min-height: 260vh;
     display: grid;
     grid-template-rows: 58px 35px auto 78px;
     color: #002e5d;
