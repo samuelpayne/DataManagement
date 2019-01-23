@@ -3,7 +3,7 @@ from django.db import models
 class Dataset(models.Model):
     datasetName = models.TextField(verbose_name='Dataset Name',
                                    unique=True)
-    datasetID = models.IntegerField(verbose_name='Dataset ID', primary_key=True,
+    datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
                                     unique=True)
     sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
                                   blank=True, null=True)
@@ -30,7 +30,7 @@ class Dataset(models.Model):
 class Sample(models.Model):
     sampleName = models.TextField(verbose_name="Sample Name",
                                   unique=True)
-    sampleID = models.IntegerField(primary_key=True,
+    sampleID = models.AutoField(primary_key=True,
                                    unique=True)
     experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank=True, null=True)
@@ -58,7 +58,7 @@ class Sample(models.Model):
 class Experiment(models.Model):
     experimentName = models.TextField(verbose_name='Experiment Name',
                                       unique=True)
-    experimentID = models.IntegerField(verbose_name='Experiment ID', primary_key=True,
+    experimentID = models.AutoField(verbose_name='Experiment ID', primary_key=True,
                                        unique=True)
     projectLead = models.TextField(verbose_name='Project Lead')
     teamMembers = models.TextField(verbose_name='Team Members')

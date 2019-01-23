@@ -7,7 +7,7 @@ from Records.models import *
 class AddSampleForm(forms.ModelForm):
     class Meta:
         model = Sample
-        fields = ['sampleName', 'sampleID', 'experiment',
+        fields = ['sampleName',  'experiment',
                   'storageCondition', 'storageLocation', 'treatmentProtocol',
                   'dateCreated', 'organism', 'organismModifications']
 
@@ -20,7 +20,7 @@ class AddSampleForm(forms.ModelForm):
 class AddDatasetForm(forms.ModelForm):
     class Meta:
         model = Dataset
-        fields = ['datasetName','datasetID','sample','instrumentSetting','type',
+        fields = ['datasetName','sample','instrumentSetting','type',
                   'operator','status','dateCreated','fileLocation',
                   'fileName','acquisitionStart','acquisitionEnd',
                   'fileSize','fileHash',]
@@ -28,5 +28,5 @@ class AddDatasetForm(forms.ModelForm):
 class AddExperimentForm(forms.ModelForm):
     class Meta:
         model = Experiment
-        fields = ['experimentName','experimentID','projectLead','teamMembers',
+        fields = ['experimentName','projectLead','teamMembers',
                   'IRB','experimentalDesign',]
