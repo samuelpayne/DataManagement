@@ -9,7 +9,7 @@ urlpatterns = [
 
     #add pages with form
     #probably seperate pages for each type ...?
-
+	path('about/', views.about, name='about'),
     path('add/', views.create_new, name = 'create-new'),
     path('add/samples/', views.add_sample, name = 'add-sample'),
     path('add/datasets/', views.add_dataset, name = 'add-dataset'),
