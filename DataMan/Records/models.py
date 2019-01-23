@@ -12,13 +12,18 @@ class Dataset(models.Model):
     type = models.TextField(verbose_name='Type of data generated')
     operator = models.TextField(verbose_name='Operator')
     status = models.TextField(verbose_name='Status')
-    dateCreated = models.DateTimeField()
+    dateCreated = models.DateTimeField(verbose_name='Date Created')
     fileLocation = models.TextField(verbose_name='Path to file location')
     fileName = models.TextField(verbose_name='File Name')
     acquisitionStart = models.TextField(verbose_name='Acquisition Start')
     acquisitionEnd = models.TextField(verbose_name="Acquisition End")
     fileSize = models.IntegerField(verbose_name='File Size')
     fileHash = models.TextField(verbose_name='File Hash')
+
+    def intrumentSetting(self, value):
+        if value == 'fail-fail-fail':
+            return "Failed"
+        return instrumentSetting
 
     def get_absolute_url(self):
         return reverse('dataset-detail', args=[str(self.datasetID)])

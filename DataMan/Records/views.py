@@ -54,7 +54,7 @@ def archive(request):
     return render(request, 'archive.html', context = data)
 
 def create_new(request):
-    return render(request, 'create-new.html', context = data)
+    return render(request, 'create-new.html',)
 
 """Page to add a sample"""
 def add_sample(request):

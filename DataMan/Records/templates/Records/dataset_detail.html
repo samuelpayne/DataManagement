@@ -6,4 +6,5 @@
 <p><Strong>Sample Name:</Strong>
     <a href="{% url 'sample-detail' dataset.sample.sampleID %}"> {{dataset.sample}} </a></p>
 <p><Strong>Sample ID:</Strong> {{dataset.sample.sampleID}} </p>
+<p><Strong>Instrument Settings:</Strong> {{dataset.instrumentSetting}} </p>
 {% endblock %}
