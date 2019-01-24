@@ -7,9 +7,9 @@ from Records.models import *
 class AddSampleForm(forms.ModelForm):
     class Meta:
         model = Sample
-        fields = ['sampleName',  'experiment',
-                  'storageCondition', 'storageLocation', 'treatmentProtocol',
-                  'dateCreated', 'organism', 'organismModifications']
+        fields = ['_sampleName',  '_experiment',
+                  '_storageCondition', '_storageLocation', '_treatmentProtocol',
+                  '_dateCreated', '_organism', '_organismModifications']
 
     """def check_date(self):
         date = self.cleaned_data['dateCreated']
@@ -20,7 +20,7 @@ class AddSampleForm(forms.ModelForm):
 class AddDatasetForm(forms.ModelForm):
     class Meta:
         model = Dataset
-        fields = ['_datasetName','_sample', '_instrumentSetting','_type',
+        fields = ['_datasetName',#'_sample', '_instrumentSetting','_type',
                   '_operator','_status','_dateCreated','_fileLocation',
                   '_fileName','_acquisitionStart','_acquisitionEnd',
                   '_fileSize','_fileHash',]
@@ -28,5 +28,5 @@ class AddDatasetForm(forms.ModelForm):
 class AddExperimentForm(forms.ModelForm):
     class Meta:
         model = Experiment
-        fields = ['experimentName','projectLead','teamMembers',
-                  'IRB','experimentalDesign',]
+        fields = ['_experimentName','_projectLead','_teamMembers',
+                  '_IRB','_experimentalDesign',]

@@ -36,16 +36,18 @@ def archive(request):
     if model is not None:
         query_results = model.objects.all()
         results = [model_to_dict(r) for r in query_results]
-        col_names = [re.sub(r'\w+\.\w+\.', '', str(i.verbose_name)) for i in model._meta.get_fields()]
+        col_names = [re.sub(r'\w+\.\w+\.', '', str(i)) for i in model._meta.get_fields()]
         col_names = col_names[1:]  #using the [1:] so it skips the first item which just declares it is one to many or one to one
+        fields = [model._meta.get_field(i).verbose_name for i in col_names]
     else:
         results = []
         col_names = []
+        fields = []
     data = {
     'type' : param,
     'show_table': param not in ['experiments','samples','datasets'],
     'query_results': results,
-    'col_names': col_names,
+    'col_names': fields,
     }
     """or:
     for type in RecordTypes:

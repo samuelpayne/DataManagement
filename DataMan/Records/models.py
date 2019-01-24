@@ -5,8 +5,8 @@ class Dataset(models.Model):
                                    unique=True)
     _datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
                                     unique=True)
-    _sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
-                                  blank=True, null=True)
+    #_sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
+    #                              blank=True, null=True)
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
     _instrumentSetting = models.TextField(verbose_name='link to instrument settings')
     _type = models.TextField(verbose_name='Type of data generated')
@@ -52,54 +52,81 @@ class Dataset(models.Model):
         return self._fileHash
 
     def get_absolute_url(self):
-        return reverse('dataset-detail', args=[str(self.datasetID)])
+        return reverse('dataset-detail', args=[str(self._datasetID)])
 
     def __str__(self):
         return self._datasetName
 
 
 class Sample(models.Model):
-    sampleName = models.TextField(verbose_name="Sample Name",
+    _sampleName = models.TextField(verbose_name="Sample Name",
                                   unique=True)
-    sampleID = models.AutoField(primary_key=True,
+    _sampleID = models.AutoField(primary_key=True,verbose_name="Sample ID",
                                    unique=True)
-    experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
-                                   blank=True, null=True)
-    # dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE,
-    #                            blank = True, null = True)
+    _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
+                                   blank=True, null=True,verbose_name='Experiment')
     # preceedingSample = models.TextField(verbose_name='Preceeding Sample')
-    storageCondition = models.TextField(verbose_name='Storage Condition')
-    storageLocation = models.TextField(verbose_name='Storage Location')
-    treatmentProtocol = models.TextField(verbose_name='Treatment Protocol')
-    dateCreated = models.DateTimeField(verbose_name='Date Created')
-    organism = models.TextField(verbose_name='Organism')
-    organismModifications = models.TextField(verbose_name='Organism Modifications', default='None')
+    _storageCondition = models.TextField(verbose_name='Storage Condition')
+    _storageLocation = models.TextField(verbose_name='Storage Location')
+    _treatmentProtocol = models.TextField(verbose_name='Treatment Protocol')
+    _dateCreated = models.DateTimeField(verbose_name='Date Created')
+    _organism = models.TextField(verbose_name='Organism')
+    _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None')
+
+    def sampleName(self):
+        return self._sampleName
+    def sampleID(self):
+        return self._sampleID
+    def experiment(self):
+        return self._experiment
+    def storageCondition(self):
+        return self._storageCondition
+    def storageLocation(self):
+        return self._storageLocation
+    def treatmentProtocol(self):
+        return self._treatmentProtocol
+    def dateCreated(self):
+        return self._dateCreated
+    def organism(self):
+        return self._organism
+    def organismModifications(self):
+        return self._organismModifications
 
     # this sets the default sort
     class Meta:
-        ordering = ['sampleName']
+        ordering = ['_sampleName']
 
     def get_absolute_url(self):
         return reverse('sample-detail', args=[self.sampleID])
 
     def __str__(self):
-        return self.sampleName
+        return self._sampleName
 
 
 class Experiment(models.Model):
-    experimentName = models.TextField(verbose_name='Experiment Name',
+    _experimentName = models.TextField(verbose_name='Experiment Name',
                                       unique=True)
-    experimentID = models.AutoField(verbose_name='Experiment ID', primary_key=True,
-                                       unique=True)
-    projectLead = models.TextField(verbose_name='Project Lead')
-    teamMembers = models.TextField(verbose_name='Team Members')
-    IRB = models.IntegerField(verbose_name='IRB Number')
-    # samples = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    # datasets = models.ForeignKey(Dataset, on_delete=models.CASCADE)
-    experimentalDesign = models.TextField(verbose_name='Experimental Design')
+    _experimentID = models.AutoField(verbose_name='Experiment ID', unique=True, primary_key=True)
+    _projectLead = models.TextField(verbose_name='Project Lead')
+    _teamMembers = models.TextField(verbose_name='Team Members')
+    _IRB = models.IntegerField(verbose_name='IRB Number')
+    _experimentalDesign = models.TextField(verbose_name='Experimental Design')
+
+    def experimentName(self):
+        return self._experimentName
+    def experimentID(self):
+       return self._experimentID
+    def projectLead(self):
+        return self._projectLead
+    def teamMembers(self):
+        return self._teamMembers
+    def IRB(self):
+        return self._IRB
+    def experimentalDesign(self):
+        return self._experimentalDesign
 
     def get_absolute_url(self):
-        return reverse('experiment-detail', args=[str(self.experimentID)])
+        return reverse('experiment-detail', args=[str(self._experimentID)])
 
     def __str__(self):
-        return self.experimentName
+        return self._experimentName
