@@ -22,8 +22,8 @@ class AddDatasetForm(forms.ModelForm):
         model = Dataset
         fields = ['_datasetName','_sample', '_instrumentSetting','_type',
                   '_operator','_status','_dateCreated','_fileLocation',
-                  'fileName','acquisitionStart','acquisitionEnd',
-                  'fileSize','fileHash',]
+                  '_fileName','_acquisitionStart','_acquisitionEnd',
+                  '_fileSize','_fileHash',]
 
 class AddExperimentForm(forms.ModelForm):
     class Meta:

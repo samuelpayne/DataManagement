@@ -26,6 +26,10 @@ class Dataset(models.Model):
         return self._datasetID
     def sample(self):
         return self._sample
+    def instrumentSetting(self):
+        if self._instrumentSetting == 'fail-fail-fail':
+            return "Failed"
+        return self._instrumentSetting
     def type(self):
         return self._type
     def operator(self):
@@ -35,12 +39,17 @@ class Dataset(models.Model):
     def dateCreated(self):
         return self._dateCreated
     def fileLocation(self):
-	    return self._fileLocation
-    
-    def instrumentSetting(self):
-        if self._instrumentSetting == 'fail-fail-fail':
-            return "Failed"
-        return self._instrumentSetting
+        return self._fileLocation
+    def fileName(self):
+        return self._fileName
+    def acquisitionStart(self):
+        return self._acquisitionStart
+    def acquisitionEnd(self):
+        return self._acquisitionEnd
+    def fileSize(self):
+        return self._fileSize
+    def fileHash(self):
+        return self._fileHash
 
     def get_absolute_url(self):
         return reverse('dataset-detail', args=[str(self.datasetID)])
