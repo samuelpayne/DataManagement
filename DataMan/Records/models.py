@@ -14,11 +14,11 @@ class Dataset(models.Model):
     _status = models.TextField(verbose_name='Status')
     _dateCreated = models.DateTimeField(verbose_name='Date Created')
     _fileLocation = models.TextField(verbose_name='Path to file location')
-    fileName = models.TextField(verbose_name='File Name')
-    acquisitionStart = models.TextField(verbose_name='Acquisition Start')
-    acquisitionEnd = models.TextField(verbose_name="Acquisition End")
-    fileSize = models.IntegerField(verbose_name='File Size')
-    fileHash = models.TextField(verbose_name='File Hash')
+    _fileName = models.TextField(verbose_name='File Name')
+    _acquisitionStart = models.TextField(verbose_name='Acquisition Start')
+    _acquisitionEnd = models.TextField(verbose_name="Acquisition End")
+    _fileSize = models.IntegerField(verbose_name='File Size')
+    _fileHash = models.TextField(verbose_name='File Hash')
 
     def datasetName(self):
         return self._datasetName
