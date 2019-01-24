@@ -1,35 +1,52 @@
 from django.db import models
 
 class Dataset(models.Model):
-    datasetName = models.TextField(verbose_name='Dataset Name',
+    _datasetName = models.TextField(verbose_name='Dataset Name',
                                    unique=True)
-    datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
+    _datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
                                     unique=True)
-    sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
+    _sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
                                   blank=True, null=True)
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
-    instrumentSetting = models.TextField(verbose_name='link to instrument settings')
-    type = models.TextField(verbose_name='Type of data generated')
-    operator = models.TextField(verbose_name='Operator')
-    status = models.TextField(verbose_name='Status')
-    dateCreated = models.DateTimeField(verbose_name='Date Created')
-    fileLocation = models.TextField(verbose_name='Path to file location')
+    _instrumentSetting = models.TextField(verbose_name='link to instrument settings')
+    _type = models.TextField(verbose_name='Type of data generated')
+    _operator = models.TextField(verbose_name='Operator')
+    _status = models.TextField(verbose_name='Status')
+    _dateCreated = models.DateTimeField(verbose_name='Date Created')
+    _fileLocation = models.TextField(verbose_name='Path to file location')
     fileName = models.TextField(verbose_name='File Name')
     acquisitionStart = models.TextField(verbose_name='Acquisition Start')
     acquisitionEnd = models.TextField(verbose_name="Acquisition End")
     fileSize = models.IntegerField(verbose_name='File Size')
     fileHash = models.TextField(verbose_name='File Hash')
 
-    def getInstrumentSetting(self):
-        if self.instrumentSetting == 'fail-fail-fail':
+    def datasetName(self):
+        return self._datasetName
+    def datasetID(self):
+        return self._datasetID
+    def sample(self):
+        return self._sample
+    def type(self):
+        return self._type
+    def operator(self):
+        return self._operator
+    def status(self):
+        return self._status
+    def dateCreated(self):
+        return self._dateCreated
+    def fileLocation(self):
+	    return self._fileLocation
+    
+    def instrumentSetting(self):
+        if self._instrumentSetting == 'fail-fail-fail':
             return "Failed"
-        return self.instrumentSetting
+        return self._instrumentSetting
 
     def get_absolute_url(self):
         return reverse('dataset-detail', args=[str(self.datasetID)])
 
     def __str__(self):
-        return self.datasetName
+        return self._datasetName
 
 
 class Sample(models.Model):
