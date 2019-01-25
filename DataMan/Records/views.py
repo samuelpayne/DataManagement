@@ -6,7 +6,8 @@ from . import forms
 import re
 from Records.models import Sample, Dataset, Experiment
 from django.forms.models import model_to_dict
-
+from django_tables2 import RequestConfig
+from Records.tables import SampleTable, DatasetTable, ExperimentTable
 # Create your views here.
 
 """Records named 'records'
@@ -80,6 +81,7 @@ def add_dataset(request):
     if form.is_valid():
         new_Dataset = form.save()
         return redirect('datasets')
+    #form =forms.AddDatasetForm()
 
     context = {
         'form':form,
@@ -114,19 +116,40 @@ class SampleView(ListView):
 
     #DataMan\Records\templates\Records\samples_list.html
     template_name = 'samples_list.html'
-    paginate_by = 25
+    context_object_name = 'sample'
+    def get_context_data(self, **kwargs):
+        context = super(SampleView, self).get_context_data(**kwargs)
+        table = SampleTable(Sample.objects.all().order_by('-pk'))
+        RequestConfig(self.request, paginate={'per_page': 25}).configure(table)
+        context['table'] = table
+        context['Title'] = 'Sample'
+        return context
 
 class DatasetView(ListView):
     model = Dataset
     queryset = Dataset.objects.all()
     template_name = 'dataset_list.html'
-    paginate_by = 25
+    context_object_name = 'dataset'
+    def get_context_data(self, **kwargs):
+        context = super(DatasetView, self).get_context_data(**kwargs)
+        table = DatasetTable(Dataset.objects.all().order_by('-pk'))
+        RequestConfig(self.request, paginate={'per_page': 25}).configure(table)
+        context['table'] = table
+        context['Title'] = 'Dataset'
+        return context
 
 class ExperimentView(ListView):
     model = Experiment
     queryset = Experiment.objects.all()
     template_name = 'experiment_list.html'
-    paginate_by = 25
+    context_object_name = 'experiment'
+    def get_context_data(self, **kwargs):
+        context = super(ExperimentView, self).get_context_data(**kwargs)
+        table = ExperimentTable(Experiment.objects.all().order_by('-_experimentName'))
+        RequestConfig(self.request, paginate={'per_page': 25}).configure(table)
+        context['table'] = table
+        context['Title'] = 'Experiment'
+        return context
 
 """class PatientView(ListView):
     model = Patient
@@ -144,10 +167,11 @@ class SampleDetailView(DetailView):
     #"""
 
 class DatasetDetailView(DetailView):
+    instrumentSetting = "new"
     model = Dataset
     template = 'dataset_detail.html'
 
 
 class ExperimentDetailView(DetailView):
     model = Experiment
-template = 'experiment_detail.html'
+    template = 'experiment_detail.html'

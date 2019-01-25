@@ -6,7 +6,7 @@ class Dataset(models.Model):
     _datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
                                     unique=True)
     _sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
-                                  blank=True, null=True,verbose_name="Sample")
+                                  blank=False, null=False,verbose_name="Sample")
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
     _instrumentSetting = models.TextField(verbose_name='link to instrument settings')
     _type = models.TextField(verbose_name='Type of data generated')
@@ -20,16 +20,32 @@ class Dataset(models.Model):
     _fileSize = models.IntegerField(verbose_name='File Size')
     _fileHash = models.TextField(verbose_name='File Hash')
 
+
+	#@property
+	#def datasetName(self):
+	#    return self.__datasetName
+	#@datasetName.setter
+	#def datasetName(self, datasetName)
+	#    #checks
+	#    self.__datasetName = datasetName
     def datasetName(self):
         return self._datasetName
+    def datasetName(self, _val):
+        if _val == 'fail-fail-fail': #whatever validation needs to happen
+            return False
+        _datasetName = _val
+        return True
     def datasetID(self):
         return self._datasetID
     def sample(self):
         return self._sample
     def instrumentSetting(self):
-        if self._instrumentSetting == 'fail-fail-fail':
-            return "Failed"
+        if self._instrumentSetting != 'fail-fail-fail':
+            return "Not Failed"
         return self._instrumentSetting
+    def instrumentSetting(self, _val):
+        self.instrumentSetting = _val
+	
     def type(self):
         return self._type
     def operator(self):
