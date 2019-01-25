@@ -9,9 +9,9 @@
   <h1>Add {{model}}</h1>
   <form action="" method="post">
       {% csrf_token %}
-      <table>
-      {{form.as_table}}
-      </table>
+      <p>
+      {{form.as_p}}
+      </p>
       <input class="nav-block" type="submit" value="Submit"/>
   </form>
 {% endblock %}
