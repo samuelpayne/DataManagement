@@ -5,8 +5,8 @@ class Dataset(models.Model):
                                    unique=True)
     _datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
                                     unique=True)
-    #_sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
-    #                              blank=True, null=True)
+    _sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
+                                  blank=True, null=True,verbose_name="Sample")
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
     _instrumentSetting = models.TextField(verbose_name='link to instrument settings')
     _type = models.TextField(verbose_name='Type of data generated')
