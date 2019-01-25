@@ -1,7 +1,9 @@
 {% extends "generic.html" %}
+{% load staticfiles%}
 
 {% load django_tables2 %}
 {% block content %}
+<link rel="stylesheet" href="{% static '/css/archive.css' %}" />
 <h1>{{Title}}</h1>
 {% render_table table %}
 {% endblock %}
