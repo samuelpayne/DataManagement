@@ -4,7 +4,7 @@
     grid-template-columns: 1fr 1fr 1fr;
 }
 body {
-    min-height: 260vh;
+    min-height: 180vh;
     display: grid;
     grid-template-rows: 58px 35px auto 78px;
     color: #002e5d;
@@ -15,7 +15,7 @@ h1{
         text-transform: uppercase;
 }
 
-li {
+ul.errorlist {
     font-size: 12px;
 }
 
