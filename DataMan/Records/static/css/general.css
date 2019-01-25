@@ -13,3 +13,9 @@ body {
 a {
     text-decoration: none;
 }
+
+byu-menu.byu-component-rendered {
+    position: sticky;
+    top: 0px;
+    background-color: #FEFEFE;
+}

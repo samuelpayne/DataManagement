@@ -16,12 +16,7 @@ h1{
 }
 
 li {
-    font-size: 0px;
-}
-
-byu-menu.byu-component-rendered {
-    position: sticky;
-    top: 0px;
+    font-size: 12px;
 }
 
 table {
