@@ -80,6 +80,8 @@ def add_dataset(request):
     form =forms.AddDatasetForm(request.POST)
     if form.is_valid():
         new_Dataset = form.save()
+        new_Dataset._experiment = new_Dataset.sample().experiment()
+        new_Dataset = form.save()
         return redirect('datasets')
     #form =forms.AddDatasetForm()
 

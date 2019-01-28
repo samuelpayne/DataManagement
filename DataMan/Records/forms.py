@@ -20,6 +20,7 @@ class AddDatasetForm(forms.ModelForm):
                   '_fileSize','_fileHash',]
     
     def validate(self):
+	    #_experiment = _sample._experiment
         #any extra validation 
         return True
 

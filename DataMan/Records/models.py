@@ -7,6 +7,8 @@ class Dataset(models.Model):
                                     unique=True)
     _sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
                                   blank=False, null=False,verbose_name="Sample")
+    _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
+                                   blank=True, null=True,verbose_name='Experiment')
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
     _instrumentSetting = models.TextField(verbose_name='link to instrument settings')
     _type = models.TextField(verbose_name='Type of data generated')
@@ -32,7 +34,8 @@ class Dataset(models.Model):
         return self._datasetName
     def datasetName(self, _val):
         if _val == 'fail-fail-fail': #whatever validation needs to happen
-            return False
+            #no change
+            _datasetName
         _datasetName = _val
         return True
     def datasetID(self):
