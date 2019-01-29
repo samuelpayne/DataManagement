@@ -71,7 +71,7 @@ def add_sample(request):
 
     context = {
         'form':form,
-        'model':'Sample'
+        'header':'Add Sample'
     }
 
     return render(request, 'add-record.html', context)
@@ -79,15 +79,14 @@ def add_sample(request):
 def add_dataset(request):
     form =forms.AddDatasetForm(request.POST)
     if form.is_valid():
-        new_Dataset = form.save()
+        new_Dataset = form.save(commit = False)
         new_Dataset._experiment = new_Dataset.sample().experiment()
         new_Dataset = form.save()
         return redirect('datasets')
-    #form =forms.AddDatasetForm()
 
     context = {
         'form':form,
-        'model':'Dataset'
+        'header':'Add Dataset'
     }
 
     return render(request, 'add-record.html', context)
@@ -100,11 +99,50 @@ def add_experiment(request):
 
     context = {
         'form':form,
-        'model':'Experiment'
+        'header':'Add Experiment'
     }
 
     return render(request, 'add-record.html', context)
-	
+
+def edit_dataset(request, pk):
+    dataset = Dataset.objects.get(pk=pk or None)
+    form = forms.AddDatasetForm(instance = dataset)
+    if request.method == 'POST':
+        form =forms.AddDatasetForm(request.POST, instance = dataset)
+        if form.is_valid():
+            dataset = form.save()
+            dataset._experiment = dataset.sample().experiment()
+            return redirect('datasets')
+    
+    context = {
+        'form':form,
+        'header':'Edit Dataset',
+        'dataset':dataset
+    }
+
+    return render(request, 'add-record.html', context)
+
+def edit_sample(request, pk):
+    sample = Sample.objects.get(pk=pk)
+    form = forms.AddSampleForm(instance = sample)
+    if request.method == 'POST':
+        form =forms.AddSampleForm(request.POST, instance = sample)
+        if form.is_valid():
+            sample = form.save()
+			#updates dataset key to experiment as well
+            if sample.dataset:
+                sample.dataset._experiment = sample.experiment()
+                sample.dataset.save()
+            return redirect('samples')
+    
+    context = {
+        'form':form,
+        'header':'Edit Sample',
+        'sample':sample
+    }
+
+    return render(request, 'add-record.html', context)
+
 def edit_experiment(request, pk):
     experiment = Experiment.objects.get(pk=pk)
     form = forms.AddExperimentForm(instance = experiment)
@@ -116,7 +154,7 @@ def edit_experiment(request, pk):
     
     context = {
         'form':form,
-        'model':'Experiment',
+        'header':'Edit Experiment',
         'experiment':experiment
     }
 

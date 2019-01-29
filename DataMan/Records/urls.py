@@ -17,6 +17,8 @@ urlpatterns = [
 
 	#for editing 
     path('add/experiments/<int:pk>/', views.edit_experiment, name = 'edit-experiment'),
+    path('add/samples/<int:pk>/', views.edit_sample, name = 'edit-sample'),
+    path('add/datasets/<int:pk>/', views.edit_dataset, name = 'edit-dataset'),
 
     path('archive/', views.archive, name = 'archive'),
     #url(regex=r'type=(.*)$', view='views.archive'),

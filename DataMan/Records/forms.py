@@ -14,7 +14,7 @@ class AddSampleForm(forms.ModelForm):
 class AddDatasetForm(forms.ModelForm):
     class Meta:
         model = Dataset
-        fields = ['_datasetName','_sample', #'instrumentSetting','_type',
+        fields = ['_datasetName','_sample', '_instrumentSetting','_type',
                   '_operator','_status','_dateCreated','_fileLocation',
                   '_fileName','_acquisitionStart','_acquisitionEnd',
                   '_fileSize','_fileHash',]
