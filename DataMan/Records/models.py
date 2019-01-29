@@ -17,8 +17,8 @@ class Dataset(models.Model):
     _dateCreated = models.DateTimeField(verbose_name='Date Created')
     _fileLocation = models.TextField(verbose_name='Path to file location')
     _fileName = models.TextField(verbose_name='File Name')
-    _acquisitionStart = models.TextField(verbose_name='Acquisition Start')
-    _acquisitionEnd = models.TextField(verbose_name="Acquisition End")
+    _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start')
+    _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End")
     _fileSize = models.IntegerField(verbose_name='File Size')
     _fileHash = models.TextField(verbose_name='File Hash')
 
