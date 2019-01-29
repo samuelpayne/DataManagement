@@ -19,3 +19,7 @@ byu-menu.byu-component-rendered {
     top: 0px;
     background-color: #FEFEFE;
 }
+
+.form-error {
+    color: red;
+}
