@@ -6,6 +6,7 @@
 <p><Strong>Project Lead:</Strong> {{experiment.projectLead}} </p>
 <p><Strong>IRB Number:</Strong> {{experiment.IRB}} </p>
 <p><Strong>Experimental Design:</Strong> {{experiment.experimentalDesign}} </p>
+<p><Strong><a href="{% url 'edit-experiment' experiment.experimentID %}">Edit</a></Strong></p>
 {% if experiment.sample_set.all.count != 0 %}
     <Strong>Samples:</Strong>
     <ul style="margin-left: 5px;">

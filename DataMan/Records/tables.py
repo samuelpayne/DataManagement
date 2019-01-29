@@ -12,7 +12,7 @@ class DatasetTable(tables.Table):
         model = Dataset
         fields = ['_experiment', '_sample','_datasetName', '_instrumentSetting','_type',
                   '_operator','_status','_dateCreated','_fileLocation',
-                  '_fileName',#'_acquisitionStart','_acquisitionEnd',
+                  '_fileName','_acquisitionStart','_acquisitionEnd',
                   '_fileSize','_fileHash',]
 
 class SampleTable(tables.Table):

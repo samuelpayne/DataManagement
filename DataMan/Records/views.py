@@ -104,6 +104,23 @@ def add_experiment(request):
     }
 
     return render(request, 'add-record.html', context)
+	
+def edit_experiment(request, pk):
+    experiment = Experiment.objects.get(pk=pk)
+    form = forms.AddExperimentForm(instance = experiment)
+    if request.method == 'POST':
+        form =forms.AddExperimentForm(request.POST, instance = experiment)
+        if form.is_valid():
+            experiment = form.save()
+            return redirect('experiments')
+    
+    context = {
+        'form':form,
+        'model':'Experiment',
+        'experiment':experiment
+    }
+
+    return render(request, 'add-record.html', context)
 """To edit a sample
     sample = Sample.objects.get(pk=pk) #get pk from url
     form =forms.AddSampleForm(request.POST, instance = sample)
