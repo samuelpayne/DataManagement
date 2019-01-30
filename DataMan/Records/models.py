@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 
 class Dataset(models.Model):
     _datasetName = models.TextField(verbose_name='Dataset Name',
@@ -14,11 +15,11 @@ class Dataset(models.Model):
     _type = models.TextField(verbose_name='Type of data generated')
     _operator = models.TextField(verbose_name='Operator')
     _status = models.TextField(verbose_name='Status')
-    _dateCreated = models.DateTimeField(verbose_name='Date Created')
+    _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _fileLocation = models.TextField(verbose_name='Path to file location')
     _fileName = models.TextField(verbose_name='File Name')
-    _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start')
-    _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End")
+    _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start',default=datetime.now)
+    _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End", default=datetime.now)
     _fileSize = models.IntegerField(verbose_name='File Size')
     _fileHash = models.TextField(verbose_name='File Hash')
 
@@ -43,11 +44,11 @@ class Dataset(models.Model):
     def sample(self):
         return self._sample
     def instrumentSetting(self):
-        if self._instrumentSetting != 'fail-fail-fail':
-            return "Not Failed"
+        if self._instrumentSetting == 'fail-fail-fail':
+            return "Failed"
         return self._instrumentSetting
-    def instrumentSetting(self, _val):
-        self.instrumentSetting = _val
+    #def instrumentSetting(self, _val):
+    #    self.instrumentSetting = _val
 	
     def type(self):
         return self._type
@@ -83,12 +84,12 @@ class Sample(models.Model):
     _sampleID = models.AutoField(primary_key=True,verbose_name="Sample ID",
                                    unique=True)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
-                                   blank=True, null=True,verbose_name='Experiment')
+                                   blank=False, null=False,verbose_name='Experiment')
     # preceedingSample = models.TextField(verbose_name='Preceeding Sample')
     _storageCondition = models.TextField(verbose_name='Storage Condition')
     _storageLocation = models.TextField(verbose_name='Storage Location')
     _treatmentProtocol = models.TextField(verbose_name='Treatment Protocol')
-    _dateCreated = models.DateTimeField(verbose_name='Date Created')
+    _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _organism = models.TextField(verbose_name='Organism')
     _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None')
 

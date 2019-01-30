@@ -2,9 +2,25 @@
 
 {% block content %}
 <h2>{{ dataset }}</h2>
-<p><Strong>Dataset ID:</Strong> {{dataset.datasetID}} </p>
 <p><Strong>Sample Name:</Strong>
     <a href="{% url 'sample-detail' dataset.sample.sampleID %}"> {{dataset.sample}} </a></p>
-<p><Strong>Sample ID:</Strong> {{dataset.sample.sampleID}} </p>
 <p><Strong>Instrument Settings:</Strong> {{dataset.instrumentSetting}} </p>
+<p><Strong>Type of data generated:</Strong> {{dataset.type}} </p>
+<p><Strong>Operator:</Strong> {{dataset.type}}</p>
+<p><Strong>Status:</Strong> {{dataset.status}}</p>
+
+<p><Strong>Date Created:</Strong> {{dataset.dateCreated|date:'M d, Y'}}</p>
+<p><Strong>Acquisition Start:</Strong> {{dataset.acquisitionStart|date:'M d, Y'}}</p>
+<p><Strong>Acquisition End:</Strong> {{dataset.acquisitionEnd|date:'M d, Y'}}</p>
+
+<p><Strong>File Name:</Strong> {{dataset.fileName}}</p>
+<p><Strong>File Location:</Strong> {{dataset.fileLocation}}</p>
+<p><Strong>File Size:</Strong> {{dataset.fileSize}}</p>
+<p><Strong>File Hash:</Strong> {{dataset.fileHash}}</p>
+
+{% for f in dataset.genfields %}
+    <p>{{f.verbose_name}}: {{f.value}}</p>
+{% endfor %}
+
+<p><Strong><a href="{% url 'edit-dataset' dataset.datasetID %}">Edit</a></Strong></p>
 {% endblock %}

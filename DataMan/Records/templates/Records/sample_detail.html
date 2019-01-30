@@ -2,16 +2,23 @@
 
 {% block content %}
 <h2>{{ sample }}</h2>
-<p><Strong>ID:</Strong> {{sample.sampleID}}</p>
-<p><Strong>Date Created:</Strong> {{sample.dateCreated}}</p>
+
+<p><Strong>Experiment:</Strong><a href="{% url 'experiment-detail' sample.experiment.experimentID %}">
+    {{sample.experiment}}</a></p>
+<p><Strong>Storage Condition:</Strong> {{sample.storageCondition}}</p>
+<p><Strong>Storage Location:</Strong> {{sample.storageLocation}}</p>
+<p><Strong>Treatment Protocol:</Strong> {{sample.treatmentProtocol}}</p>
+<p><Strong>Date Created:</Strong> {{sample.dateCreated|date:'M d, Y'}}</p>
+<p><Strong>Organism:</Strong> {{sample.organism}}</p>
+<p><Strong>Organism Modifications:</Strong> {{sample.organismModifications}}</p>
 
 {% if sample.dataset %}
     <p><Strong>Dataset: </Strong><a href="{% url 'dataset-detail' sample.dataset.datasetID %}">
         {{sample.dataset}}</a></p>
-    <p><Strong>Dataset ID:</Strong> {{sample.dataset.datasetID}}</p>
 {% else %}
     <p><Strong>Dataset: </Strong>None</p>
     <p><Strong>Dataset ID: </Strong>None</p>
 {% endif %}
 
+<p><Strong><a href="{% url 'edit-sample' sample.sampleID %}">Edit</a></Strong></p>
 {% endblock %}

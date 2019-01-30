@@ -8,6 +8,7 @@ from Records.models import Sample, Dataset, Experiment
 from django.forms.models import model_to_dict
 from django_tables2 import RequestConfig
 from Records.tables import SampleTable, DatasetTable, ExperimentTable
+from datetime import datetime
 # Create your views here.
 
 """Records named 'records'
@@ -62,12 +63,12 @@ def create_new(request):
 """Page to add a sample"""
 def add_sample(request):
     #check anything you want checked
-    form =forms.AddSampleForm(request.POST)
-    if form.is_valid():
-        #do cool and important things with the information
-        #form.check_date()
-        new_Sample = form.save()
-        return redirect('samples')
+    form =forms.AddSampleForm()
+    if request.method == 'POST':
+        form =forms.AddSampleForm(request.POST)
+        if form.is_valid():
+            new_Sample = form.save()
+            return redirect('samples')
 
     context = {
         'form':form,
@@ -77,12 +78,14 @@ def add_sample(request):
     return render(request, 'add-record.html', context)
 
 def add_dataset(request):
-    form =forms.AddDatasetForm(request.POST)
-    if form.is_valid():
-        new_Dataset = form.save(commit = False)
-        new_Dataset._experiment = new_Dataset.sample().experiment()
-        new_Dataset = form.save()
-        return redirect('datasets')
+    form =forms.AddDatasetForm()
+    if request.method == 'POST':
+        form =forms.AddDatasetForm(request.POST)
+        if form.is_valid():
+            new_Dataset = form.save(commit = False)
+            new_Dataset._experiment = new_Dataset.sample().experiment()
+            new_Dataset = form.save()
+            return redirect('datasets')
 
     context = {
         'form':form,
@@ -92,10 +95,12 @@ def add_dataset(request):
     return render(request, 'add-record.html', context)
 
 def add_experiment(request):
-    form =forms.AddExperimentForm(request.POST)
-    if form.is_valid():
-        new_Experiment = form.save()
-        return redirect('experiments')
+    form = forms.AddExperimentForm()
+    if request.method == 'POST':
+        form =forms.AddExperimentForm(request.POST)
+        if form.is_valid():
+            new_Experiment = form.save()
+            return redirect('experiments')
 
     context = {
         'form':form,
@@ -110,8 +115,9 @@ def edit_dataset(request, pk):
     if request.method == 'POST':
         form =forms.AddDatasetForm(request.POST, instance = dataset)
         if form.is_valid():
-            dataset = form.save()
+            dataset = form.save(commit = False)
             dataset._experiment = dataset.sample().experiment()
+            dataset.save()
             return redirect('datasets')
     
     context = {

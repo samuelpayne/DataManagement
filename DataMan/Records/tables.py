@@ -31,5 +31,5 @@ class ExperimentTable(tables.Table):
     
     class Meta:
         model = Experiment
-        fields = ['_experimentName','_projectLead',#'_teamMembers',
+        fields = ['_experimentName','_projectLead','_teamMembers',
                   '_IRB','_experimentalDesign',]

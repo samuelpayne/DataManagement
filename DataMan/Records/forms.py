@@ -15,8 +15,8 @@ class AddDatasetForm(forms.ModelForm):
     class Meta:
         model = Dataset
         fields = ['_datasetName','_sample', '_instrumentSetting','_type',
-                  '_operator','_status','_dateCreated','_fileLocation',
-                  '_fileName','_acquisitionStart','_acquisitionEnd',
+                  '_operator','_status','_dateCreated','_acquisitionStart','_acquisitionEnd',
+                  '_fileName','_fileLocation',
                   '_fileSize','_fileHash',]
     
     def validate(self):
