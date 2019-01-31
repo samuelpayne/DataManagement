@@ -12,9 +12,9 @@
       {% for field in form %}
         <p class="form-title">{{ field.label }}</p>
         {% for error in field.errors %}
-            {% if error != 'This field is required.' %}
-                <p class="form-error">{{ error }}</p>
-            {% endif %}
+          {% if error != 'This field is required.' %}
+            <p class="form-error">{{ error }}</p>
+          {% endif %}
         {% endfor%}
         {{ field }}
       {% endfor %}

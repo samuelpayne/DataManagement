@@ -135,11 +135,15 @@ def edit_sample(request, pk):
         form =forms.AddSampleForm(request.POST, instance = sample)
         if form.is_valid():
             sample = form.save()
-			#updates dataset key to experiment as well
-            if sample.dataset:
-                sample.dataset._experiment = sample.experiment()
-                sample.dataset.save()
-            return redirect('samples')
+            #updates dataset key to experiment as well
+            try:
+                if sample.dataset:
+                    sample.dataset._experiment = sample.experiment()
+                    sample.dataset.save()
+            except:
+                DoesNotExist = null
+            finally:
+                return redirect('samples')
     
     context = {
         'form':form,

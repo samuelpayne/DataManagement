@@ -8,6 +8,8 @@ class DatasetTable(tables.Table):
     _sample = tables.LinkColumn('sample-detail', args=[A('_sample.pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
 
+    _dateCreated = tables.DateTimeColumn(format ='M d, Y')
+
     class Meta:
         model = Dataset
         fields = ['_experiment', '_sample','_datasetName', '_instrumentSetting','_type',
@@ -19,6 +21,8 @@ class SampleTable(tables.Table):
     _sampleName = tables.LinkColumn('sample-detail', args=[A('pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
     dataset = tables.LinkColumn('dataset-detail', args=[A('dataset.pk')])
+	
+    _dateCreated = tables.DateTimeColumn(format ='M d, Y')
 
     class Meta:
         model = Sample
