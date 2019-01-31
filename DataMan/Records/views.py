@@ -141,7 +141,8 @@ def edit_sample(request, pk):
                     sample.dataset._experiment = sample.experiment()
                     sample.dataset.save()
             except:
-                DoesNotExist = null
+                DoesNotExist = null #Does nothing but make it not crash
+				#something needs to be here, doesn't matter what
             finally:
                 return redirect('samples')
     
