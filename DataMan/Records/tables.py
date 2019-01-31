@@ -9,6 +9,8 @@ class DatasetTable(tables.Table):
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
 
     _dateCreated = tables.DateTimeColumn(format ='M d, Y')
+    _acquisitionStart = tables.DateTimeColumn(format ='M d, Y h:m')
+    _acquisitionEnd = tables.DateTimeColumn(format ='M d, Y h:m')
 
     class Meta:
         model = Dataset

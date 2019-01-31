@@ -11,17 +11,17 @@ class Dataset(models.Model):
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank=True, null=True,verbose_name='Experiment')
     # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
-    _instrumentSetting = models.TextField(verbose_name='link to instrument settings')
+    _instrumentSetting = models.TextField(verbose_name='link to instrument settings', null=True, blank=True)
     _type = models.TextField(verbose_name='Type of data generated')
-    _operator = models.TextField(verbose_name='Operator')
+    _operator = models.TextField(verbose_name='Operator', help_text ="The team member who ran the machine.")
     _status = models.TextField(verbose_name='Status')
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _fileLocation = models.TextField(verbose_name='Path to file location')
-    _fileName = models.TextField(verbose_name='File Name')
+    _fileName = models.TextField(verbose_name='File Name', null=True, blank=True)
     _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start',default=datetime.now)
     _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End", default=datetime.now)
-    _fileSize = models.IntegerField(verbose_name='File Size')
-    _fileHash = models.TextField(verbose_name='File Hash')
+    _fileSize = models.IntegerField(verbose_name='File Size', null=True, blank=True)
+    _fileHash = models.TextField(verbose_name='File Hash', null=True, blank=True)
 
 
 	#@property
@@ -84,14 +84,14 @@ class Sample(models.Model):
     _sampleID = models.AutoField(primary_key=True,verbose_name="Sample ID",
                                    unique=True)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
-                                   blank=False, null=False,verbose_name='Experiment')
+                                   blank=True, null=True,verbose_name='Experiment')
     # preceedingSample = models.TextField(verbose_name='Preceeding Sample')
     _storageCondition = models.TextField(verbose_name='Storage Condition')
     _storageLocation = models.TextField(verbose_name='Storage Location')
-    _treatmentProtocol = models.TextField(verbose_name='Treatment Protocol')
+    _treatmentProtocol = models.TextField(verbose_name='Treatment Protocol', null=True, blank=True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _organism = models.TextField(verbose_name='Organism')
-    _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None')
+    _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None', null=True, blank=True)
 
     def sampleName(self):
         return self._sampleName
@@ -128,9 +128,10 @@ class Experiment(models.Model):
                                       unique=True)
     _experimentID = models.AutoField(verbose_name='Experiment ID', unique=True, primary_key=True)
     _projectLead = models.TextField(verbose_name='Project Lead')
-    _teamMembers = models.TextField(verbose_name='Team Members')
-    _IRB = models.IntegerField(verbose_name='IRB Number')
+    _teamMembers = models.TextField(verbose_name='Team Members',blank=True,null=True)
+    _IRB = models.IntegerField(verbose_name='IRB Number',blank=True,null=True)
     _experimentalDesign = models.TextField(verbose_name='Experimental Design')
+    _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
 
     def experimentName(self):
         return self._experimentName
@@ -150,3 +151,7 @@ class Experiment(models.Model):
 
     def __str__(self):
         return self._experimentName
+
+#class Protocol(models.Model):
+
+#class Project(models.Model):

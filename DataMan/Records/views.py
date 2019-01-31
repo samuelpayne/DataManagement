@@ -9,6 +9,7 @@ from django.forms.models import model_to_dict
 from django_tables2 import RequestConfig
 from Records.tables import SampleTable, DatasetTable, ExperimentTable
 from datetime import datetime
+from django.forms import formset_factory
 # Create your views here.
 
 """Records named 'records'
@@ -76,6 +77,23 @@ def add_sample(request):
     }
 
     return render(request, 'add-record.html', context)
+
+##"""I'm looking into using a formset for bulk entry"""
+def add_sample_bulk(request):
+    formset =formset_factory(forms.AddSampleForm())
+    if request.method == 'POST':
+        formset =formset_factory(forms.AddSampleForm(request.POST, request.FILES))
+        """for form in formset:
+            if form.is_valid():
+                new_Sample = form.save()"""
+        return redirect('samples')
+
+    context = {
+        'form':form,
+        'header':'Add Sample'
+    }
+
+    return render(request, 'add-record-bulk.html', context)
 
 def add_dataset(request):
     form =forms.AddDatasetForm()
@@ -170,14 +188,9 @@ def edit_experiment(request, pk):
     }
 
     return render(request, 'add-record.html', context)
-"""To edit a sample
-    sample = Sample.objects.get(pk=pk) #get pk from url
-    form =forms.AddSampleForm(request.POST, instance = sample)
-    form.save()
-    """
 
 """(type)Views will generate the list view pages
-i.e., the list of samples"""
+i.e., the list of samples that's now a table"""
 class SampleView(ListView):
     model = Sample
     queryset = Sample.objects.all()
