@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Records.apps.RecordsConfig',
     'django_tables2',
-	'bootstrap_datepicker'
 ]
 
 MIDDLEWARE = [
