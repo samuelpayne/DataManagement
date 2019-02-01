@@ -34,6 +34,7 @@ class SampleTable(tables.Table):
 
 class ExperimentTable(tables.Table):
     _experimentName = tables.LinkColumn('experiment-detail', args=[A('pk')])
+    _experimentalDesign = tables.TemplateColumn('{{record.experimentalDesign|slice:":15"}}...')
     
     class Meta:
         model = Experiment

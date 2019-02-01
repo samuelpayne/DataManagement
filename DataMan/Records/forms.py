@@ -61,4 +61,4 @@ class AddExperimentForm(forms.ModelForm):
     class Meta:
         model = Experiment
         fields = ['_experimentName','_projectLead','_teamMembers',
-                  '_IRB','_experimentalDesign',]
+                  '_IRB','_experimentalDesign', '_comments',]
