@@ -6,3 +6,5 @@ from Records.models import *
 admin.site.register(Sample)
 admin.site.register(Experiment)
 admin.site.register(Dataset)
+admin.site.register(InstrumentSetting)
+admin.site.register(Instrument)

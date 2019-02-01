@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.core.exceptions import ValidationError
 from Records.models import *
 
-STATUS_OPTIONS = [
+STATUS_OPTIONS = [#Probably eventually replace with something not hard coded in
     ('In Progress','In Progress'),
     ('Submitted','Submitted'),
     ('Analyzed','Analyzed'),
@@ -41,7 +41,7 @@ class AddDatasetForm(forms.ModelForm):
     _status = forms.CharField(label='File Status', widget=forms.Select(choices=STATUS_OPTIONS))
     class Meta:
         model = Dataset
-        fields = ['_datasetName','_sample', '_instrumentSetting','_type',
+        fields = ['_datasetName','_sample', '_instrument','_instrumentSetting','_type',
                   '_operator','_status','_dateCreated','_acquisitionStart','_acquisitionEnd',
                   '_fileName','_fileLocation',
                   '_fileSize','_fileHash',]
@@ -51,14 +51,19 @@ class AddDatasetForm(forms.ModelForm):
 			'_acquisitionEnd':DateInput(),
 			#'_status':forms.Select(choices=STATUS_OPTIONS)
 		}
-    
-    def validate(self):
-	    #_experiment = _sample._experiment
-        #any extra validation 
-        return True
 
 class AddExperimentForm(forms.ModelForm):
     class Meta:
         model = Experiment
         fields = ['_experimentName','_projectLead','_teamMembers',
                   '_IRB','_experimentalDesign', '_comments',]
+
+class AddInstrumentForm(forms.ModelForm):
+    class Meta:
+        model = Instrument
+        exclude = []
+
+class AddInstrumentSettingForm(forms.ModelForm):
+    class Meta:
+        model = InstrumentSetting
+        exclude = []

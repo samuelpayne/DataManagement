@@ -1,6 +1,9 @@
 from django.db import models
 from datetime import datetime
 
+#from django_mysql.models import ListCharField
+
+
 class Dataset(models.Model):
     _datasetName = models.TextField(verbose_name='Dataset Name',
                                    unique=True)
@@ -10,13 +13,14 @@ class Dataset(models.Model):
                                   blank=False, null=False,verbose_name="Sample")
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank=True, null=True,verbose_name='Experiment')
-    # instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE)
-    _instrumentSetting = models.TextField(verbose_name='link to instrument settings', null=True, blank=True)
+    _instrument = models.ForeignKey('Instrument', verbose_name='Instrument', on_delete=models.SET_NULL, blank=False, null=True)
+    _instrumentSetting = models.ForeignKey('InstrumentSetting',verbose_name="Instrument Setting", on_delete=models.SET_NULL, null=True, blank=True)
     _type = models.TextField(verbose_name='Type of data generated')
     _operator = models.TextField(verbose_name='Operator', help_text ="The team member who ran the machine.")
     _status = models.TextField(verbose_name='Status')
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _fileLocation = models.TextField(verbose_name='Path to file location')
+	####APPARENTLY THERE ARE FILEPATHFIELDS AND THAT MIGHT BE USEFULL####
     _fileName = models.TextField(verbose_name='File Name', null=True, blank=True)
     _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start',default=datetime.now)
     _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End", default=datetime.now)
@@ -135,16 +139,28 @@ class Experiment(models.Model):
 
     def experimentName(self):
         return self._experimentName
+    def experimentName(self, value):
+        self._experimentName = value
     def experimentID(self):
        return self._experimentID
+    def experimentID(self, value):
+        self._experimentID = value
     def projectLead(self):
         return self._projectLead
+    def projectLead(self, value):
+        self._projectLead = value
     def teamMembers(self):
         return self._teamMembers
+    def teamMembers(self, value):
+        self._teamMembers = value
     def IRB(self):
         return self._IRB
+    def IRB(self, value):
+        self._IRB = value
     def experimentalDesign(self):
         return self._experimentalDesign
+    def experimentalDesign(self, value):
+        self._experimentalDesign = value
 
     def get_absolute_url(self):
         return reverse('experiment-detail', args=[str(self._experimentID)])
@@ -155,3 +171,38 @@ class Experiment(models.Model):
 #class Protocol(models.Model):
 
 #class Project(models.Model):
+
+class detailedField(models.Model):
+	_name = models.CharField(unique=True, primary_key=True, 
+			blank=False, null=False, max_length = 20)
+	_description = models.TextField(verbose_name="Description",blank=True, null=True)
+	_file = models.FileField(verbose_name='Related file or images',blank=True, null=True)
+
+	def __str__(self):
+		return self._name
+	def name(self):
+		return self._name
+	def name(self, value):
+		self._name = value
+	def description(self):
+		return self._description
+	def description(self, value):
+		self._description = value
+	def file(self):
+		return self._file
+	def file(self, value):
+		self._file = value
+		
+class InstrumentSetting(detailedField):
+	_instrument = models.ForeignKey("Instrument", on_delete=models.CASCADE,
+                                   blank=False, null=True,verbose_name='Instrument')
+	def __str__(self):
+		return self._name
+
+class Instrument(detailedField):
+	def __str__(self):
+		return self._name
+
+class ExperimentDesign(detailedField):
+	def __str__(self):
+		return self._name

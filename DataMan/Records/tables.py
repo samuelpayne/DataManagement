@@ -22,7 +22,7 @@ class DatasetTable(tables.Table):
 class SampleTable(tables.Table):
     _sampleName = tables.LinkColumn('sample-detail', args=[A('pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
-    dataset = tables.LinkColumn('dataset-detail', args=[A('dataset.pk')])
+    dataset = tables.LinkColumn('dataset-detail', args=[A('dataset.pk')], verbose_name = 'Dataset')
 	
     _dateCreated = tables.DateTimeColumn(format ='M d, Y')
 
