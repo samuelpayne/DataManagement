@@ -61,6 +61,7 @@ def archive(request):
 def create_new(request):
     return render(request, 'create-new.html',)
 
+
 """Page to add a sample"""
 def add_sample(request):
     #check anything you want checked
@@ -251,7 +252,6 @@ class DatasetDetailView(DetailView):
     instrumentSetting = "new"
     model = Dataset
     template = 'dataset_detail.html'
-
 
 class ExperimentDetailView(DetailView):
     model = Experiment

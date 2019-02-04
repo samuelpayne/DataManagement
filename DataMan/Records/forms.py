@@ -5,8 +5,8 @@ from django.core.exceptions import ValidationError
 from Records.models import *
 
 STATUS_OPTIONS = [#Probably eventually replace with something not hard coded in
-    ('In Progress','In Progress'),
-    ('Submitted','Submitted'),
+    ('In Progress','In Progress'), #Maybe a fixture, maybe just add them manually 
+    ('Submitted','Submitted'),     # once it's uploaded
     ('Analyzed','Analyzed'),
     ('Released','Released'),
     ('Archived','Archived'),
@@ -14,6 +14,7 @@ STATUS_OPTIONS = [#Probably eventually replace with something not hard coded in
     ('Revoked','Revoked'),
     ('Replaced','Replaced')
     ]
+
 
 class DateInput(forms.DateInput):
     input_type = 'date'
@@ -49,7 +50,6 @@ class AddDatasetForm(forms.ModelForm):
 			'_dateCreated':DateInput(),
 			'_acquisitionStart':DateInput(),#TimeInput(format='%m/%d/%Y %H:%M'),
 			'_acquisitionEnd':DateInput(),
-			#'_status':forms.Select(choices=STATUS_OPTIONS)
 		}
 
 class AddExperimentForm(forms.ModelForm):

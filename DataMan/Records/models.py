@@ -17,7 +17,8 @@ class Dataset(models.Model):
     _instrumentSetting = models.ForeignKey('InstrumentSetting',verbose_name="Instrument Setting", on_delete=models.SET_NULL, null=True, blank=True)
     _type = models.TextField(verbose_name='Type of data generated')
     _operator = models.TextField(verbose_name='Operator', help_text ="The team member who ran the machine.")
-    _status = models.TextField(verbose_name='Status')
+    #_status = models.ForeignKey("fileStatusOptions", on_delete=models.SET_NULL, verbose_name='Status', null=True)
+    _status = models.TextField(verbose_name="File Status", null = True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _fileLocation = models.TextField(verbose_name='Path to file location')
 	####APPARENTLY THERE ARE FILEPATHFIELDS AND THAT MIGHT BE USEFULL####
@@ -102,7 +103,7 @@ class Sample(models.Model):
     # preceedingSample = models.TextField(verbose_name='Preceeding Sample')
     _storageCondition = models.TextField(verbose_name='Storage Condition')
     _storageLocation = models.TextField(verbose_name='Storage Location')
-    _treatmentProtocol = models.TextField(verbose_name='Treatment Protocol', null=True, blank=True)
+    _treatmentProtocol = models.ForeignKey('Protocol', on_delete=models.SET_NULL, verbose_name='Treatment Protocol',null=True, blank=True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _organism = models.TextField(verbose_name='Organism')
     _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None', null=True, blank=True)
@@ -226,11 +227,25 @@ class InstrumentSetting(detailedField):
                                    blank=False, null=True,verbose_name='Instrument')
 	def __str__(self):
 		return self._name
+	def instrument(self):
+		return self._instrument
+	def instrument(self, value):
+		self._instrument = value
 
 class Instrument(detailedField):
 	def __str__(self):
 		return self._name
 
-class ExperimentDesign(detailedField):
+class ExperimentalDesign(detailedField):
 	def __str__(self):
 		return self._name
+		
+class Protocol(detailedField):
+	def __str__(self):
+		return self._name
+
+class fileStatusOption(models.Model):
+	_option = models.CharField(unique=True, primary_key=True,
+		blank=False, null=False, max_length = 20, verbose_name="Status")
+	def __str__(self):
+		return self._option
