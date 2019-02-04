@@ -34,7 +34,7 @@ class AddSampleForm(forms.ModelForm):
         model = Sample
         fields = ['_sampleName',  '_experiment',
                   '_storageCondition', '_storageLocation', '_treatmentProtocol',
-                  '_dateCreated','_organism', '_organismModifications']
+                  '_dateCreated','_organism', '_organismModifications', '_comments']
         widgets = {'_dateCreated':DateInput()}
         
 class AddDatasetForm(forms.ModelForm):
@@ -44,7 +44,7 @@ class AddDatasetForm(forms.ModelForm):
         fields = ['_datasetName','_sample', '_instrument','_instrumentSetting','_type',
                   '_operator','_status','_dateCreated','_acquisitionStart','_acquisitionEnd',
                   '_fileName','_fileLocation',
-                  '_fileSize','_fileHash',]
+                  '_fileSize','_fileHash', '_comments']
         widgets = {
 			'_dateCreated':DateInput(),
 			'_acquisitionStart':DateInput(),#TimeInput(format='%m/%d/%Y %H:%M'),

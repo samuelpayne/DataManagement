@@ -26,54 +26,64 @@ class Dataset(models.Model):
     _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End", default=datetime.now)
     _fileSize = models.IntegerField(verbose_name='File Size', null=True, blank=True)
     _fileHash = models.TextField(verbose_name='File Hash', null=True, blank=True)
+    _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
 
-
-	#@property
-	#def datasetName(self):
-	#    return self.__datasetName
-	#@datasetName.setter
-	#def datasetName(self, datasetName)
-	#    #checks
-	#    self.__datasetName = datasetName
     def datasetName(self):
         return self._datasetName
-    def datasetName(self, _val):
-        if _val == 'fail-fail-fail': #whatever validation needs to happen
-            #no change
-            _datasetName
-        _datasetName = _val
-        return True
+    def datasetName(self, value):
+        self._datasetName = value
     def datasetID(self):
         return self._datasetID
+    def datasetID(self, value):
+        self._datasetID = value
     def sample(self):
         return self._sample
+    def sample(self, value):
+        self._sample = value
     def instrumentSetting(self):
-        if self._instrumentSetting == 'fail-fail-fail':
-            return "Failed"
         return self._instrumentSetting
-    #def instrumentSetting(self, _val):
-    #    self.instrumentSetting = _val
-	
+    def instrumentSetting(self, _val):
+        self.instrumentSetting = _val
     def type(self):
         return self._type
+    def type(self, value):
+        self._type = value
     def operator(self):
         return self._operator
+    def operator(self, value):
+        self._operator = value
     def status(self):
         return self._status
+    def status(self, value):
+        self._status = value
     def dateCreated(self):
         return self._dateCreated
+    def dateCreated(self, value):
+        self._dateCreated = value
     def fileLocation(self):
         return self._fileLocation
+    def fileLocation(self, value):
+        self._fileLocation = value
     def fileName(self):
         return self._fileName
+    def fileName(self, value):
+        self._fileName = value
     def acquisitionStart(self):
         return self._acquisitionStart
+    def acquisitionStart(self, value):
+        self._acquisitionStart = value
     def acquisitionEnd(self):
         return self._acquisitionEnd
+    def acquisitionEnd(self, value):
+        self._acquisitionEnd = value
     def fileSize(self):
         return self._fileSize
+    def fileSize(self, value):
+        self._fileSize = value
     def fileHash(self):
         return self._fileHash
+    def fileHash(self, value):
+        self._fileHash = value
 
     def get_absolute_url(self):
         return reverse('dataset-detail', args=[str(self._datasetID)])
@@ -96,25 +106,44 @@ class Sample(models.Model):
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _organism = models.TextField(verbose_name='Organism')
     _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None', null=True, blank=True)
+    _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
 
     def sampleName(self):
         return self._sampleName
+    def sampleName(self, value):
+        self._sampleName = value
     def sampleID(self):
         return self._sampleID
+    def sampleID(self, value):
+        self._sampleID = value
     def experiment(self):
         return self._experiment
+    def experiment(self, value):
+        self._experiment = value
     def storageCondition(self):
         return self._storageCondition
+    def storageCondition(self, value):
+        self._storageCondition = value
     def storageLocation(self):
         return self._storageLocation
+    def storageLocation(self, value):
+        self._storageLocation = value
     def treatmentProtocol(self):
         return self._treatmentProtocol
+    def treatmentProtocol(self, value):
+        self._treatmentProtocol = value
     def dateCreated(self):
         return self._dateCreated
+    def dateCreated(self, value):
+        self._dateCreated = value
     def organism(self):
         return self._organism
+    def organism(self, value):
+        self._organism = value
     def organismModifications(self):
         return self._organismModifications
+    def organismModifications(self, value):
+        self._organismModifications = value
 
     # this sets the default sort
     class Meta:
@@ -168,7 +197,6 @@ class Experiment(models.Model):
     def __str__(self):
         return self._experimentName
 
-#class Protocol(models.Model):
 
 #class Project(models.Model):
 

@@ -17,7 +17,7 @@ class DatasetTable(tables.Table):
         fields = ['_experiment', '_sample','_datasetName', '_instrumentSetting','_type',
                   '_operator','_status','_dateCreated','_fileLocation',
                   '_fileName','_acquisitionStart','_acquisitionEnd',
-                  '_fileSize','_fileHash',]
+                  '_fileSize','_fileHash', '_comments']
 
 class SampleTable(tables.Table):
     _sampleName = tables.LinkColumn('sample-detail', args=[A('pk')])
@@ -30,7 +30,7 @@ class SampleTable(tables.Table):
         model = Sample
         fields = ['_experiment','_sampleName', 'dataset',
                   '_storageCondition', '_storageLocation', '_treatmentProtocol',
-                  '_dateCreated', '_organism', '_organismModifications']
+                  '_dateCreated', '_organism', '_organismModifications', '_comments']
 
 class ExperimentTable(tables.Table):
     _experimentName = tables.LinkColumn('experiment-detail', args=[A('pk')])
