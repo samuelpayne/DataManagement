@@ -9,11 +9,10 @@
   <h1 class="add-header">{{header}}</h1>
   <form action="" method="post">
       {% csrf_token %}
-      {% for button in buttons %}
-        <a class="nav-block" href="{% url 'add-instrument' %}" target="_blank" value="Create Instrument">
-      {% endfor %}
-
-      </a>
+      <!--{% for button in buttons %}-->
+        <a class="nav-block" href="{% url 'add-instrument' %}" target="_blank">
+        </a>
+      <!--{% endfor %}-->
       {% for field in form %}
         <p class="form-title">{{ field.label }}</p>
         {% for error in field.errors %}
