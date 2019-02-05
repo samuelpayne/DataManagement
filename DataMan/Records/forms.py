@@ -29,12 +29,17 @@ class detailedFieldWidget(forms.MultiWidget):
 			return[value.name(), value.description(), value.file()]
 		return[None,None,None]
 
+class InstrumentForm(forms.ModelForm):
+	class Meta:
+		model = Instrument
+		exclude = []
+
 class DateInput(forms.DateInput):
     input_type = 'date'
 
 class TimeInput(forms.TimeInput):
-	input_type = 'time' #make it look nice here
-	
+	input_type = 'time' 
+	#make it look nice here
 
 class DateTimeInput(forms.MultiWidget):
 	def __init__(self, attrs = None,date_format=None, time_format='%H:%M'):
@@ -72,7 +77,7 @@ class AddDatasetForm(forms.ModelForm):
         widgets = {
 			#'_instrument':detailedFieldWidget(),
 			'_dateCreated':DateInput(),
-			'_acquisitionStart':DateTimeInput(),#TimeInput(format='%m/%d/%Y %H:%M'),
+			'_acquisitionStart':DateTimeInput(),
 			'_acquisitionEnd':DateTimeInput(),
 		}
 

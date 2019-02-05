@@ -23,6 +23,8 @@ urlpatterns = [
     path('add/samples/<int:pk>/', views.edit_sample, name = 'edit-sample'),
     path('add/datasets/<int:pk>/', views.edit_dataset, name = 'edit-dataset'),
 
+    path('add/instrument/', views.add_instrument, name = 'add-instrument'),
+
     path('archive/', views.archive, name = 'archive'),
     #url(regex=r'type=(.*)$', view='views.archive'),
     path('samples/', views.SampleView.as_view(), name = 'samples'),

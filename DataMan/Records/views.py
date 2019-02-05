@@ -128,6 +128,19 @@ def add_experiment(request):
 
     return render(request, 'add-record.html', context)
 
+def add_instrument(request):
+	form = forms.InstrumentForm()
+	if request.method == 'POST':
+		form = forms.InstrumentForm(request.POST)
+		if form.is_valid():
+			new_inst = form.save()
+			return True
+	context = {
+		'form':form,
+		'header':'Add Instrument'
+	}
+	return render(request, 'add-record.html', context)
+
 def edit_dataset(request, pk):
     dataset = Dataset.objects.get(pk=pk or None)
     form = forms.AddDatasetForm(instance = dataset)
@@ -256,3 +269,4 @@ class DatasetDetailView(DetailView):
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
+
