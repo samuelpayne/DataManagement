@@ -34,16 +34,17 @@ class DateInput(forms.DateInput):
 
 class TimeInput(forms.TimeInput):
 	input_type = 'time' #make it look nice here
+	
 
 class DateTimeInput(forms.MultiWidget):
-	def __init__(self, attrs = None,date_format=None, time_format=None):
+	def __init__(self, attrs = None,date_format=None, time_format='%H:%M'):
 		widgets=(DateInput(attrs=attrs),
 			forms.TimeInput(attrs=attrs, format=time_format))
 		super(DateTimeInput, self).__init__(widgets, attrs)
 
 	def decompress(self, value):
 		if value:
-			return [value.date(), value.time().replace(microsecond=0)]
+			return [value.date(), value.time().replace(second = 0, microsecond=0)]
 		return [None, None]
 
 class AddSampleForm(forms.ModelForm):
