@@ -9,6 +9,11 @@
   <h1 class="add-header">{{header}}</h1>
   <form action="" method="post">
       {% csrf_token %}
+      {% for button in buttons %}
+        <a class="nav-block" href="{% url 'add-instrument' %}" target="_blank" value="Create Instrument">
+      {% endfor %}
+
+      </a>
       {% for field in form %}
         <p class="form-title">{{ field.label }}</p>
         {% for error in field.errors %}
@@ -18,6 +23,7 @@
         {% endfor%}
         {{ field }}
       {% endfor %}
+      <br><br>
       <input class="nav-block" type="submit" value="Submit"/>
   </form>
 {% endblock %}
