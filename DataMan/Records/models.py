@@ -9,12 +9,15 @@ class Dataset(models.Model):
                                    unique=True)
     _datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
                                     unique=True)
-    _sample = models.OneToOneField('Sample', on_delete=models.CASCADE,
+    _sample = models.ManyToManyField('Sample', #on_delete=models.CASCADE,
                                   blank=False, null=False,verbose_name="Sample")
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank=True, null=True,verbose_name='Experiment')
     _instrument = models.ForeignKey('Instrument', verbose_name='Instrument', on_delete=models.SET_NULL, blank=False, null=True)
-    _instrumentSetting = models.ForeignKey('InstrumentSetting',verbose_name="Instrument Setting", on_delete=models.SET_NULL, null=True, blank=True)
+    _instrumentSetting = models.ForeignKey('InstrumentSetting',verbose_name="Instrument Setting",
+                                    on_delete=models.SET_NULL, null=True, blank=True)
+    if _instrument != 0:
+        _instrument.limit_choices_to = {'_instrument': _instrument}
     _type = models.TextField(verbose_name='Type of data generated')
     _operator = models.TextField(verbose_name='Operator', help_text ="The team member who ran the machine.")
     #_status = models.ForeignKey("fileStatusOptions", on_delete=models.SET_NULL, verbose_name='Status', null=True)
