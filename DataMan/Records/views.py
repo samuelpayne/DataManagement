@@ -127,6 +127,7 @@ def add_experiment(request):
     }
 
     return render(request, 'add-record.html', context)
+	
 
 def add_instrument(request):
 	form = forms.InstrumentForm()
@@ -140,6 +141,55 @@ def add_instrument(request):
 		'header':'Add Instrument'
 	}
 	return render(request, 'add-record.html', context)
+def add_instrument_setting(request):
+	form = forms.InstrumentSettingForm()
+	if request.method == 'POST':
+		form = forms.InstrumentSettingForm(request.POST)
+		if form.is_valid():
+			new_inst = form.save()
+			return True
+	context = {
+		'form':form,
+		'header':'Add Instrument Setting'
+	}
+	return render(request, 'add-record.html', context)
+def add_protocol(request):
+	form = forms.ProtocolForm()
+	if request.method == 'POST':
+		form = forms.ProtocolForm(request.POST)
+		if form.is_valid():
+			new_inst = form.save()
+			return True
+	context = {
+		'form':form,
+		'header':'Add Protocol'
+	}
+	return render(request, 'add-record.html', context)
+def add_file_status(request):
+	form = forms.fileStatusOptionForm()
+	if request.method == 'POST':
+		form = forms.fileStatusOptionForm(request.POST)
+		if form.is_valid():
+			new_inst = form.save()
+			return True
+	context = {
+		'form':form,
+		'header':'Add File Status'
+	}
+	return render(request, 'add-record.html', context)
+def add_experimental_design(request):
+	form = forms.ExperimentalDesignForm()
+	if request.method == 'POST':
+		form = forms.ExperimentalDesignForm(request.POST)
+		if form.is_valid():
+			new_inst = form.save()
+			return True
+	context = {
+		'form':form,
+		'header':'Add Experimental Design'
+	}
+	return render(request, 'add-record.html', context)
+
 
 def edit_dataset(request, pk):
     dataset = Dataset.objects.get(pk=pk or None)
@@ -152,10 +202,15 @@ def edit_dataset(request, pk):
             dataset.save()
             return redirect('datasets')
     
+    buttons = {
+        'New Instrument':'add-instrument',
+        'New Instrument Setting':'add-instrument-setting'
+    }
     context = {
         'form':form,
         'header':'Edit Dataset',
-        'dataset':dataset
+        'dataset':dataset,
+		'buttons':buttons
     }
 
     return render(request, 'add-record.html', context)
@@ -178,10 +233,14 @@ def edit_sample(request, pk):
             finally:
                 return redirect('samples')
     
+    buttons = {
+        'New Protocol':'add-protocol',
+    }
     context = {
         'form':form,
         'header':'Edit Sample',
-        'sample':sample
+        'sample':sample,
+		'buttons':buttons
     }
 
     return render(request, 'add-record.html', context)
@@ -194,16 +253,21 @@ def edit_experiment(request, pk):
         if form.is_valid():
             experiment = form.save()
             return redirect('experiments')
-    
+    buttons = {
+        'New Experimental Design':'add-experimental-design',
+    }
     context = {
         'form':form,
         'header':'Edit Experiment',
-        'experiment':experiment
+        'experiment':experiment,
+		'buttons':buttons
     }
 
     return render(request, 'add-record.html', context)
 
-"""(type)Views will generate the list view pages
+
+
+"""(type)Views generate the list view pages
 i.e., the list of samples that's now a table"""
 class SampleView(ListView):
     model = Sample

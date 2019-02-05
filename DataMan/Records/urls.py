@@ -22,8 +22,12 @@ urlpatterns = [
     path('add/experiments/<int:pk>/', views.edit_experiment, name = 'edit-experiment'),
     path('add/samples/<int:pk>/', views.edit_sample, name = 'edit-sample'),
     path('add/datasets/<int:pk>/', views.edit_dataset, name = 'edit-dataset'),
-
+	
     path('add/instrument/', views.add_instrument, name = 'add-instrument'),
+    path('add/instrument/setting', views.add_instrument_setting, name = 'add-instrument-setting'),
+    path('add/protocol/', views.add_protocol, name = 'add-protocol'),
+    path('add/file-status/', views.add_file_status, name = 'add-file-status'),
+    path('add/experimental-design/', views.add_experimental_design, name = 'add-experimental-design'),
 
     path('archive/', views.archive, name = 'archive'),
     #url(regex=r'type=(.*)$', view='views.archive'),

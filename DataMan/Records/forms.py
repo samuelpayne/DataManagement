@@ -15,23 +15,25 @@ STATUS_OPTIONS = [#Probably eventually replace with something not hard coded in
     ('Replaced','Replaced')
     ]
 
-class detailedFieldWidget(forms.MultiWidget):
-	def __init__(self, attrs = None):
-		widgets={
-			'_name': forms.CharField(max_length = 20),
-			'_description': forms.Textarea(),#verbose_name="Description"),
-			'_file': forms.FileField()#verbose_name='Related file or images')
-		}
-		super(detailedFieldWidget, self).__init__(widgets, attrs)
-
-	def decompress(self, value):
-		if value:
-			return[value.name(), value.description(), value.file()]
-		return[None,None,None]
-
 class InstrumentForm(forms.ModelForm):
 	class Meta:
 		model = Instrument
+		exclude = []
+class InstrumentSettingForm(forms.ModelForm):
+	class Meta:
+		model = InstrumentSetting
+		exclude = []
+class ProtocolForm(forms.ModelForm):
+	class Meta:
+		model = Protocol
+		exclude = []
+class fileStatusOptionForm(forms.ModelForm):
+	class Meta:
+		model = fileStatusOption
+		exclude = []
+class ExperimentalDesignForm(forms.ModelForm):
+	class Meta:
+		model = ExperimentalDesign
 		exclude = []
 
 class DateInput(forms.DateInput):

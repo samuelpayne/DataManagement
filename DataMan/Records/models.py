@@ -202,7 +202,6 @@ class Experiment(models.Model):
         return self._experimentName
 
 
-#class Project(models.Model):
 
 class detailedField(models.Model):
 	_name = models.CharField(unique=True, primary_key=True, 
