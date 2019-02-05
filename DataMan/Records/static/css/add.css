@@ -45,9 +45,7 @@ textarea {
 }
 
 .nav-block {
-    width: 160px;
     height: 40px;
-    background: #002e5d;
     border-radius: 10px;
     margin: auto;
     display: grid;
@@ -56,13 +54,28 @@ textarea {
     top: 0;
 }
 
+.nav-block__title {
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 18px;
+}
+
 .nav-block:hover {
     top: -4px;
     cursor: pointer;
 }
 
+a.nav-block {
+    width: 160px;
+    background: #002e5d;
+    color: #FEFEFE;
+    background: #BABABA;
+}
 input.nav-block {
+    width: 80px;
     color: #fff;
+    background: #002e5d;
     font-size: 14px;
     text-align: center;
     margin-bottom: 18px;
