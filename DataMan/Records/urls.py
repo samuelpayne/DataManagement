@@ -7,15 +7,20 @@ from . import views
 urlpatterns = [
     path('', views.records, name = 'records'),
 
+	#upload pages
+    path('upload/', views.upload, name = 'upload'),
+	#If we want to have separate upload pages, which I'm not sure we do:
+    #"""path('upload/samples/', views.add_sample, name = 'upload-sample'),
+    #path('upload/datasets/', views.add_dataset, name = 'upload-dataset'),
+    #path('upload/experiments/', views.add_experiment, name = 'upload-experiment'),"""
+
     #add pages with form
-    #probably seperate pages for each type ...?
 	path('about/', views.about, name='about'),
     path('add/', views.create_new, name = 'create-new'),
     path('add/samples/', views.add_sample, name = 'add-sample'),
     path('add/datasets/', views.add_dataset, name = 'add-dataset'),
     path('add/experiments/', views.add_experiment, name = 'add-experiment'),
 
-	
     #path('add/samples/bulk', views.add_sample_bulk, name = 'add-samples-bulk'),
 
 	#for editing 

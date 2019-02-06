@@ -61,6 +61,17 @@ def archive(request):
 def create_new(request):
     return render(request, 'create-new.html',)
 
+def upload(request):
+	form = forms.UploadFileForm()
+	if request.method == 'POST':
+		form = forms.UploadFileForm(request.POST, request.FILES)
+		return excel.make_response(filehandle.get_sheet(), "csv",
+			file_name="download")
+	context = {
+		'form':form
+	}
+	return render(request, 'upload.html',context)
+
 
 """Page to add a sample"""
 def add_sample(request):
@@ -135,7 +146,7 @@ def add_instrument(request):
 		form = forms.InstrumentForm(request.POST)
 		if form.is_valid():
 			new_inst = form.save()
-			return True
+			return redirect('add-dataset')
 	context = {
 		'form':form,
 		'header':'Add Instrument'
@@ -147,7 +158,7 @@ def add_instrument_setting(request):
 		form = forms.InstrumentSettingForm(request.POST)
 		if form.is_valid():
 			new_inst = form.save()
-			return True
+			return redirect('add-dataset')
 	context = {
 		'form':form,
 		'header':'Add Instrument Setting'
@@ -159,7 +170,7 @@ def add_protocol(request):
 		form = forms.ProtocolForm(request.POST)
 		if form.is_valid():
 			new_inst = form.save()
-			return True
+			return redirect('add-sample')
 	context = {
 		'form':form,
 		'header':'Add Protocol'
@@ -171,7 +182,7 @@ def add_file_status(request):
 		form = forms.fileStatusOptionForm(request.POST)
 		if form.is_valid():
 			new_inst = form.save()
-			return True
+			return redirect('add-dataset')
 	context = {
 		'form':form,
 		'header':'Add File Status'
@@ -183,7 +194,7 @@ def add_experimental_design(request):
 		form = forms.ExperimentalDesignForm(request.POST)
 		if form.is_valid():
 			new_inst = form.save()
-			return True
+			return redirect('add-experiment')
 	context = {
 		'form':form,
 		'header':'Add Experimental Design'

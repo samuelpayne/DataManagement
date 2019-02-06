@@ -38,11 +38,9 @@ class ExperimentalDesignForm(forms.ModelForm):
 
 class DateInput(forms.DateInput):
     input_type = 'date'
-
 class TimeInput(forms.TimeInput):
 	input_type = 'time' 
 	#make it look nice here
-
 class DateTimeInput(forms.MultiWidget):
 	def __init__(self, attrs = None,date_format=None, time_format='%H:%M'):
 		widgets=(DateInput(attrs=attrs),
@@ -53,6 +51,9 @@ class DateTimeInput(forms.MultiWidget):
 		if value:
 			return [value.date(), value.time().replace(second = 0, microsecond=0)]
 		return [None, None]
+
+class UploadFileForm(forms.Form):
+	file = forms.FileField()
 
 class AddSampleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
@@ -73,11 +74,10 @@ class AddDatasetForm(forms.ModelForm):
     class Meta:
         model = Dataset
         fields = ['_datasetName','_sample', '_instrument','_instrumentSetting','_type',
-                  '_operator','_status','_dateCreated','_acquisitionStart','_acquisitionEnd',
-                  '_fileName','_fileLocation',
+                  '_operator','_dateCreated','_acquisitionStart','_acquisitionEnd',
+                  '_status','_fileName','_fileLocation',
                   '_fileSize','_fileHash', '_comments']
         widgets = {
-			#'_instrument':detailedFieldWidget(),
 			'_dateCreated':DateInput(),
 			'_acquisitionStart':DateTimeInput(),
 			'_acquisitionEnd':DateTimeInput(),
