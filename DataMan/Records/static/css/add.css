@@ -1,6 +1,6 @@
 .content {
     display: grid;
-    grid-template-rows: 100px 400px auto;
+    grid-template-rows: 100px 100px auto;
     grid-template-columns: 1fr 1fr 1fr;
 }
 body {
@@ -71,6 +71,7 @@ a.nav-block {
     background: #002e5d;
     color: #FEFEFE;
     background: #BABABA;
+    display: grid;
 }
 input.nav-block {
     width: 80px;
@@ -87,5 +88,6 @@ input {
 }
 
 form {
-    grid-row: 2/4;
+    grid-row: 3/4;
+    grid-column: 1/4;
 }
