@@ -61,17 +61,41 @@ def archive(request):
 def create_new(request):
     return render(request, 'create-new.html',)
 
+"""
+class sample_excel(CsvDbModel):
+	class Meta:
+		dbModel = Sample
+		fields = ['_sampleName']
+#"""
 def upload(request):
 	form = forms.UploadFileForm()
 	if request.method == 'POST':
 		form = forms.UploadFileForm(request.POST, request.FILES)
-		return excel.make_response(filehandle.get_sheet(), "csv",
+		book = excel.make_response(filehandle.get_sheet(), "csv",
 			file_name="download")
+		book
 	context = {
 		'form':form
 	}
 	return render(request, 'upload.html',context)
 
+"""def import_sample_run(request):
+	form = forms.UploadFileForm()
+	if request.method == 'POST':
+		form = forms.UploadFileForm(request.POST, request.FILES)
+
+		#def get_sample():
+			
+		if form.is_valid():
+			request.FILES['file'].save_book_to_database(
+				models=[Sample],
+				initializers=[None],
+				mapdicts={
+				'Sample':'_sample',
+				}
+			)
+			return redirect('records')#"""
+	
 
 """Page to add a sample"""
 def add_sample(request):
