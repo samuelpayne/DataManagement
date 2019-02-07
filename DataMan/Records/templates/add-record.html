@@ -7,11 +7,14 @@
 {% block content %}
   <link rel="stylesheet" href="{% static '/css/add.css' %}" />
   <h1 class="add-header">{{header}}</h1>
+    {% for key, value in buttons.items %}
+        <a class="nav-block" href="{% url value %}" target="_blank">
+            <p class="nav-block__title">{{key}}</p>
+        </a>
+    {% endfor %}
   <form action="" method="post">
       {% csrf_token %}
-        <a class="nav-block" href="{% url 'add-instrument' %}" target="_blank">
-            <p class="nav-block__title">Create Instrument</p>
-        </a>
+
       {% for field in form %}
         <p class="form-title">{{ field.label }}</p>
         {% for error in field.errors %}

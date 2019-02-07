@@ -60,7 +60,7 @@ def archive(request):
 
 def create_new(request):
     return render(request, 'create-new.html',)
-
+	
 """
 class sample_excel(CsvDbModel):
 	class Meta:
@@ -95,7 +95,6 @@ def upload(request):
 				}
 			)
 			return redirect('records')#"""
-	
 
 """Page to add a sample"""
 def add_sample(request):
@@ -106,10 +105,13 @@ def add_sample(request):
         if form.is_valid():
             new_Sample = form.save()
             return redirect('samples')
-
+    buttons = {
+        'New Protocol': 'add-protocol',
+    }
     context = {
         'form':form,
-        'header':'Add Sample'
+        'header':'Add Sample',
+        'buttons':buttons
     }
 
     return render(request, 'add-record.html', context)
@@ -140,11 +142,16 @@ def add_dataset(request):
             new_Dataset._experiment = new_Dataset.sample().experiment()
             new_Dataset = form.save()
             return redirect('datasets')
-
+    buttons = {
+        'New Instrument': 'add-instrument',
+        'New Instrument Setting': 'add-instrument-setting'
+    }
     context = {
         'form':form,
-        'header':'Add Dataset'
+        'header':'Add Dataset',
+        'buttons':buttons
     }
+
 
     return render(request, 'add-record.html', context)
 
@@ -155,10 +162,13 @@ def add_experiment(request):
         if form.is_valid():
             new_Experiment = form.save()
             return redirect('experiments')
-
+    buttons = {
+        'New Experimental Design': 'add-experimental-design',
+    }
     context = {
         'form':form,
-        'header':'Add Experiment'
+        'header':'Add Experiment',
+        'buttons':buttons
     }
 
     return render(request, 'add-record.html', context)
@@ -368,4 +378,3 @@ class DatasetDetailView(DetailView):
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
-
