@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="{% static '/css/add.css' %}" />
   <h1 class="add-header">{{header}}</h1>
     {% for key, value in buttons.items %}
-        <a class="nav-block" href="{% url value %}" target="_blank">
+        <a class="nav-block" href="{% url value %}">
             <p class="nav-block__title">{{key}}</p>
         </a>
     {% endfor %}
