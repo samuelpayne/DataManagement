@@ -9,6 +9,7 @@ urlpatterns = [
 
 	#upload pages
     path('upload/', views.upload, name = 'upload'),
+    path('upload/template', views.download_template, name = 'download-template'),
 	#If we want to have separate upload pages, which I'm not sure we do:
     #"""path('upload/samples/', views.add_sample, name = 'upload-sample'),
     #path('upload/datasets/', views.add_dataset, name = 'upload-dataset'),

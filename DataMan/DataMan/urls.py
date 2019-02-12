@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import include
+from django.conf import settings
+from django.conf.urls.static import static
 from django.views.generic import RedirectView
 
 urlpatterns = [
@@ -24,3 +26,8 @@ urlpatterns = [
     #temporary redirect, while we only have a records app
     path('', RedirectView.as_view(url='/records/', permanent = False)),
 ]
+
+#This might also be how we run it in production, 
+#but we might need to change the location
+if settings.DEBUG:
+	urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

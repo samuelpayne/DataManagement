@@ -4,12 +4,13 @@ from django.views.generic import DetailView
 from django.http import HttpResponseRedirect
 from . import forms
 import re
-from Records.models import Sample, Dataset, Experiment
+from Records.models import *
 from django.forms.models import model_to_dict
 from django_tables2 import RequestConfig
 from Records.tables import SampleTable, DatasetTable, ExperimentTable
 from datetime import datetime
 from django.forms import formset_factory
+import openpyxl
 # Create your views here.
 
 """Records named 'records'
@@ -61,17 +62,120 @@ def archive(request):
 def create_new(request):
     return render(request, 'create-new.html',)
 
+def download_template():
+	yes = True
+	
 def upload(request):
 	form = forms.UploadFileForm()
+	success = False
 	if request.method == 'POST':
+		#print ("Hello\n\n\n\n")
 		form = forms.UploadFileForm(request.POST, request.FILES)
-		return excel.make_response(filehandle.get_sheet(), "csv",
-			file_name="download")
+		#print ("Form Validity check:", form.is_valid())
+		if form.is_valid():
+			file = request.FILES['_File']
+			data = form.save(commit = False)
+			lead = data.lead
+			#print (file)
+		#try: #Catch invalid formats, etc.
+		if True: #Allows for effective debugging
+			#print ("Trying open...")
+			wb = openpyxl.load_workbook(file, data_only=True)
+			#read_only = True causes sharing violations 
+			#because it doesn't close fully
+			#print ("Successful open")
+			if (wb['Input']['I3'].value == 'Instrument'):
+				#check if it is generic or mass spec specific
+				read_mass_spec(wb,wsIn, lead)
+			elif (wb['Input']['I3'].value == 'Mass spec'):
+				print("Reading mass spec data")
+				read_mass_spec(wb,wb['Input'], lead)
+			wb.close()
+			success = True #to be used in template
+		#except:print("Read in error") 
+		#	return redirect('records')
+
 	context = {
 		'form':form
 	}
 	return render(request, 'upload.html',context)
 
+def read_mass_spec(wb, wsIn, lead):
+	if wsIn['C34'].value is None:
+		print ("Empty file")
+		return "Empty"
+
+	samples = Sample.objects.all()
+	datasets = Dataset.objects.all()
+	wlrowNum = 1
+	for i in wsIn['B34:H{}'.format(wsIn.max_row)]:
+		#each record (sample-dataset pair)
+		if i[0].value is None:
+			break
+			#All done!
+		wlrowNum +=1
+		wlRow = wb['Worklist'][wlrowNum]
+
+		#Otherwise read it in
+		dataset_exists_or_new(wlRow[4].value, datasets, samples, lead, i, wb, wsIn, wlRow, "Mass spec")
+	wlRow = None
+	wsIn = None
+
+
+def exp_exist_or_new(name, lead, comments):
+	experiments = Experiment.objects.all()
+	if experiments.filter(_experimentName = name).exists():
+		return experiments.get(_experimentName = name)
+	#the experiment is New
+	newExp = Experiment(
+		_experimentName = name,
+		_projectLead =  lead,
+		_comments = comments
+	)
+	newExp.save()
+	return newExp
+
+def sample_exists_or_new(name, experiment, samples, row, wsIn, sheetType):
+	if samples.filter(_sampleName = name).exists():
+		return samples.get(_sampleName = name)
+		
+	if sheetType == "Mass spec":
+		newSample = Sample(
+			_sampleName = name,
+			_storageCondition = "Processing",
+			_experiment = experiment,
+			_storageLocation = str(row[0].value),
+			_dateCreated = datetime.strptime(wsIn['J5'].value, '%M-%d-%Y'),
+			_organism = wsIn['J2'].value,
+			_comments = "Concentration: "+str(row[6].value)
+		)
+		newSample.save()
+		return newSample
+
+def dataset_exists_or_new(name, datasets, samples, lead, row, wb, wsIn, wlRow,sheetType):
+	if datasets.filter(_datasetName = name).exists():
+		return datasets.get(_datasetName = name)
+		
+	def inst_exists_or_new(insName):
+		if Instrument.objects.all().filter(_name = insName).exists():
+			return Instrument.objects.all().get(_name = insName)
+		ins = Instrument(_name = insName)
+		ins.save()
+		return ins
+
+	#if sheetType ==  "Mass spec":
+	wsWL = wb['Worklist']
+	experiment = exp_exist_or_new(row[1].value, lead, ("Notebook code: "+wsIn['J4'].value))
+	initSample = sample_exists_or_new(row[2].value, experiment, samples, row, wsIn, sheetType)
+	initInstrument = inst_exists_or_new((wsIn['I3'].value+' '+wsIn['J3'].value))
+
+	newDataset = Dataset(
+		_datasetName = name,
+		_experiment = experiment,
+		_instrument = initInstrument,
+	)
+	newDataset.save()
+	newDataset._sample.add(initSample)
 
 """Page to add a sample"""
 def add_sample(request):
@@ -154,7 +258,7 @@ def add_experiment(request):
 def add_instrument(request):
 	form = forms.InstrumentForm()
 	if request.method == 'POST':
-		form = forms.InstrumentForm(request.POST)
+		form = forms.InstrumentForm(request.POST, request.FILES)
 		if form.is_valid():
 			new_inst = form.save()
 			return redirect('add-dataset')
@@ -166,7 +270,7 @@ def add_instrument(request):
 def add_instrument_setting(request):
 	form = forms.InstrumentSettingForm()
 	if request.method == 'POST':
-		form = forms.InstrumentSettingForm(request.POST)
+		form = forms.InstrumentSettingForm(request.POST, request.FILES)
 		if form.is_valid():
 			new_inst = form.save()
 			return redirect('add-dataset')
@@ -178,7 +282,7 @@ def add_instrument_setting(request):
 def add_protocol(request):
 	form = forms.ProtocolForm()
 	if request.method == 'POST':
-		form = forms.ProtocolForm(request.POST)
+		form = forms.ProtocolForm(request.POST, request.FILES)
 		if form.is_valid():
 			new_inst = form.save()
 			return redirect('add-sample')
@@ -190,7 +294,7 @@ def add_protocol(request):
 def add_file_status(request):
 	form = forms.fileStatusOptionForm()
 	if request.method == 'POST':
-		form = forms.fileStatusOptionForm(request.POST)
+		form = forms.fileStatusOptionForm(request.POST, request.FILES)
 		if form.is_valid():
 			new_inst = form.save()
 			return redirect('add-dataset')
@@ -202,9 +306,9 @@ def add_file_status(request):
 def add_experimental_design(request):
 	form = forms.ExperimentalDesignForm()
 	if request.method == 'POST':
-		form = forms.ExperimentalDesignForm(request.POST)
+		form = forms.ExperimentalDesignForm(request.POST, request.FILES)
 		if form.is_valid():
-			new_inst = form.save()
+			newDes = form.save()
 			return redirect('add-experiment')
 	context = {
 		'form':form,
@@ -355,4 +459,3 @@ class DatasetDetailView(DetailView):
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
-

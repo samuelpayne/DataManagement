@@ -6,5 +6,19 @@
 {% block content %}
 <link rel="stylesheet" href="{% static '/css/archive.css' %}" />
 <h1>UPLOAD DATA</h1>
-{{form}}
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!--<p><a href="{% static 'download-template.html' %}"> Download Template </a></p> -->
+    {% for field in form %}
+      <p class="form-title">{{ field.label }}</p>
+      {% for error in field.errors %}
+        {% if error != 'This field is required.' %}
+          <p class="form-error">{{ error }}</p>
+        {% endif %}
+      {% endfor%}
+      {{ field }}
+    {% endfor %}
+    <br><br>
+    <input type="submit" value="Submit" />
+</form>
 {% endblock %}

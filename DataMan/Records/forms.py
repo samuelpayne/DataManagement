@@ -36,6 +36,7 @@ class ExperimentalDesignForm(forms.ModelForm):
 		model = ExperimentalDesign
 		exclude = []
 
+
 class DateInput(forms.DateInput):
     input_type = 'date'
 class TimeInput(forms.TimeInput):
@@ -52,8 +53,19 @@ class DateTimeInput(forms.MultiWidget):
 			return [value.date(), value.time().replace(second = 0, microsecond=0)]
 		return [None, None]
 
-class UploadFileForm(forms.Form):
-	file = forms.FileField()
+class UploadFileForm(forms.ModelForm):
+	readFail = False
+	class Meta:
+		model = FileRead
+		fields = ['_File', 'lead']
+
+	def clean(self):
+		data = self.cleaned_data
+		if self.readFail: #conditionals from views
+			raise forms.ValidationError('Invalid file')
+		else:
+			return data
+		
 
 class AddSampleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

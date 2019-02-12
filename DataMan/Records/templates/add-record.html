@@ -1,5 +1,4 @@
-<!--add-sample.html
-    Page for adding samples.-->
+<!--Template for adding records.-->
 
 {% extends "generic.html" %}
 {% load staticfiles%}
@@ -12,7 +11,8 @@
             <p class="nav-block__title">{{key}}</p>
         </a>
     {% endfor %}
-  <form action="" method="post">
+  <form action="" method="post" enctype="multipart/form-data">
+      <!--The multipart enctype allows file uploads, such as experiment overview-->
       {% csrf_token %}
 
       {% for field in form %}
