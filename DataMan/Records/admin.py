@@ -11,3 +11,5 @@ admin.site.register(Instrument)
 admin.site.register(ExperimentalDesign)
 admin.site.register(Protocol)
 admin.site.register(fileStatusOption)
+
+admin.site.register(FileRead)

@@ -9,8 +9,7 @@ class Dataset(models.Model):
                                    unique=True)
     _datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
                                     unique=True)
-    _sample = models.ManyToManyField('Sample', #on_delete=models.CASCADE,
-                                  blank=False, null=False,verbose_name="Sample")
+    _sample = models.ManyToManyField('Sample', verbose_name="Sample", blank=False,null=True)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank=True, null=True,verbose_name='Experiment')
     _instrument = models.ForeignKey('Instrument', verbose_name='Instrument', on_delete=models.SET_NULL, blank=False, null=True)
@@ -18,16 +17,16 @@ class Dataset(models.Model):
                                     on_delete=models.SET_NULL, null=True, blank=True)
     if _instrument != 0:
         _instrument.limit_choices_to = {'_instrument': _instrument}
-    _type = models.TextField(verbose_name='Type of data generated')
-    _operator = models.TextField(verbose_name='Operator', help_text ="The team member who ran the machine.")
+    _type = models.TextField(verbose_name='Type of data generated', null=True, blank=True)
+    _operator = models.TextField(verbose_name='Operator', help_text ="The team member who ran the machine.", null=True, blank=True)
     #_status = models.ForeignKey("fileStatusOptions", on_delete=models.SET_NULL, verbose_name='Status', null=True)
     _status = models.TextField(verbose_name="File Status", null = True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _fileLocation = models.TextField(verbose_name='Path to file location')
 	####APPARENTLY THERE ARE FILEPATHFIELDS AND THAT MIGHT BE USEFULL####
-    _fileName = models.TextField(verbose_name='File Name', null=True, blank=True)
-    _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start',default=datetime.now)
-    _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End", default=datetime.now)
+    _fileName = models.TextField(verbose_name='File Name', null=True, blank=False)
+    _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start',default=datetime.now, null=True, blank=True)
+    _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End", default=datetime.now, null=True, blank=True)
     _fileSize = models.IntegerField(verbose_name='File Size', null=True, blank=True)
     _fileHash = models.TextField(verbose_name='File Hash', null=True, blank=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
@@ -102,7 +101,7 @@ class Sample(models.Model):
     _sampleID = models.AutoField(primary_key=True,verbose_name="Sample ID",
                                    unique=True)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
-                                   blank=True, null=True,verbose_name='Experiment')
+                                   blank=False, null=True,verbose_name='Experiment')
     # preceedingSample = models.TextField(verbose_name='Preceeding Sample')
     _storageCondition = models.TextField(verbose_name='Storage Condition')
     _storageLocation = models.TextField(verbose_name='Storage Location')
@@ -167,7 +166,7 @@ class Experiment(models.Model):
     _projectLead = models.TextField(verbose_name='Project Lead')
     _teamMembers = models.TextField(verbose_name='Team Members',blank=True,null=True)
     _IRB = models.IntegerField(verbose_name='IRB Number',blank=True,null=True)
-    _experimentalDesign = models.TextField(verbose_name='Experimental Design')
+    _experimentalDesign = models.TextField(verbose_name='Experimental Design', blank=False, null=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
 
     def experimentName(self):
@@ -205,9 +204,10 @@ class Experiment(models.Model):
 
 class detailedField(models.Model):
 	_name = models.CharField(unique=True, primary_key=True, 
-			blank=False, null=False, max_length = 20)
+			blank=False, null=False, max_length = 20, verbose_name= "Name")
 	_description = models.TextField(verbose_name="Description",blank=True, null=True)
-	_file = models.FileField(verbose_name='Related file or images',blank=True, null=True)
+	_file = models.FileField(verbose_name='Related file or images',
+		upload_to = 'files/%Y/%m/%d/', blank=True, null=True)
 
 	def __str__(self):
 		return self._name
@@ -251,3 +251,11 @@ class fileStatusOption(models.Model):
 		blank=False, null=False, max_length = 20, verbose_name="Status")
 	def __str__(self):
 		return self._option
+
+class FileRead(models.Model):
+	lead = models.CharField(blank=False, max_length = 200)
+	_File = models.FileField(blank=False, upload_to='files/')
+	def file(self):
+		return self._File()
+	def __str__(self):
+		return self._File()
