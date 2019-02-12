@@ -1,0 +1,47 @@
+.content {
+    display: grid;
+    grid-template-rows: 100px 400px auto;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+h1{
+        grid-column: 1/4;
+        text-transform: uppercase;
+}
+.nav-block {
+    height: 40px;
+    border-radius: 10px;
+    margin: auto;
+    display: grid;
+    transition: top .3s linear;
+    position: relative;
+    top: 0;
+}
+
+.nav-block__title {
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+.nav-block:hover {
+    top: -4px;
+    cursor: pointer;
+}
+
+a.nav-block {
+    width: 160px;
+    background: #002e5d;
+    color: #FEFEFE;
+    background: #BABABA;
+    display: grid;
+}
+input.nav-block {
+    width: 80px;
+    color: #fff;
+    background: #002e5d;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 18px;
+    border: 0px;
+}

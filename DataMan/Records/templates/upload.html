@@ -4,11 +4,13 @@
 {% load staticfiles%}
 
 {% block content %}
-<link rel="stylesheet" href="{% static '/css/archive.css' %}" />
+<link rel="stylesheet" href="{% static '/css/upload.css' %}" />
 <h1>UPLOAD DATA</h1>
 <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <p><a href="{% static 'download-template.xlsx' %}"> Download Template </a></p>
+    <a class="nav-block" href="{% static 'download-template.xlsx' %}">
+            <p class="nav-block__title"> Download Template</p>
+    </a>
     {% for field in form %}
       <p class="form-title">{{ field.label }}</p>
       {% for error in field.errors %}
@@ -19,6 +21,6 @@
       {{ field }}
     {% endfor %}
     <br><br>
-    <input type="submit" value="Submit" />
+    <input class="nav-block" type="submit" value="Submit"/>
 </form>
 {% endblock %}
