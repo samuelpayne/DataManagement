@@ -61,9 +61,6 @@ def archive(request):
 
 def create_new(request):
     return render(request, 'create-new.html',)
-
-def download_template():
-	yes = True
 	
 def upload(request):
 	form = forms.UploadFileForm()
