@@ -12,12 +12,16 @@
 <p><Strong>Organism:</Strong> {{sample.organism}}</p>
 <p><Strong>Organism Modifications:</Strong> {{sample.organismModifications}}</p>
 
-{% if sample.dataset %}
-    <p><Strong>Dataset: </Strong><a href="{% url 'dataset-detail' sample.dataset.datasetID %}">
-        {{sample.dataset}}</a></p>
+{% if sample.dataset_set.all.count != 0 %}
+    <Strong>Datasets: </Strong>
+    <ul style="margin-left: 5px;">
+    {% for Dataset in sample.dataset_set.all %}
+        <li>
+            <a href="{% url 'dataset-detail' Dataset.datasetID %}">{{Dataset}}</a>
+        </li>
+     {% endfor %}</ul>
 {% else %}
-    <p><Strong>Dataset: </Strong>None</p>
-    <p><Strong>Dataset ID: </Strong>None</p>
+    <p>No datasets found.</p>
 {% endif %}
 
 <p><Strong><a href="{% url 'edit-sample' sample.sampleID %}">Edit</a></Strong></p>

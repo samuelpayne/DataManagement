@@ -33,59 +33,63 @@ class Dataset(models.Model):
 
     def datasetName(self):
         return self._datasetName
-    def datasetName(self, value):
+    def setDatasetName(self, value):
         self._datasetName = value
     def datasetID(self):
         return self._datasetID
-    def datasetID(self, value):
+    def setDatasetID(self, value):
         self._datasetID = value
     def sample(self):
-        return self._sample
-    def sample(self, value):
-        self._sample = value
+        return self._sample.all()
+    #def setSample(self, value):
+    #    self._sample = value
+    def instrument(self):
+        return self._instrument
+    def setInstrument(self, _val):
+        self.instrument = _val
     def instrumentSetting(self):
         return self._instrumentSetting
-    def instrumentSetting(self, _val):
+    def setInstrumentSetting(self, _val):
         self.instrumentSetting = _val
     def type(self):
         return self._type
-    def type(self, value):
+    def setType(self, value):
         self._type = value
     def operator(self):
         return self._operator
-    def operator(self, value):
+    def setOperator(self, value):
         self._operator = value
     def status(self):
         return self._status
-    def status(self, value):
+    def setStatus(self, value):
         self._status = value
     def dateCreated(self):
         return self._dateCreated
-    def dateCreated(self, value):
+    def setDateCreated(self, value):
         self._dateCreated = value
     def fileLocation(self):
         return self._fileLocation
-    def fileLocation(self, value):
+    def setFileLocation(self, value):
         self._fileLocation = value
     def fileName(self):
         return self._fileName
-    def fileName(self, value):
+    def setFileName(self, value):
         self._fileName = value
     def acquisitionStart(self):
         return self._acquisitionStart
-    def acquisitionStart(self, value):
+    def setAcquisitionStart(self, value):
         self._acquisitionStart = value
     def acquisitionEnd(self):
         return self._acquisitionEnd
-    def acquisitionEnd(self, value):
+    def setAcquisitionEnd(self, value):
         self._acquisitionEnd = value
     def fileSize(self):
         return self._fileSize
-    def fileSize(self, value):
+    def setFileSize(self, value):
         self._fileSize = value
     def fileHash(self):
         return self._fileHash
-    def fileHash(self, value):
+    def setFileHash(self, value):
         self._fileHash = value
 
     def get_absolute_url(self):
@@ -113,39 +117,39 @@ class Sample(models.Model):
 
     def sampleName(self):
         return self._sampleName
-    def sampleName(self, value):
+    def setSampleName(self, value):
         self._sampleName = value
     def sampleID(self):
         return self._sampleID
-    def sampleID(self, value):
+    def setSampleID(self, value):
         self._sampleID = value
     def experiment(self):
         return self._experiment
-    def experiment(self, value):
+    def setExperiment(self, value):
         self._experiment = value
     def storageCondition(self):
         return self._storageCondition
-    def storageCondition(self, value):
+    def setStorageCondition(self, value):
         self._storageCondition = value
     def storageLocation(self):
         return self._storageLocation
-    def storageLocation(self, value):
+    def setStorageLocation(self, value):
         self._storageLocation = value
     def treatmentProtocol(self):
         return self._treatmentProtocol
-    def treatmentProtocol(self, value):
+    def setTreatmentProtocol(self, value):
         self._treatmentProtocol = value
     def dateCreated(self):
         return self._dateCreated
-    def dateCreated(self, value):
+    def setDateCreated(self, value):
         self._dateCreated = value
     def organism(self):
         return self._organism
-    def organism(self, value):
+    def setOrganism(self, value):
         self._organism = value
     def organismModifications(self):
         return self._organismModifications
-    def organismModifications(self, value):
+    def setOrganismModifications(self, value):
         self._organismModifications = value
 
     # this sets the default sort
@@ -171,27 +175,28 @@ class Experiment(models.Model):
 
     def experimentName(self):
         return self._experimentName
-    def experimentName(self, value):
+    def setExperimentName(self, value):
         self._experimentName = value
     def experimentID(self):
        return self._experimentID
-    def experimentID(self, value):
+    def setExperimentID(self, value):
         self._experimentID = value
     def projectLead(self):
         return self._projectLead
-    def projectLead(self, value):
+    def setProjectLead(self, value):
         self._projectLead = value
+        return self._projectLead
     def teamMembers(self):
         return self._teamMembers
-    def teamMembers(self, value):
+    def setTeamMembers(self, value):
         self._teamMembers = value
     def IRB(self):
         return self._IRB
-    def IRB(self, value):
+    def setIRB(self, value):
         self._IRB = value
     def experimentalDesign(self):
         return self._experimentalDesign
-    def experimentalDesign(self, value):
+    def setExperimentalDesign(self, value):
         self._experimentalDesign = value
 
     def get_absolute_url(self):

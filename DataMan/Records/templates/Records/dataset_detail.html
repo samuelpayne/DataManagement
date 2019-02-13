@@ -2,8 +2,19 @@
 
 {% block content %}
 <h2>{{ dataset }}</h2>
-<p><Strong>Sample Name:</Strong>
-    <a href="{% url 'sample-detail' dataset.sample.sampleID %}"> {{dataset.sample}} </a></p>
+<Strong>Samples:</Strong>
+    {% if dataset.sample.all.count != 0 %}
+    <ul style="margin-left: 5px;">
+        {% for Sample in dataset.sample.all %}
+        <li> 
+            <a href="{% url 'sample-detail' Sample.sampleID %}"> {{Sample}} </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+     <p> No Samples found. </p>
+    {% endif %}
+<p><Strong>Instrument:</Strong> {{dataset.instrument}} </p>
 <p><Strong>Instrument Settings:</Strong> {{dataset.instrumentSetting}} </p>
 <p><Strong>Type of data generated:</Strong> {{dataset.type}} </p>
 <p><Strong>Operator:</Strong> {{dataset.type}}</p>

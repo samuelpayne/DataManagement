@@ -1,3 +1,5 @@
+"""This is the code handling each of the pages."""
+
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
 from django.views.generic import DetailView
@@ -11,7 +13,6 @@ from Records.tables import SampleTable, DatasetTable, ExperimentTable
 from datetime import datetime
 from django.forms import formset_factory
 import openpyxl
-# Create your views here.
 
 """Records named 'records'
     Give options:
@@ -66,9 +67,9 @@ def upload(request):
 	form = forms.UploadFileForm()
 	success = False
 	if request.method == 'POST':
-		#print ("Hello\n\n\n\n")
+		print ("Hello\n\n\n\n")
 		form = forms.UploadFileForm(request.POST, request.FILES)
-		#print ("Form Validity check:", form.is_valid())
+		print ("Form Validity check:", form.is_valid())
 		if form.is_valid():
 			file = request.FILES['_File']
 			data = form.save(commit = False)
@@ -76,17 +77,12 @@ def upload(request):
 			#print (file)
 		#try: #Catch invalid formats, etc.
 		if True: #Allows for effective debugging
-			#print ("Trying open...")
+			print ("Trying open...")
 			wb = openpyxl.load_workbook(file, data_only=True)
 			#read_only = True causes sharing violations 
 			#because it doesn't close fully
-			#print ("Successful open")
-			if (wb['Input']['I3'].value == 'Instrument'):
-				#check if it is generic or mass spec specific
-				read_mass_spec(wb,wsIn, lead)
-			elif (wb['Input']['I3'].value == 'Mass spec'):
-				print("Reading mass spec data")
-				read_mass_spec(wb,wb['Input'], lead)
+			print ("Successful open")
+			read_mass_spec(wb,wb['Input'], lead)
 			wb.close()
 			success = True #to be used in template
 		#except:print("Read in error") 
@@ -123,7 +119,7 @@ def exp_exist_or_new(name, lead, comments):
 	experiments = Experiment.objects.all()
 	if experiments.filter(_experimentName = name).exists():
 		return experiments.get(_experimentName = name)
-	#the experiment is New
+	#the experiment needs to be created
 	newExp = Experiment(
 		_experimentName = name,
 		_projectLead =  lead,
@@ -159,20 +155,46 @@ def dataset_exists_or_new(name, datasets, samples, lead, row, wb, wsIn, wlRow,sh
 		ins = Instrument(_name = insName)
 		ins.save()
 		return ins
+	def meth_exists_or_new(methodName):
+		if Method.objects.all().filter(_name = methodName).exists():
+			return Method.objects.all().get(_name = methodName)
+		ins = Method(_name = methodName)
+		ins.save()
+		return ins
 
-	#if sheetType ==  "Mass spec":
 	wsWL = wb['Worklist']
 	experiment = exp_exist_or_new(row[1].value, lead, ("Notebook code: "+wsIn['J4'].value))
 	initSample = sample_exists_or_new(row[2].value, experiment, samples, row, wsIn, sheetType)
-	initInstrument = inst_exists_or_new((wsIn['I3'].value+' '+wsIn['J3'].value))
+	setting = meth_exists_or_new(row[7].value)
+
+	if wsIn['I3'].value ==  "Mass spec":
+		initInstrument = inst_exists_or_new((wsIn['I3'].value+' '+wsIn['J3'].value))
+		dataType = "Mass spec"
+		date = datetime.strptime(wsIn['J5'].value, '%M-%d-%Y'),
+	else:
+		initInstrument = inst_exists_or_new((wsIn['J3'].value+' '+wsIn['J4'].value))
+		dataType = wsIn['J3']
+		date = datetime.strptime(wsIn['J6'].value, '%M-%d-%Y'),
 
 	newDataset = Dataset(
 		_datasetName = name,
 		_experiment = experiment,
 		_instrument = initInstrument,
+		_fileName = wlRow[4].value+wsWL['A5'].value,
+		_fileLocation = wlRow[5].value,
+		_instrumentSetting = setting,
+		_type = dataType,
+		_dateCreated = date,
+		#Commas after each value
+		#acquisition dates
+		#_status
+		#_size
+		#_fileHash
 	)
 	newDataset.save()
 	newDataset._sample.add(initSample)
+
+	return newDataset
 
 """Page to add a sample"""
 def add_sample(request):
@@ -215,9 +237,11 @@ def add_dataset(request):
     form =forms.AddDatasetForm()
     if request.method == 'POST':
         form =forms.AddDatasetForm(request.POST)
+        print ("Testing Validity")
         if form.is_valid():
-            new_Dataset = form.save(commit = False)
-            new_Dataset._experiment = new_Dataset.sample().experiment()
+            print ("Valid")
+            #new_Dataset = form.save(commit = False)
+            #new_Dataset._experiment = new_Dataset.sample()[0].experiment()
             new_Dataset = form.save()
             return redirect('datasets')
     buttons = {
@@ -321,7 +345,7 @@ def edit_dataset(request, pk):
         form =forms.AddDatasetForm(request.POST, instance = dataset)
         if form.is_valid():
             dataset = form.save(commit = False)
-            dataset._experiment = dataset.sample().experiment()
+            dataset._experiment = dataset.sample()[0].experiment()
             dataset.save()
             return redirect('datasets')
     

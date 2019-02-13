@@ -53,6 +53,10 @@ class DateTimeInput(forms.MultiWidget):
 			return [value.date(), value.time().replace(second = 0, microsecond=0)]
 		return [None, None]
 
+	#def clean(self):
+		
+
+
 class UploadFileForm(forms.ModelForm):
 	readFail = False
 	class Meta:
@@ -90,9 +94,9 @@ class AddDatasetForm(forms.ModelForm):
                   '_status','_fileName','_fileLocation',
                   '_fileSize','_fileHash', '_comments']
         widgets = {
-			'_dateCreated':DateInput(),
-			'_acquisitionStart':DateTimeInput(),
-			'_acquisitionEnd':DateTimeInput(),
+			#'_dateCreated':DateInput(),
+			#'_acquisitionStart':DateTimeInput(),
+			#'_acquisitionEnd':DateTimeInput(),
 		}
 
 class AddExperimentForm(forms.ModelForm):
