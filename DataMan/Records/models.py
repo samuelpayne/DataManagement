@@ -170,7 +170,8 @@ class Experiment(models.Model):
     _projectLead = models.TextField(verbose_name='Project Lead')
     _teamMembers = models.TextField(verbose_name='Team Members',blank=True,null=True)
     _IRB = models.IntegerField(verbose_name='IRB Number',blank=True,null=True)
-    _experimentalDesign = models.TextField(verbose_name='Experimental Design', blank=False, null=True)
+    _experimentalDesign = models.ForeignKey('ExperimentalDesign', on_delete=models.SET_NULL, 
+		verbose_name='Experimental Design', blank=False, null=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
 
     def experimentName(self):
@@ -258,7 +259,7 @@ class fileStatusOption(models.Model):
 		return self._option
 
 class FileRead(models.Model):
-	lead = models.CharField(blank=False, max_length = 200)
+	lead = models.CharField(blank=False, max_length = 200, verbose_name='Project Lead')
 	_File = models.FileField(blank=False, upload_to='files/')
 	def file(self):
 		return self._File()

@@ -79,7 +79,7 @@ def upload(request):
 		if True: #Allows for effective debugging
 			print ("Trying open...")
 			wb = openpyxl.load_workbook(file, data_only=True)
-			#read_only = True causes sharing violations 
+			#read_only = True csometimes auses sharing violations 
 			#because it doesn't close fully
 			print ("Successful open")
 			read_mass_spec(wb,wb['Input'], lead)
@@ -103,7 +103,7 @@ def read_mass_spec(wb, wsIn, lead):
 	wlrowNum = 1
 	for i in wsIn['B34:H{}'.format(wsIn.max_row)]:
 		#each record (sample-dataset pair)
-		if i[0].value is None:
+		if i[2].value is None:
 			break
 			#All done!
 		wlrowNum +=1
