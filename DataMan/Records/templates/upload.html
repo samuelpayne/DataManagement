@@ -23,4 +23,15 @@
     <br><br>
     <input class="nav-block" type="submit" value="Submit"/>
 </form>
+
+<div>
+<h3>{{upload_status}}</h3>
+  {% for i in summary %}
+    <p>
+    {% for f in i %}
+      {{f}}
+    {% endfor %}
+    </p>
+  {% endfor %}
+</div>
 {% endblock %}

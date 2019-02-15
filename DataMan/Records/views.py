@@ -63,10 +63,14 @@ def archive(request):
 
 def create_new(request):
     return render(request, 'create-new.html',)
+
+def success(request):
+	return render(request, 'success.html')
 	
 def upload(request):
 	form = forms.UploadFileForm()
-	success = False
+	upload_status = ['']
+	summary = ''
 	if request.method == 'POST':
 		print ("Hello\n\n\n\n")
 		form = forms.UploadFileForm(request.POST, request.FILES)
@@ -76,46 +80,68 @@ def upload(request):
 			data = form.save(commit = False)
 			lead = data.lead
 			#print (file)
-		try: #Catch invalid formats, etc.
-			#if True: #Allows for effective debugging
+		#try: #Catch invalid formats, etc.
+		if True: #Allows for effective debugging
 			print ("Trying open...")
 			wb = openpyxl.load_workbook(file, data_only=True)
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
 			print ("Successful open")
 			if wb['Input']['I3'].value == "Mass spec":
-				read_data(wb, lead, read_in_map_MS)
-				success = True #to be used in template
+				upload_status = read_data(wb, lead, read_in_map_MS) #to be used in template
 			elif wb['Input']['I3'].value == "Instrument Type":
-				read_data(wb, lead, read_in_map_gen)
-				success = True 
-			else: print('Unknown format')
+				
+				upload_status = read_data(wb, lead, read_in_map_gen)#"Upload Successful"
+			else: 
+				print('Unknown format')
+				upload_status = "Unknown format. Please use one of the provided templates."
 			wb.close()
-		except:print("Read in error") 
-		#	return redirect('records')
+		"""except:
+			print("Read in error") 
+			upload_status = "Read in error.\nPlease use one of the provided templates."
+		#"""
+		#return redirect('records')
+		if len(upload_status) >1: summary = upload_status[1:]
 
 	context = {
-		'form':form
+		'form':form,
+		'upload_status':upload_status[0],
+		'summary': summary,
 	}
 	return render(request, 'upload.html',context)
 
+NEW = 'NEW'
+EXISTING = '(Existing)'
 def read_data(wb, lead, read_map):
 	wsIn = wb[read_map['wsIn']]
 	if wsIn[read_map['start_loc']].value is None:
 		print ("Empty file")
-		return "Empty\n\n"
+		return ["Empty file"]
 
+	summary = [("Upload summary:")]
 	wlrowNum = read_map['wlrowNumInit']
 	for i in wsIn[(read_map['in_section']).format(wsIn.max_row)]:
 		#each record a dataset associated with a sample
 		if i[read_map['sample_name']].value is None:
-			break
+			return summary
 			#All done!
 		wlrowNum +=1
 		wlRow = wb[read_map['wsWL']][wlrowNum]
 
 		#Otherwise read it in
-		dataset_exists_or_new(wlRow[read_map['dataset_name']].value, lead, i, wb, wsIn, wlRow, read_map)
+		e_n = exp_exist_or_new(i[read_map['experiment_loc']].value, lead)
+		experiment = e_n[2]
+		summary.append(e_n)
+
+		e_n = sample_exists_or_new(i[read_map['sample_name']].value, experiment, i, wsIn, read_map)
+		sample = e_n[2]
+		summary.append(e_n)
+		
+		e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, i, wb, wsIn, wlRow, read_map)
+		summary.append(e_n)
+
+		print (summary)
+
 	wlRow = None
 	wsIn = None
 
@@ -123,24 +149,23 @@ def read_data(wb, lead, read_map):
 def exp_exist_or_new(name, lead):
 	experiments = Experiment.objects.all()
 	if experiments.filter(_experimentName = name).exists():
-		return experiments.get(_experimentName = name)
+		return [EXISTING, 'Experiment: ', experiments.get(_experimentName = name)]
 	#the experiment needs to be created
 	newExp = Experiment(
 		_experimentName = name,
 		_projectLead =  lead,
 	)
 	newExp.save()
-	return newExp
+	return [NEW, 'Experiment: ', newExp]
 
-def sample_exists_or_new(name, experiment, samples, row, wsIn, read_map):
+def sample_exists_or_new(name, experiment, row, wsIn, read_map):
+	samples = Sample.objects.all()
 	if samples.filter(_sampleName = name).exists():
-		return samples.get(_sampleName = name)
+		return [EXISTING, 'Sample: ', samples.get(_sampleName = name)]
 
 	comment = ""
 	for c in read_map['comments_row']:
 		comment += c
-		print ("\n\n\nComments:")
-		print (row[read_map['comments_row'][c]].value)
 		comment += str(row[read_map['comments_row'][c]].value)+'\n'
 	for c in read_map['comments_gen']:
 		comment += c
@@ -159,33 +184,34 @@ def sample_exists_or_new(name, experiment, samples, row, wsIn, read_map):
 		_comments = comment,
 	)
 	newSample.save()
-	return newSample
+	return [NEW, 'Sample: ', newSample]
 
-def dataset_exists_or_new(name, lead, row, wb, wsIn, wlRow, read_map):
-	samples = Sample.objects.all()
+def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_map):
 	datasets = Dataset.objects.all()
 
 	if datasets.filter(_datasetName = name).exists():
-		return datasets.get(_datasetName = name)
+		return [EXISTING, 'Dataset: ', datasets.get(_datasetName = name)]
 		
 	def inst_exists_or_new(insName):
 		if Instrument.objects.all().filter(_name = insName).exists():
-			return Instrument.objects.all().get(_name = insName)
+			return [EXISTING,'Instrument: ', Instrument.objects.all().get(_name = insName)]
 		ins = Instrument(_name = insName)
 		ins.save()
-		return ins
-	def meth_exists_or_new(methodName):
+		return [NEW, 'Instrument: ', ins]
+	def setting_exists_or_new(methodName):
 		if InstrumentSetting.objects.all().filter(_name = methodName).exists():
-			return InstrumentSetting.objects.all().get(_name = methodName)
+			return [EXISTING,'Instrument Setting: ',InstrumentSetting.objects.all().get(_name = methodName)]
 		ins = InstrumentSetting(_name = methodName)
 		ins.save()
-		return ins
+		return [NEW, 'Instrument Setting: ', ins]
 
-	experiment = exp_exist_or_new(row[read_map['experiment_loc']].value, lead)
-	initSample = sample_exists_or_new(row[read_map['sample_name']].value, experiment, samples, row, wsIn, read_map)
-	setting = meth_exists_or_new(row[5].value)
+	summary = []
+	e_n = inst_exists_or_new((wsIn[read_map['instrument_type_loc']].value+' '+wsIn[ read_map['inst_code']].value))
+	initInstrument = e_n[2]
+	if (e_n[0] == NEW): summary.append(e_n)
+	e_n = setting_exists_or_new(row[read_map['setting_loc']].value)
+	setting = e_n[2]
 
-	initInstrument = inst_exists_or_new((wsIn[read_map['instrument_type_loc']].value+' '+wsIn[ read_map['inst_code']].value))
 	dataType = wsIn[read_map['data_type_loc']].value
 	date = datetime.strptime(wsIn[read_map['date_loc']].value, '%M-%d-%Y').strftime('%Y-%m-%d')
 
@@ -209,9 +235,9 @@ def dataset_exists_or_new(name, lead, row, wb, wsIn, wlRow, read_map):
 		#_fileHash
 	)
 	newDataset.save()
-	newDataset._sample.add(initSample)
+	newDataset._sample.add(sample)
 
-	return newDataset
+	return [NEW, 'Dataset: ', newDataset]
 
 """Page to add a sample"""
 def add_sample(request):
@@ -364,7 +390,7 @@ def edit_dataset(request, pk):
             dataset = form.save(commit = False)
             dataset._experiment = dataset.sample()[0].experiment()
             dataset.save()
-            return redirect('datasets')
+            return redirect('success')
     
     buttons = {
         'New Instrument':'add-instrument',
@@ -395,7 +421,7 @@ def edit_sample(request, pk):
                 DoesNotExist = null #Does nothing but make it not crash
 				#something needs to be here, doesn't matter what
             finally:
-                return redirect('samples')
+                return redirect('success')
     
     buttons = {
         'New Protocol':'add-protocol',
@@ -416,7 +442,7 @@ def edit_experiment(request, pk):
         form =forms.AddExperimentForm(request.POST, instance = experiment)
         if form.is_valid():
             experiment = form.save()
-            return redirect('experiments')
+            return redirect('success')
     buttons = {
         'New Experimental Design':'add-experimental-design',
     }
