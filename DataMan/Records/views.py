@@ -10,6 +10,7 @@ from Records.models import *
 from django.forms.models import model_to_dict
 from django_tables2 import RequestConfig
 from Records.tables import SampleTable, DatasetTable, ExperimentTable
+from Records.read_maps import *
 from datetime import datetime
 from django.forms import formset_factory
 import openpyxl
@@ -75,17 +76,22 @@ def upload(request):
 			data = form.save(commit = False)
 			lead = data.lead
 			#print (file)
-		#try: #Catch invalid formats, etc.
-		if True: #Allows for effective debugging
+		try: #Catch invalid formats, etc.
+			#if True: #Allows for effective debugging
 			print ("Trying open...")
 			wb = openpyxl.load_workbook(file, data_only=True)
-			#read_only = True csometimes auses sharing violations 
+			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
 			print ("Successful open")
-			read_mass_spec(wb,wb['Input'], lead)
+			if wb['Input']['I3'].value == "Mass spec":
+				read_data(wb, lead, read_in_map_MS)
+				success = True #to be used in template
+			elif wb['Input']['I3'].value == "Instrument Type":
+				read_data(wb, lead, read_in_map_gen)
+				success = True 
+			else: print('Unknown format')
 			wb.close()
-			success = True #to be used in template
-		#except:print("Read in error") 
+		except:print("Read in error") 
 		#	return redirect('records')
 
 	context = {
@@ -93,29 +99,28 @@ def upload(request):
 	}
 	return render(request, 'upload.html',context)
 
-def read_mass_spec(wb, wsIn, lead):
-	if wsIn['C34'].value is None:
+def read_data(wb, lead, read_map):
+	wsIn = wb[read_map['wsIn']]
+	if wsIn[read_map['start_loc']].value is None:
 		print ("Empty file")
-		return "Empty"
+		return "Empty\n\n"
 
-	samples = Sample.objects.all()
-	datasets = Dataset.objects.all()
-	wlrowNum = 1
-	for i in wsIn['B34:H{}'.format(wsIn.max_row)]:
-		#each record (sample-dataset pair)
-		if i[2].value is None:
+	wlrowNum = read_map['wlrowNumInit']
+	for i in wsIn[(read_map['in_section']).format(wsIn.max_row)]:
+		#each record a dataset associated with a sample
+		if i[read_map['sample_name']].value is None:
 			break
 			#All done!
 		wlrowNum +=1
-		wlRow = wb['Worklist'][wlrowNum]
+		wlRow = wb[read_map['wsWL']][wlrowNum]
 
 		#Otherwise read it in
-		dataset_exists_or_new(wlRow[4].value, datasets, samples, lead, i, wb, wsIn, wlRow, "Mass spec")
+		dataset_exists_or_new(wlRow[read_map['dataset_name']].value, lead, i, wb, wsIn, wlRow, read_map)
 	wlRow = None
 	wsIn = None
 
-
-def exp_exist_or_new(name, lead, comments):
+#overload for additional information
+def exp_exist_or_new(name, lead):
 	experiments = Experiment.objects.all()
 	if experiments.filter(_experimentName = name).exists():
 		return experiments.get(_experimentName = name)
@@ -123,29 +128,43 @@ def exp_exist_or_new(name, lead, comments):
 	newExp = Experiment(
 		_experimentName = name,
 		_projectLead =  lead,
-		_comments = comments
 	)
 	newExp.save()
 	return newExp
 
-def sample_exists_or_new(name, experiment, samples, row, wsIn, sheetType):
+def sample_exists_or_new(name, experiment, samples, row, wsIn, read_map):
 	if samples.filter(_sampleName = name).exists():
 		return samples.get(_sampleName = name)
-		
-	if sheetType == "Mass spec":
-		newSample = Sample(
-			_sampleName = name,
-			_storageCondition = "Processing",
-			_experiment = experiment,
-			_storageLocation = str(row[0].value),
-			_dateCreated = datetime.strptime(wsIn['J5'].value, '%M-%d-%Y'),
-			_organism = wsIn['J2'].value,
-			_comments = "Concentration: "+str(row[6].value)
-		)
-		newSample.save()
-		return newSample
 
-def dataset_exists_or_new(name, datasets, samples, lead, row, wb, wsIn, wlRow,sheetType):
+	comment = ""
+	for c in read_map['comments_row']:
+		comment += c
+		print ("\n\n\nComments:")
+		print (row[read_map['comments_row'][c]].value)
+		comment += str(row[read_map['comments_row'][c]].value)+'\n'
+	for c in read_map['comments_gen']:
+		comment += c
+		comment += str(wsIn[read_map['comments_gen'][c]].value)+'\n'
+
+	if read_map['date_global']: date = wsIn[read_map['date_created']].value
+	else: date = row[read_map['date_created']].value
+
+	newSample = Sample(
+		_sampleName = name,
+		_storageCondition = "Processing",
+		_experiment = experiment,
+		_storageLocation = str(row[read_map['storage_location']].value),
+		_dateCreated = datetime.strptime(date, '%M-%d-%Y').strftime('%Y-%m-%d'),
+		_organism = wsIn[read_map['organism']].value,
+		_comments = comment,
+	)
+	newSample.save()
+	return newSample
+
+def dataset_exists_or_new(name, lead, row, wb, wsIn, wlRow, read_map):
+	samples = Sample.objects.all()
+	datasets = Dataset.objects.all()
+
 	if datasets.filter(_datasetName = name).exists():
 		return datasets.get(_datasetName = name)
 		
@@ -156,32 +175,30 @@ def dataset_exists_or_new(name, datasets, samples, lead, row, wb, wsIn, wlRow,sh
 		ins.save()
 		return ins
 	def meth_exists_or_new(methodName):
-		if Method.objects.all().filter(_name = methodName).exists():
-			return Method.objects.all().get(_name = methodName)
-		ins = Method(_name = methodName)
+		if InstrumentSetting.objects.all().filter(_name = methodName).exists():
+			return InstrumentSetting.objects.all().get(_name = methodName)
+		ins = InstrumentSetting(_name = methodName)
 		ins.save()
 		return ins
 
-	wsWL = wb['Worklist']
-	experiment = exp_exist_or_new(row[1].value, lead, ("Notebook code: "+wsIn['J4'].value))
-	initSample = sample_exists_or_new(row[2].value, experiment, samples, row, wsIn, sheetType)
-	setting = meth_exists_or_new(row[7].value)
+	experiment = exp_exist_or_new(row[read_map['experiment_loc']].value, lead)
+	initSample = sample_exists_or_new(row[read_map['sample_name']].value, experiment, samples, row, wsIn, read_map)
+	setting = meth_exists_or_new(row[5].value)
 
-	if wsIn['I3'].value ==  "Mass spec":
-		initInstrument = inst_exists_or_new((wsIn['I3'].value+' '+wsIn['J3'].value))
-		dataType = "Mass spec"
-		date = datetime.strptime(wsIn['J5'].value, '%M-%d-%Y'),
-	else:
-		initInstrument = inst_exists_or_new((wsIn['J3'].value+' '+wsIn['J4'].value))
-		dataType = wsIn['J3']
-		date = datetime.strptime(wsIn['J6'].value, '%M-%d-%Y'),
+	initInstrument = inst_exists_or_new((wsIn[read_map['instrument_type_loc']].value+' '+wsIn[ read_map['inst_code']].value))
+	dataType = wsIn[read_map['data_type_loc']].value
+	date = datetime.strptime(wsIn[read_map['date_loc']].value, '%M-%d-%Y').strftime('%Y-%m-%d')
 
+	if read_map['file_extension_from_excel']: extension = str(wsWL[read_map['file_extension']].value)
+	else: extension = str(read_map['file_extension'])
+
+	wsWL = wb[read_map['wsWL']]
 	newDataset = Dataset(
 		_datasetName = name,
 		_experiment = experiment,
 		_instrument = initInstrument,
-		_fileName = wlRow[4].value+wsWL['A5'].value,
-		_fileLocation = wlRow[5].value,
+		_fileName = str(wlRow[read_map['file_name']].value)+extension,
+		_fileLocation = str(wlRow[read_map['file_location']].value),
 		_instrumentSetting = setting,
 		_type = dataType,
 		_dateCreated = date,
