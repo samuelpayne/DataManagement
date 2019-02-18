@@ -162,6 +162,35 @@ class Sample(models.Model):
     def __str__(self):
         return self._sampleName
 
+class Individual(models.Model):
+    _individualName = models.TextField(verbose_name='Individual Name',
+                                      unique=True)
+    _individualID = models.AutoField(verbose_name='Individual ID', unique=True, primary_key=True)
+    _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
+                                    blank=False, null=True, verbose_name='Experiment')
+    _comments = models.TextField(verbose_name='Comments, Notes, or Details', blank=True, null=True)
+
+    def individualName(self):
+        return self._individualName
+    def individualID(self):
+        return self._individualID
+    def experiment(self):
+        return self._experiment
+    def setIndividualName(self, value):
+        self._individualName = value
+    def setIndividualID(self, value):
+        self._individualID = value
+    def setExperiment(self, value):
+        self._experiment = value
+
+    class Meta:
+        ordering = ['_individualName']
+
+    def get_absolute_url(self):
+        return reverse('individual-detail', args=[self.individualID()])
+
+    def __str__(self):
+        return self._individualName
 
 class Experiment(models.Model):
     _experimentName = models.TextField(verbose_name='Experiment Name',
@@ -209,7 +238,7 @@ class Experiment(models.Model):
 
 
 class detailedField(models.Model):
-	_name = models.CharField(unique=True, primary_key=True, 
+	_name = models.CharField(unique=True, primary_key=True,
 			blank=False, null=False, max_length = 20, verbose_name= "Name")
 	_description = models.TextField(verbose_name="Description",blank=True, null=True)
 	_file = models.FileField(verbose_name='Related file or images',
@@ -229,7 +258,7 @@ class detailedField(models.Model):
 		return self._file
 	def file(self, value):
 		self._file = value
-		
+
 class InstrumentSetting(detailedField):
 	_instrument = models.ForeignKey("Instrument", on_delete=models.CASCADE,
                                    blank=False, null=True,verbose_name='Instrument')
@@ -247,7 +276,7 @@ class Instrument(detailedField):
 class ExperimentalDesign(detailedField):
 	def __str__(self):
 		return self._name
-		
+
 class Protocol(detailedField):
 	def __str__(self):
 		return self._name

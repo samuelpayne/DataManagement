@@ -317,6 +317,20 @@ def add_experiment(request):
     }
 
     return render(request, 'add-record.html', context)
+
+def add_individual(request):
+    form = forms.AddIndividualForm()
+    if request.method == 'POST':
+        form = forms.AddIndividualForm(request.POST)
+        if form.is_valid():
+            new_Individual = form.save()
+            return redirect('individuals')
+    context = {
+        'form':form,
+        'header':'Add Individual',
+    }
+
+    return render(request, 'add-record.html', context)
 	
 
 def add_instrument(request):
