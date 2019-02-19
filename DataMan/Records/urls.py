@@ -17,8 +17,7 @@ urlpatterns = [
 	path('about/', views.about, name='about'),
     path('add/', views.create_new, name = 'create-new'),
     path('add/samples/', views.add_sample, name = 'add-sample'),
-    path('add/datasets/', views.add_dataset, name = 'add-dataset'),
-	#					###change to add_individual once we have one ####				#
+    path('add/datasets/', views.add_dataset, name = 'add-dataset'),			#
     path('add/individual/', views.add_individual, name = 'add-individual'),
     path('add/experiments/', views.add_experiment, name = 'add-experiment'),
 
@@ -39,9 +38,9 @@ urlpatterns = [
     #url(regex=r'type=(.*)$', view='views.archive'),
     path('samples/', views.SampleView.as_view(), name = 'samples'),
     path('datasets/', views.DatasetView.as_view(), name = 'datasets'),
-    path('individuals/', views.DatasetView.as_view(), name = 'individuals'),
+    path('individuals/', views.IndividualView.as_view(), name = 'individuals'),
     path('experiments/', views.ExperimentView.as_view(), name = 'experiments'),
-    #path('patients/', views.PatientView.as_view(), name = 'patients'),
+    path('instruments/', views.InstrumentView.as_view(), name = 'instruments'),
 
     path('samples/<int:pk>/', views.SampleDetailView.as_view(),
          name = 'sample-detail'),
@@ -49,4 +48,6 @@ urlpatterns = [
          name = 'dataset-detail'),
     path('experiments/<int:pk>/', views.ExperimentDetailView.as_view(),
          name = 'experiment-detail'),
+    path('individuals/<int:pk>/', views.IndividualDetailView.as_view(),
+         name = 'individual-detail'),
 ]

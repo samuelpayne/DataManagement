@@ -272,6 +272,10 @@ class InstrumentSetting(detailedField):
 class Instrument(detailedField):
 	def __str__(self):
 		return self._name
+	def description(self):
+		return self._description
+	def file(self):
+		return self._file
 
 class ExperimentalDesign(detailedField):
 	def __str__(self):

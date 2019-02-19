@@ -9,7 +9,7 @@ import re
 from Records.models import *
 from django.forms.models import model_to_dict
 from django_tables2 import RequestConfig
-from Records.tables import SampleTable, DatasetTable, ExperimentTable
+from Records.tables import *
 from Records.read_maps import *
 from datetime import datetime
 from django.forms import formset_factory
@@ -514,12 +514,28 @@ class ExperimentView(ListView):
         context['Title'] = 'Experiment'
         return context
 
-"""class PatientView(ListView):
-    model = Patient
-    queryset = Patient.objects.all()
-    template_name = 'patient_list.html'
+class IndividualView(ListView):
+    model = Individual
+    queryset = Individual.objects.all()
+    template_name = 'individual_list.html'
     paginate_by = 25
-    #"""
+    def get_context_data(self, **kwargs):
+        context = super(IndividualView, self).get_context_data(**kwargs)
+        table = IndividualTable(Individual.objects.all().order_by('-_individualName'))
+        RequestConfig(self.request, paginate={'per_page': 25}).configure(table)
+        context['table'] = table
+        context['Title'] = 'Individuals'
+        return context
+
+class InstrumentView(ListView):
+	model = Instrument
+	template_name = 'instrument_list.html'
+	paginate_by = 25
+	def get_context_data(self, **kwargs):
+		context = super(InstrumentView, self).get_context_data(**kwargs)
+		RequestConfig(self.request, paginate={'per_page': 25})
+		context['Title'] = 'Instruments'
+		return context
 
 """named (type)-detail, these are the detail view
 pages generated for the specific record
@@ -537,3 +553,7 @@ class DatasetDetailView(DetailView):
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
+
+class IndividualDetailView(DetailView):
+	model = Individual
+	template = 'individual_detail.html'

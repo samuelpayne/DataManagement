@@ -1,6 +1,6 @@
 import django_tables2 as tables
 from django_tables2.utils import A
-from Records.models import Dataset, Sample, Experiment
+from Records.models import Dataset, Sample, Experiment, Individual
 
 
 class DatasetTable(tables.Table):
@@ -40,3 +40,11 @@ class ExperimentTable(tables.Table):
         model = Experiment
         fields = ['_experimentName','_projectLead','_teamMembers',
                   '_IRB','_experimentalDesign',]
+
+class IndividualTable(tables.Table):
+    _individualName = tables.LinkColumn('individual-detail', args=[A('pk')])
+    _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
+    
+    class Meta:
+        model = Individual
+        exclude = ['_individualID']
