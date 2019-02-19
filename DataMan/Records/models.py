@@ -243,6 +243,9 @@ class detailedField(models.Model):
 	_description = models.TextField(verbose_name="Description",blank=True, null=True)
 	_file = models.FileField(verbose_name='Related file or images',
 		upload_to = 'files/%Y/%m/%d/', blank=True, null=True)
+	
+	class Meta:# this sets the default sort
+		ordering = ['_name']
 
 	def __str__(self):
 		return self._name
@@ -272,6 +275,7 @@ class InstrumentSetting(detailedField):
 class Instrument(detailedField):
 	def __str__(self):
 		return self._name
+	#redefined for the html template
 	def description(self):
 		return self._description
 	def file(self):
