@@ -85,8 +85,8 @@ class AddSampleForm(forms.ModelForm):
 class AddIndividualForm(forms.ModelForm):
     class Meta:
         model = Individual
-        fields = ['_individualName', '_individualID',
-                  '_experiment', '_comments']
+        fields = ['_individualIdentifier', '_individualID', '_gender', '_age',
+                  '_healthStatus', '_experiment', '_comments']
 
 class AddDatasetForm(forms.ModelForm):
     _status = forms.CharField(label='File Status', widget=forms.Select(choices=STATUS_OPTIONS))
