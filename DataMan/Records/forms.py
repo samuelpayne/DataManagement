@@ -82,11 +82,25 @@ class AddSampleForm(forms.ModelForm):
                   '_dateCreated','_organism', '_organismModifications', '_comments']
         widgets = {'_dateCreated':DateInput()}
 
+"""class AddIndividualForm(forms.ModelForm):
+    class Meta:
+        model = Individual
+        fields = ['_individualName', '_individualID',
+                  '_experiment', '_comments']#"""
+        
 class AddIndividualForm(forms.ModelForm):
     class Meta:
         model = Individual
         fields = ['_individualName', '_individualID',
                   '_experiment', '_comments']
+    def __init__(self,  *args,extraFields=None, **kwargs,):
+        super(AddIndividualForm, self).__init__(*args, **kwargs)
+        if extraFields!=None:
+            for f in extraFields:
+                self.fields[f] = forms.CharField(label=f)
+
+			
+
 
 class AddDatasetForm(forms.ModelForm):
     _status = forms.CharField(label='File Status', widget=forms.Select(choices=STATUS_OPTIONS))

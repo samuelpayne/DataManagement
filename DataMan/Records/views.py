@@ -328,11 +328,20 @@ def add_experiment(request):
     return render(request, 'add-record.html', context)
 
 def add_individual(request):
-    form = forms.AddIndividualForm()
+    extra = ['Gender','Age','Disease Status',]
+    form = forms.AddIndividualForm(extraFields = extra)
     if request.method == 'POST':
-        form = forms.AddIndividualForm(request.POST)
+        form = forms.AddIndividualForm(request.POST, extraFields = extra)
         if form.is_valid():
-            new_Individual = form.save()
+            new_Individual = form.save(commit = False)
+            #parses to JSON
+            extraFieldData = '{'
+            for f in extra:
+                extraFieldData+=' "'+str(f)+'":"'
+                extraFieldData += str(form.data[f])+'",'
+            extraFieldData +='}'
+            new_Individual.setComments(extraFieldData)
+            new_Individual.save()
             return redirect('individuals')
     context = {
         'form':form,

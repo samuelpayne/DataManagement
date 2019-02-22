@@ -23,7 +23,7 @@ class Dataset(models.Model):
     _status = models.TextField(verbose_name="File Status", null = True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _fileLocation = models.TextField(verbose_name='Path to file location')
-	####APPARENTLY THERE ARE FILEPATHFIELDS AND THAT MIGHT BE USEFULL####
+	####APPARENTLY THERE ARE FILEPATHFIELDS AND THAT MIGHT BE USEFUL####
     _fileName = models.TextField(verbose_name='File Name', null=True, blank=False)
     _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start',default=datetime.now, null=True, blank=True)
     _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End", default=datetime.now, null=True, blank=True)
@@ -182,6 +182,8 @@ class Individual(models.Model):
         self._individualID = value
     def setExperiment(self, value):
         self._experiment = value
+    def setComments(self, value):
+        self._comments = value
 
     class Meta:
         ordering = ['_individualName']

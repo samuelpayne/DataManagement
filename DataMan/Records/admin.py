@@ -13,3 +13,4 @@ admin.site.register(Protocol)
 admin.site.register(fileStatusOption)
 
 admin.site.register(FileRead)
+admin.site.register(Individual)
