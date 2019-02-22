@@ -96,7 +96,7 @@ class Dataset(models.Model):
         return reverse('dataset-detail', args=[str(self._datasetID)])
 
     def __str__(self):
-        return self._datasetName
+        return str(self._datasetName)
 
 
 class Sample(models.Model):
@@ -160,7 +160,7 @@ class Sample(models.Model):
         return reverse('sample-detail', args=[self.sampleID])
 
     def __str__(self):
-        return self._sampleName
+        return str(self._sampleName)
 
 class Individual(models.Model):
     _individualName = models.TextField(verbose_name='Individual Name',
@@ -190,7 +190,7 @@ class Individual(models.Model):
         return reverse('individual-detail', args=[self.individualID()])
 
     def __str__(self):
-        return self._individualName
+        return str(self._individualName)
 
 class Experiment(models.Model):
     _experimentName = models.TextField(verbose_name='Experiment Name',
@@ -233,7 +233,7 @@ class Experiment(models.Model):
         return reverse('experiment-detail', args=[str(self._experimentID)])
 
     def __str__(self):
-        return self._experimentName
+        return str(self._experimentName)
 
 
 
@@ -248,7 +248,7 @@ class detailedField(models.Model):
 		ordering = ['_name']
 
 	def __str__(self):
-		return self._name
+		return str(self._name)
 	def name(self):
 		return self._name
 	def name(self, value):

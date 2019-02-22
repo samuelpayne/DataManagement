@@ -192,6 +192,7 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 	if datasets.filter(_datasetName = name).exists():
 		return [EXISTING, 'Dataset: ', datasets.get(_datasetName = name)]
 		
+
 	def inst_exists_or_new(insName):
 		if Instrument.objects.all().filter(_name = insName).exists():
 			return [EXISTING,'Instrument: ', Instrument.objects.all().get(_name = insName)]
@@ -202,6 +203,13 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 		if InstrumentSetting.objects.all().filter(_name = methodName).exists():
 			return [EXISTING,'Instrument Setting: ',InstrumentSetting.objects.all().get(_name = methodName)]
 		ins = InstrumentSetting(_name = methodName)
+		settings_column = wb[read_map['settings_sheet']][read_map['settings_keyword_column']]
+
+		filename = wlRow[read_map['settings_file']]
+		print(filename)
+		try: ins.file = open(filename)
+		except: print (filename, " open failed.")
+		print ("Settings Saved")
 		ins.save()
 		return [NEW, 'Instrument Setting: ', ins]
 
@@ -236,6 +244,7 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 	)
 	newDataset.save()
 	newDataset._sample.add(sample)
+
 
 	return [NEW, 'Dataset: ', newDataset]
 

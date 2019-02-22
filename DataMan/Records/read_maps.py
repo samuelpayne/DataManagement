@@ -35,6 +35,12 @@ read_in_map_MS = {
 	'inst_code':'J3',
 	'date_loc':'J5',
 
+	#Instrument Settings file upload
+	'settings_sheet':'Methods',
+	'settings_keyword_column':'B',
+	'settings_file_column':'C',
+	'settings_description':'E',
+
 	#Worklist fields (about dataset, different rows)
 	'wsWL':'Worklist',
 	'wlrowNumInit':1, #one less than the row to start on
@@ -75,6 +81,12 @@ read_in_map_gen = {
 	'instrument_type_loc':'J3',
 	'inst_code':'J4',
 	'date_loc':'J5',
+	
+	#Instrument Settings file upload
+	'settings_sheet':'Methods',
+	'settings_keyword_column':'B',
+	'settings_file_column':'C',
+	'settings_description':'E',
 
 	#Worklist fields (about dataset, different rows)
 	'wsWL':'Worklist',
