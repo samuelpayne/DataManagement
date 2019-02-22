@@ -91,16 +91,12 @@ class AddSampleForm(forms.ModelForm):
 class AddIndividualForm(forms.ModelForm):
     class Meta:
         model = Individual
-        fields = ['_individualName', '_individualID',
-                  '_experiment', '_comments']
+        exclude = ['_individualID',]
     def __init__(self,  *args,extraFields=None, **kwargs,):
         super(AddIndividualForm, self).__init__(*args, **kwargs)
         if extraFields!=None:
             for f in extraFields:
                 self.fields[f] = forms.CharField(label=f)
-
-			
-
 
 class AddDatasetForm(forms.ModelForm):
     _status = forms.CharField(label='File Status', widget=forms.Select(choices=STATUS_OPTIONS))

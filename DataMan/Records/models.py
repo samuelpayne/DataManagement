@@ -163,21 +163,24 @@ class Sample(models.Model):
         return str(self._sampleName)
 
 class Individual(models.Model):
-    _individualName = models.TextField(verbose_name='Individual Name',
+    _individualIdentifier = models.TextField(verbose_name='Individual Identifier',
                                       unique=True)
     _individualID = models.AutoField(verbose_name='Individual ID', unique=True, primary_key=True)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                     blank=False, null=True, verbose_name='Experiment')
+    _gender = models.TextField(verbose_name='Gender')
+    _age = models.TextField(verbose_name='Age')
+    _healthStatus = models.TextField(verbose_name='Health Status')
     _comments = models.TextField(verbose_name='Comments, Notes, or Details', blank=True, null=True)
 
-    def individualName(self):
-        return self._individualName
+    def individualIdentifier(self):
+        return self._individualIdentifier
     def individualID(self):
         return self._individualID
     def experiment(self):
         return self._experiment
-    def setIndividualName(self, value):
-        self._individualName = value
+    def setIndividualIdentifier(self, value):
+        self._individualIdentifier = value
     def setIndividualID(self, value):
         self._individualID = value
     def setExperiment(self, value):
@@ -186,13 +189,13 @@ class Individual(models.Model):
         self._comments = value
 
     class Meta:
-        ordering = ['_individualName']
+        ordering = ['_individualIdentifier']
 
     def get_absolute_url(self):
         return reverse('individual-detail', args=[self.individualID()])
 
     def __str__(self):
-        return str(self._individualName)
+        return self._individualIdentifier
 
 class Experiment(models.Model):
     _experimentName = models.TextField(verbose_name='Experiment Name',

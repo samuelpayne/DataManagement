@@ -328,7 +328,7 @@ def add_experiment(request):
     return render(request, 'add-record.html', context)
 
 def add_individual(request):
-    extra = ['Gender','Age','Disease Status',]
+    extra = []#'Gender','Age','Disease Status',]
     form = forms.AddIndividualForm(extraFields = extra)
     if request.method == 'POST':
         form = forms.AddIndividualForm(request.POST, extraFields = extra)
