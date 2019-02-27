@@ -81,20 +81,14 @@ class AddSampleForm(forms.ModelForm):
                   '_storageCondition', '_storageLocation', '_treatmentProtocol',
                   '_dateCreated','_organism', '_organismModifications', '_comments']
         widgets = {'_dateCreated':DateInput()}
-
-"""class AddIndividualForm(forms.ModelForm):
-    class Meta:
-        model = Individual
-        fields = ['_individualName', '_individualID',
-                  '_experiment', '_comments']#"""
         
 class AddIndividualForm(forms.ModelForm):
     class Meta:
         model = Individual
-        exclude = ['_individualID',]
+        exclude = ['_individualID','_extra_fields']
     def __init__(self,  *args,extraFields=None, **kwargs,):
         super(AddIndividualForm, self).__init__(*args, **kwargs)
-        if extraFields!=None:
+        if 'extraFields' in kwargs and extraFields!=None:
             for f in extraFields:
                 self.fields[f] = forms.CharField(label=f)
 

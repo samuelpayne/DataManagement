@@ -539,7 +539,7 @@ class IndividualView(ListView):
     paginate_by = 25
     def get_context_data(self, **kwargs):
         context = super(IndividualView, self).get_context_data(**kwargs)
-        table = IndividualTable(Individual.objects.all().order_by('-_individualName'))
+        table = IndividualTable(Individual.objects.all().order_by('_individualIdentifier'))
         RequestConfig(self.request, paginate={'per_page': 25}).configure(table)
         context['table'] = table
         context['Title'] = 'Individuals'

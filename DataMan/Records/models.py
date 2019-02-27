@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+import json
 
 #from django_mysql.models import ListCharField
 
@@ -164,7 +165,7 @@ class Sample(models.Model):
 
 class Individual(models.Model):
     _individualIdentifier = models.TextField(verbose_name='Individual Identifier',
-                                      unique=True)
+                                      )#unique=True)
     _individualID = models.AutoField(verbose_name='Individual ID', unique=True, primary_key=True)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                     blank=False, null=True, verbose_name='Experiment')
@@ -173,12 +174,20 @@ class Individual(models.Model):
     _healthStatus = models.TextField(verbose_name='Health Status')
     _comments = models.TextField(verbose_name='Comments, Notes, or Details', blank=True, null=True)
 
+    _extra_fields = models.TextField(blank=True, null=True)
+
     def individualIdentifier(self):
         return self._individualIdentifier
     def individualID(self):
         return self._individualID
     def experiment(self):
         return self._experiment
+
+    def extra_fields(self, value):
+        return self._extra_fields
+    def setExtraFields(self, value):
+        self._extra_fields = value
+
     def setIndividualIdentifier(self, value):
         self._individualIdentifier = value
     def setIndividualID(self, value):
@@ -207,7 +216,7 @@ class Experiment(models.Model):
     _experimentalDesign = models.ForeignKey('ExperimentalDesign', on_delete=models.SET_NULL, 
 		verbose_name='Experimental Design', blank=False, null=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
-
+	
     def experimentName(self):
         return self._experimentName
     def setExperimentName(self, value):

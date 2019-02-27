@@ -42,9 +42,9 @@ class ExperimentTable(tables.Table):
                   '_IRB','_experimentalDesign',]
 
 class IndividualTable(tables.Table):
-    _individualName = tables.LinkColumn('individual-detail', args=[A('pk')])
+    _individualIdentifier = tables.LinkColumn('individual-detail', args=[A('pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
     
     class Meta:
         model = Individual
-        exclude = ['_individualID']
+        exclude = ['_individualID', '_extra_fields']
