@@ -135,6 +135,7 @@ def read_data(wb, lead, read_map):
 		wlRow = wb[read_map['wsWL']][wlrowNum]
 
 		#Otherwise read it in
+
 		e_n = exp_exist_or_new(i[int(read_map['experiment_loc'])].value, lead)
 		experiment = e_n[2]
 		summary.append(e_n)
@@ -353,7 +354,7 @@ def add_individual(request, experiment = None):
             for f in extra:
                 extraFieldData[f] = form.data[f]
             print (extraFieldData)
-            new_Individual.setExtraFields(JSON.parse(extraFieldData))
+            new_Individual.setExtraFields(extraFieldData)
             for f in new_Individual.extra_fields():
                 print (f)
             new_Individual.save()
