@@ -14,6 +14,7 @@ from Records.read_maps import *
 from datetime import datetime
 from django.forms import formset_factory
 import openpyxl
+import json
 
 """Records named 'records'
     Give options:
@@ -120,7 +121,12 @@ def read_data(wb, lead, read_map):
 
 	summary = [("Upload summary:")]
 	wlrowNum = read_map['wlrowNumInit']
+	#print (wsIn['C34'])
+	#print (read_map['in_section'])
+	#print (wsIn[read_map['in_section']])
+	#print (wsIn[read_map['in_section'].format(wsIn.max_row)], 'here')
 	for i in wsIn[(read_map['in_section']).format(wsIn.max_row)]:
+		# i in wsIn['B34:H63']: #.format(wsIn.max_row):
 		#each record a dataset associated with a sample
 		if i[read_map['sample_name']].value is None:
 			return summary
@@ -129,7 +135,7 @@ def read_data(wb, lead, read_map):
 		wlRow = wb[read_map['wsWL']][wlrowNum]
 
 		#Otherwise read it in
-		e_n = exp_exist_or_new(i[read_map['experiment_loc']].value, lead)
+		e_n = exp_exist_or_new(i[int(read_map['experiment_loc'])].value, lead)
 		experiment = e_n[2]
 		summary.append(e_n)
 
@@ -141,7 +147,7 @@ def read_data(wb, lead, read_map):
 		summary.append(e_n)
 
 		print (summary)
-
+		
 	wlRow = None
 	wsIn = None
 
@@ -327,20 +333,29 @@ def add_experiment(request):
 
     return render(request, 'add-record.html', context)
 
-def add_individual(request):
-    extra = []#'Gender','Age','Disease Status',]
+def add_individual(request, experiment = None):
+    if experiment == None:
+        extra = []
+    else:
+        if True:#try:
+            experiment_set = Experiment.objects.all()
+            exp = experiment_set.get(pk = experiment)
+            extra = exp.experimentalDesign().extra_fields()
+        #except: extra = []
+    
     form = forms.AddIndividualForm(extraFields = extra)
     if request.method == 'POST':
         form = forms.AddIndividualForm(request.POST, extraFields = extra)
         if form.is_valid():
             new_Individual = form.save(commit = False)
             #parses to JSON
-            extraFieldData = '{'
+            extraFieldData = {}
             for f in extra:
-                extraFieldData+=' "'+str(f)+'":"'
-                extraFieldData += str(form.data[f])+'",'
-            extraFieldData +='}'
-            new_Individual.setComments(extraFieldData)
+                extraFieldData[f] = form.data[f]
+            print (extraFieldData)
+            new_Individual.setExtraFields(JSON.parse(extraFieldData))
+            for f in new_Individual.extra_fields():
+                print (f)
             new_Individual.save()
             return redirect('individuals')
     context = {

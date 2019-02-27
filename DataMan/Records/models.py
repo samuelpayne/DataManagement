@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import datetime
 import json
+from django_mysql.models import ListTextField
 
 #from django_mysql.models import ListCharField
 
@@ -165,7 +166,7 @@ class Sample(models.Model):
 
 class Individual(models.Model):
     _individualIdentifier = models.TextField(verbose_name='Individual Identifier',
-                                      )#unique=True)
+                                      unique=True)
     _individualID = models.AutoField(verbose_name='Individual ID', unique=True, primary_key=True)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                     blank=False, null=True, verbose_name='Experiment')
@@ -183,7 +184,7 @@ class Individual(models.Model):
     def experiment(self):
         return self._experiment
 
-    def extra_fields(self, value):
+    def extra_fields(self):
         return self._extra_fields
     def setExtraFields(self, value):
         self._extra_fields = value
@@ -296,8 +297,18 @@ class Instrument(detailedField):
 		return self._file
 
 class ExperimentalDesign(detailedField):
+	_extra_fields = ListTextField(
+		base_field = models.CharField(blank=True,null=True,max_length=100),
+		null=True, blank=True,
+		#Text fields are not allowed, and these are headers/category names
+	)
 	def __str__(self):
-		return self._name
+		return str(self._name)
+	
+	def extra_fields(self):
+		return self._extra_fields
+	def set_extra_fields(self, value):
+		self._extra_fields = value
 
 class Protocol(detailedField):
 	def __str__(self):

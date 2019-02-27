@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 from django.core.exceptions import ValidationError
 from Records.models import *
+import json
 
 STATUS_OPTIONS = [#Probably eventually replace with something not hard coded in
     ('In Progress','In Progress'), #Maybe a fixture, maybe just add them manually
@@ -88,7 +89,7 @@ class AddIndividualForm(forms.ModelForm):
         exclude = ['_individualID','_extra_fields']
     def __init__(self,  *args,extraFields=None, **kwargs,):
         super(AddIndividualForm, self).__init__(*args, **kwargs)
-        if 'extraFields' in kwargs and extraFields!=None:
+        if extraFields!=None:
             for f in extraFields:
                 self.fields[f] = forms.CharField(label=f)
 

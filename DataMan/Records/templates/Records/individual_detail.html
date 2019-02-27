@@ -1,7 +1,8 @@
 {% extends "generic.html" %}
-
+var extra = JSON.parse(individual.extra_fields)
 {% block content %}
 <h2>{{ individual }}</h2>
 <p><Strong>Experiment:</Strong> {{individual.experiment}} </p>
 <p><Strong>Comments:</Strong> {{individual.comments}} </p>
+<p><Strong>{{extra}}</Strong>{{individual.extra_fields}} </p>
 {% endblock %}

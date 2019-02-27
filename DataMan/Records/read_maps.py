@@ -56,7 +56,7 @@ read_in_map_gen = {
 	'sheetType':'General',
 
 	'wsIn':'Input', #name of Input worksheet
-	'in_section':'B34:{}{}', #Where the samples are defined (as rows)
+	'in_section':'B34:H{}', #Where the samples are defined (as rows)
 	'start_loc':'C34', #Required field for first row (empty if empty file)
 	'sample_name':1, #Within a row, required sample name (empty only at the end)
 	'storage_location':8, #within a row, (not intended to be tray pos)

@@ -19,9 +19,8 @@ urlpatterns = [
     path('add/samples/', views.add_sample, name = 'add-sample'),
     path('add/datasets/', views.add_dataset, name = 'add-dataset'),			#
     path('add/individual/', views.add_individual, name = 'add-individual'),
+    path('add/individual/<int:experiment>', views.add_individual, name = 'add-individual'),
     path('add/experiments/', views.add_experiment, name = 'add-experiment'),
-
-    #path('add/samples/bulk', views.add_sample_bulk, name = 'add-samples-bulk'),
 
 	#for editing 
     path('add/experiments/<int:pk>/', views.edit_experiment, name = 'edit-experiment'),
