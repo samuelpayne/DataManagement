@@ -336,6 +336,13 @@ def add_experiment(request):
 
 def add_individual(request, experiment = None):
     if experiment == None:
+        form = forms.AddIndividualForm()# GetExperForm()
+        context = {
+            'form':form,
+            'header':'Add Individual',
+        }
+
+        return render(request, 'add-record.html', context)
         extra = []
     else:
         if True:#try:
