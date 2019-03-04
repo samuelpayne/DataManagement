@@ -14,6 +14,7 @@ from Records.read_maps import *
 from datetime import datetime
 from django.forms import formset_factory
 import openpyxl
+from openpyxl.utils import get_column_letter
 import json
 
 """Records named 'records'
@@ -121,11 +122,11 @@ def read_data(wb, lead, read_map):
 
 	summary = [("Upload summary:")]
 	wlrowNum = read_map['wlrowNumInit']
-	#print (wsIn['C34'])
-	#print (read_map['in_section'])
-	#print (wsIn[read_map['in_section']])
-	#print (wsIn[read_map['in_section'].format(wsIn.max_row)], 'here')
-	for i in wsIn[(read_map['in_section']).format(wsIn.max_row)]:
+	if read_map['variable_colums_TF']:
+		rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
+	else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
+
+	for i in rows:
 		# i in wsIn['B34:H63']: #.format(wsIn.max_row):
 		#each record a dataset associated with a sample
 		if i[read_map['sample_name']].value is None:
@@ -136,7 +137,10 @@ def read_data(wb, lead, read_map):
 
 		#Otherwise read it in
 
-		e_n = exp_exist_or_new(i[int(read_map['experiment_loc'])].value, lead)
+		if read_map['experiment_global']:
+			e_n = exp_exist_or_new(wsIn[read_map['experiment_loc']].value, lead)
+		else:
+			e_n = exp_exist_or_new(i[int(read_map['experiment_loc'])].value, lead)
 		experiment = e_n[2]
 		summary.append(e_n)
 
@@ -181,15 +185,20 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 	if read_map['date_global']: date = wsIn[read_map['date_created']].value
 	else: date = row[read_map['date_created']].value
 
+	try:
+		date = datetime.strptime(date, '%M-%d-%Y').strftime('%Y-%m-%d')
+	except:
+		date = ''
+
 	newSample = Sample(
 		_sampleName = name,
 		_storageCondition = "Processing",
 		_experiment = experiment,
 		_storageLocation = str(row[read_map['storage_location']].value),
-		_dateCreated = datetime.strptime(date, '%M-%d-%Y').strftime('%Y-%m-%d'),
-		_organism = wsIn[read_map['organism']].value,
+		_organism = wsIn[(read_map['organism'])].value,
 		_comments = comment,
 	)
+	if date !='': newSample.date_created(date)
 	newSample.save()
 	return [NEW, 'Sample: ', newSample]
 
@@ -210,12 +219,14 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 		if InstrumentSetting.objects.all().filter(_name = methodName).exists():
 			return [EXISTING,'Instrument Setting: ',InstrumentSetting.objects.all().get(_name = methodName)]
 		ins = InstrumentSetting(_name = methodName)
-		settings_column = wb[read_map['settings_sheet']][read_map['settings_keyword_column']]
+		#If we wanted to try reverse-engineering the lookup function and get the rest pf the setting information
+		#it'd look a bit like this.
+		#settings_column = wb[read_map['settings_sheet']][read_map['settings_keyword_column']]
 
 		filename = wlRow[read_map['settings_file']]
 		print(filename)
 		try: ins.file = open(filename)
-		except: print (filename, " open failed.")
+		except: ins.comments(ins.comments + finename)#print (filename, " open failed.")
 		print ("Settings Saved")
 		ins.save()
 		return [NEW, 'Instrument Setting: ', ins]
@@ -230,10 +241,10 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 	dataType = wsIn[read_map['data_type_loc']].value
 	date = datetime.strptime(wsIn[read_map['date_loc']].value, '%M-%d-%Y').strftime('%Y-%m-%d')
 
-	if read_map['file_extension_from_excel']: extension = str(wsWL[read_map['file_extension']].value)
+	wsWL = wb[read_map['wsWL']]
+	if read_map['file_extension_from_excel']: extension = str(wlRow[read_map['file_extension']].value)
 	else: extension = str(read_map['file_extension'])
 
-	wsWL = wb[read_map['wsWL']]
 	newDataset = Dataset(
 		_datasetName = name,
 		_experiment = experiment,

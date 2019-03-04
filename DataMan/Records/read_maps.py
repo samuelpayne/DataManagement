@@ -9,6 +9,7 @@
 read_in_map_MS = {
 	'sheetType':'Mass spec',
 	'wsIn':'Input', #name of Input worksheet
+	'variable_colums_TF': False, # the number of columns is set
 	'in_section':'B34:H{}', #Where the samples are defined (as rows)
 	'start_loc':'C34', #Required field for first row (empty if empty file)
 	'sample_name':2, #Within a row, required sample name (empty only at the end)
@@ -36,11 +37,13 @@ read_in_map_MS = {
 	'date_loc':'J5',
 
 	#Instrument Settings file upload
+	#None are currently used
 	'settings_sheet':'Methods',
 	'settings_keyword_column':'B',
 	'settings_file_column':'C',
 	'settings_description':'E',
 
+	'settings_file':5, #in wlrow
 	#Worklist fields (about dataset, different rows)
 	'wsWL':'Worklist',
 	'wlrowNumInit':1, #one less than the row to start on
@@ -56,7 +59,9 @@ read_in_map_gen = {
 	'sheetType':'General',
 
 	'wsIn':'Input', #name of Input worksheet
-	'in_section':'B34:H{}', #Where the samples are defined (as rows)
+	'variable_colums_TF': True, # the number of columns is flexible
+	#		meaning that users can add columns and views needs to format the section with rows and columns
+	'in_section':'C34:{}{}', #Where the samples are defined (as rows)
 	'start_loc':'C34', #Required field for first row (empty if empty file)
 	'sample_name':1, #Within a row, required sample name (empty only at the end)
 	'storage_location':8, #within a row, (not intended to be tray pos)
@@ -65,36 +70,38 @@ read_in_map_gen = {
 	'organism':'J2', #absolute cell
 	'comments_row':{ #Any extra information
 		#Format: 'Heading: ':row index
-		'Concentration: ':5,
+		'Concentration: ':4,
 	},
 	'comments_gen':{ #Information not on the row
 		#Format: 'Heading: ':cell 
-		'Notebook code: ':'J4',
+		'Notebook code: ':'J5',
 	},
 	
-	'experiment_global':True, #Are all samples of the same experiment?
-	'experiment_loc':'C2', #input row index or cell if global
+	'experiment_global':False, #Are all samples of the same experiment?
+	'experiment_loc':0, #input row index or cell if global
 
 	#Input sheet dataset information
 	'setting_loc':5, #Input row coordinate
-	'data_type_loc':'I3', #Input sheet cells
+	'data_type_loc':'J3', #Input sheet cells
 	'instrument_type_loc':'J3',
 	'inst_code':'J4',
-	'date_loc':'J5',
+	'date_loc':'J6',
 	
 	#Instrument Settings file upload
 	'settings_sheet':'Methods',
 	'settings_keyword_column':'B',
 	'settings_file_column':'C',
 	'settings_description':'E',
+	
+	'settings_file':7,#relative to wlrow
 
 	#Worklist fields (about dataset, different rows)
 	'wsWL':'Worklist',
 	'wlrowNumInit':1, #one less than the row to start on
 	#				with reference to the worklist sheet
 	'dataset_name':4,#worklist row coordinate
-	'file_location':5,
+	'file_location':6,
 	'file_name':4, #worklist row index (optionally same as dataset)
 	'file_extension_from_excel':True, #If the extension is specified or assumed
-	'file_extension':'A7', #absolute (or cell if specified)
+	'file_extension':5, #literal or relative to row
 }

@@ -11,7 +11,7 @@ class Dataset(models.Model):
                                    unique=True)
     _datasetID = models.AutoField(verbose_name='Dataset ID', primary_key=True,
                                     unique=True)
-    _sample = models.ManyToManyField('Sample', verbose_name="Sample", blank=False,null=True)
+    _sample = models.ManyToManyField('Sample', verbose_name="Sample", blank=False)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                    blank=True, null=True,verbose_name='Experiment')
     _instrument = models.ForeignKey('Instrument', verbose_name='Instrument', on_delete=models.SET_NULL, blank=False, null=True)
