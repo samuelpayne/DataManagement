@@ -336,12 +336,18 @@ def add_experiment(request):
 
 def add_individual(request, experiment = None):
     if experiment == None:
-        form = forms.AddIndividualForm()# GetExperForm()
+        form = forms.SelectExperiment()# GetExperForm()
         context = {
             'form':form,
             'header':'Add Individual',
         }
-
+        if request.method == 'POST':
+            form = forms.SelectExperiment(request.POST)
+            if form.is_valid():
+                individual = form.save(commit = False)
+                key = individual.experiment()._experimentID
+                print (key)
+            return redirect('add-individual', key)
         return render(request, 'add-record.html', context)
         extra = []
     else:
@@ -372,7 +378,6 @@ def add_individual(request, experiment = None):
     }
 
     return render(request, 'add-record.html', context)
-	
 
 def add_instrument(request):
 	form = forms.InstrumentForm()
