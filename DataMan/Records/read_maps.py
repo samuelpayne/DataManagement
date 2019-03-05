@@ -1,4 +1,6 @@
-"""These correlate the read-in fields and their locations.
+"""Project DataMan
+
+These correlate the read-in fields and their locations.
     These values can be adjusted to reflect changes in the
     excel workbook layout. Additional maps may be created
     to add layouts or formats.
@@ -61,8 +63,8 @@ read_in_map_gen = {
 	'wsIn':'Input', #name of Input worksheet
 	'variable_colums_TF': True, # the number of columns is flexible
 	#		meaning that users can add columns and views needs to format the section with rows and columns
-	'in_section':'C34:{}{}', #Where the samples are defined (as rows)
-	'start_loc':'C34', #Required field for first row (empty if empty file)
+	'in_section':'C18:{}{}', #Where the samples are defined (as rows)
+	'start_loc':'C18', #Required field for first row (empty if empty file)
 	'sample_name':1, #Within a row, required sample name (empty only at the end)
 	'storage_location':8, #within a row, (not intended to be tray pos)
 	'date_global':False,#date will either be absolute or in row

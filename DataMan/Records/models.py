@@ -1,10 +1,12 @@
+"""Project DataMan
+
+These define the 'models' (like classes)
+    with certain fields."""
+
 from django.db import models
 from datetime import datetime
 import json
 from django_mysql.models import ListTextField
-
-#from django_mysql.models import ListCharField
-
 
 class Dataset(models.Model):
     _datasetName = models.TextField(verbose_name='Dataset Name',
@@ -99,7 +101,6 @@ class Dataset(models.Model):
 
     def __str__(self):
         return str(self._datasetName)
-
 
 class Sample(models.Model):
     _sampleName = models.TextField(verbose_name="Sample Name",
@@ -249,8 +250,6 @@ class Experiment(models.Model):
 
     def __str__(self):
         return str(self._experimentName)
-
-
 
 class detailedField(models.Model):
 	_name = models.CharField(unique=True, primary_key=True,

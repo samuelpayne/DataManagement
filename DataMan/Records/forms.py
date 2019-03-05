@@ -1,3 +1,8 @@
+"""Project DataMan
+
+These use the django forms to make
+    data entry easy."""
+
 from django import forms
 from datetime import datetime
 from datetime import timedelta

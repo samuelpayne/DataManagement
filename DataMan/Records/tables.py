@@ -1,3 +1,7 @@
+"""Project DataMan
+
+These define the tables used in the archive view pages."""
+
 import django_tables2 as tables
 from django_tables2.utils import A
 from Records.models import Dataset, Sample, Experiment, Individual
@@ -5,7 +9,6 @@ from Records.models import Dataset, Sample, Experiment, Individual
 
 class DatasetTable(tables.Table):
     _datasetName = tables.LinkColumn('dataset-detail', args=[A('pk')])
-    #_sample = tables.LinkColumn('sample-detail', args=[A('_sample.pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
 
     _dateCreated = tables.DateTimeColumn(format ='M d, Y')
@@ -16,14 +19,12 @@ class DatasetTable(tables.Table):
         model = Dataset
         fields = ['_experiment','_datasetName', '_instrument', '_instrumentSetting','_type',
                   '_operator','_status','_dateCreated','_fileLocation',
-                  '_fileName',#'_acquisitionStart','_acquisitionEnd',
+                  '_fileName',
                   '_fileSize', '_comments']
 
 class SampleTable(tables.Table):
     _sampleName = tables.LinkColumn('sample-detail', args=[A('pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
-    #dataset = tables.LinkColumn('dataset-detail', args=[A('dataset.pk')], verbose_name = 'Dataset')
-	#since they are now many-to-many, this doesn't make sense to link here
 
     _dateCreated = tables.DateTimeColumn(format ='M d, Y')
 

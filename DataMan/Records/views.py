@@ -1,4 +1,8 @@
-"""This is the code handling each of the pages."""
+"""Project DataMan
+
+This is the code handling each of the pages.
+    It connects the templates to the urls and 
+    the information from the database."""
 
 from django.shortcuts import render, redirect
 from django.views.generic import ListView
@@ -16,6 +20,10 @@ from django.forms import formset_factory
 import openpyxl
 from openpyxl.utils import get_column_letter
 import json
+
+
+NEW = 'NEW'
+EXISTING = '(Existing)'
 
 """Records named 'records'
     Give options:
@@ -68,56 +76,101 @@ def create_new(request):
 
 def success(request):
 	return render(request, 'success.html')
-	
+
 def upload(request):
 	form = forms.UploadFileForm()
 	upload_status = ['']
 	summary = ''
-	if request.method == 'POST':
-		print ("Hello\n\n\n\n")
+	upload_summary = ['']
+	upload_options = {}
+
+	if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
+
 		form = forms.UploadFileForm(request.POST, request.FILES)
-		print ("Form Validity check:", form.is_valid())
 		if form.is_valid():
 			file = request.FILES['_File']
 			data = form.save(commit = False)
 			lead = data.lead
-			#print (file)
-		#try: #Catch invalid formats, etc.
-		if True: #Allows for effective debugging
-			print ("Trying open...")
+		try: #Catch invalid formats, etc.
+			#if True: #Allows for effective debugging
 			wb = openpyxl.load_workbook(file, data_only=True)
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
-			print ("Successful open")
 			if wb['Input']['I3'].value == "Mass spec":
-				upload_status = read_data(wb, lead, read_in_map_MS) #to be used in template
+				upload_summary = read_data(wb, lead, read_in_map_MS) #to be used in template
 			elif wb['Input']['I3'].value == "Instrument Type":
 				
-				upload_status = read_data(wb, lead, read_in_map_gen)#"Upload Successful"
+				upload_summary = read_data(wb, lead, read_in_map_gen)#"Upload Successful"
 			else: 
-				print('Unknown format')
-				upload_status = "Unknown format. Please use one of the provided templates."
+				upload_summary = "Unknown format. Please use one of the provided templates."
 			wb.close()
-		"""except:
-			print("Read in error") 
+			upload_options = {
+				'Confirm': True,
+				'Cancel': False,
+			}
+			if len(upload_summary) >1: summary = upload_summary[1:]
+		except:
 			upload_status = "Read in error.\nPlease use one of the provided templates."
 		#"""
-		#return redirect('records')
-		if len(upload_status) >1: summary = upload_status[1:]
+
+		#saves summary of changes till delete option
+		i = 0 
+		request.session['upload_summary'] = {}
+		for report in upload_summary:
+			request.session['upload_summary'][i] = report
+			i +=1
+		request.session.modified = True
 
 	context = {
 		'form':form,
-		'upload_status':upload_status[0],
+		'upload_status':upload_summary[0],
 		'summary': summary,
+		'upload_options': upload_options,
 	}
-	return render(request, 'upload.html',context)
 
-NEW = 'NEW'
-EXISTING = '(Existing)'
+	#Cancel options - currently functions 
+	#on keep or delete
+	if request.POST.get('option') == "Confirm":
+		context['upload_status'] = 'Saved'
+		context['summary'] = ''
+		del request.session['upload_summary']
+	elif request.POST.get('option') == 'Cancel':
+		try:
+			#get rid of read in data
+			upload_summary = request.session.get('upload_summary')
+
+			for i in upload_summary:
+				if int(i) !=0: #
+					v = upload_summary[i]
+					if v[0] == NEW:
+						#was new with this read in 
+						#needs to be deleted
+						if 'Experiment' in v[1]:
+							#it's an experiment
+							experiment = Experiment.objects.all().get(_experimentName = v[2])
+							experiment.delete()
+						elif 'Dataset' in v[1]:
+							#may have been deleted with the experiment
+							if Dataset.objects.all().filter(_datasetName = v[2]).exists():
+								dataset = Dataset.objects.all().get(_datasetName = v[2])
+								dataset.delete()
+						elif 'Sample' in v[1]:
+							#it's a sample -- it may have been deleted with the parent
+							#experiment, so we check if it exists
+							if Sample.objects.all().filter(_sampleName = v[2]).exists():
+								s = Sample.objects.all().get(_sampleName = v[2])
+								s.delete()
+						else:
+							print (v, "Delete Unsuccessful")
+			context['upload_status'] = 'Cancelled'
+			del request.session['upload_summary']
+		except: context['upload_status'] = 'Cancel Failed.\nPlease check if the uploaded data is in the database and retry if necessary.'
+
+	return render(request, 'upload.html', context)
+
 def read_data(wb, lead, read_map):
 	wsIn = wb[read_map['wsIn']]
 	if wsIn[read_map['start_loc']].value is None:
-		print ("Empty file")
 		return ["Empty file"]
 
 	summary = [("Upload summary:")]
@@ -141,17 +194,15 @@ def read_data(wb, lead, read_map):
 			e_n = exp_exist_or_new(wsIn[read_map['experiment_loc']].value, lead)
 		else:
 			e_n = exp_exist_or_new(i[int(read_map['experiment_loc'])].value, lead)
-		experiment = e_n[2]
+		experiment = Experiment.objects.all().get(_experimentName = e_n[2])
 		summary.append(e_n)
 
 		e_n = sample_exists_or_new(i[read_map['sample_name']].value, experiment, i, wsIn, read_map)
-		sample = e_n[2]
+		sample = Sample.objects.all().get(_sampleName = e_n[2])
 		summary.append(e_n)
 		
 		e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, i, wb, wsIn, wlRow, read_map)
 		summary.append(e_n)
-
-		print (summary)
 		
 	wlRow = None
 	wsIn = None
@@ -160,19 +211,19 @@ def read_data(wb, lead, read_map):
 def exp_exist_or_new(name, lead):
 	experiments = Experiment.objects.all()
 	if experiments.filter(_experimentName = name).exists():
-		return [EXISTING, 'Experiment: ', experiments.get(_experimentName = name)]
+		return [EXISTING, 'Experiment: ', name]
 	#the experiment needs to be created
 	newExp = Experiment(
 		_experimentName = name,
 		_projectLead =  lead,
 	)
 	newExp.save()
-	return [NEW, 'Experiment: ', newExp]
+	return [NEW, 'Experiment: ', name, newExp.experimentID()]
 
 def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 	samples = Sample.objects.all()
 	if samples.filter(_sampleName = name).exists():
-		return [EXISTING, 'Sample: ', samples.get(_sampleName = name)]
+		return [EXISTING, 'Sample: ', name]
 
 	comment = ""
 	for c in read_map['comments_row']:
@@ -198,17 +249,16 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 		_organism = wsIn[(read_map['organism'])].value,
 		_comments = comment,
 	)
-	if date !='': newSample.date_created(date)
+	if date !='': newSample.setDateCreated(date)
 	newSample.save()
-	return [NEW, 'Sample: ', newSample]
+	return [NEW, 'Sample: ', name]
 
 def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_map):
 	datasets = Dataset.objects.all()
 
 	if datasets.filter(_datasetName = name).exists():
-		return [EXISTING, 'Dataset: ', datasets.get(_datasetName = name)]
-		
-
+		return [EXISTING, 'Dataset: ', name]
+	
 	def inst_exists_or_new(insName):
 		if Instrument.objects.all().filter(_name = insName).exists():
 			return [EXISTING,'Instrument: ', Instrument.objects.all().get(_name = insName)]
@@ -219,15 +269,13 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 		if InstrumentSetting.objects.all().filter(_name = methodName).exists():
 			return [EXISTING,'Instrument Setting: ',InstrumentSetting.objects.all().get(_name = methodName)]
 		ins = InstrumentSetting(_name = methodName)
-		#If we wanted to try reverse-engineering the lookup function and get the rest pf the setting information
+		#If we wanted to try reverse-engineering the lookup function and get the rest of the setting information
 		#it'd look a bit like this.
 		#settings_column = wb[read_map['settings_sheet']][read_map['settings_keyword_column']]
 
 		filename = wlRow[read_map['settings_file']]
-		print(filename)
 		try: ins.file = open(filename)
-		except: ins.comments(ins.comments + finename)#print (filename, " open failed.")
-		print ("Settings Saved")
+		except: ins.comments(ins.comments + finename)
 		ins.save()
 		return [NEW, 'Instrument Setting: ', ins]
 
@@ -263,8 +311,7 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 	newDataset.save()
 	newDataset._sample.add(sample)
 
-
-	return [NEW, 'Dataset: ', newDataset]
+	return [NEW, 'Dataset: ', name]
 
 """Page to add a sample"""
 def add_sample(request):
@@ -286,32 +333,11 @@ def add_sample(request):
 
     return render(request, 'add-record.html', context)
 
-##"""I'm looking into using a formset for bulk entry"""
-def add_sample_bulk(request):
-    formset =formset_factory(forms.AddSampleForm())
-    if request.method == 'POST':
-        formset =formset_factory(forms.AddSampleForm(request.POST, request.FILES))
-        """for form in formset:
-            if form.is_valid():
-                new_Sample = form.save()"""
-        return redirect('samples')
-
-    context = {
-        'form':form,
-        'header':'Add Sample'
-    }
-
-    return render(request, 'add-record-bulk.html', context)
-
 def add_dataset(request):
     form =forms.AddDatasetForm()
     if request.method == 'POST':
         form =forms.AddDatasetForm(request.POST)
-        print ("Testing Validity")
         if form.is_valid():
-            print ("Valid")
-            #new_Dataset = form.save(commit = False)
-            #new_Dataset._experiment = new_Dataset.sample()[0].experiment()
             new_Dataset = form.save()
             return redirect('datasets')
     buttons = {
@@ -323,7 +349,6 @@ def add_dataset(request):
         'header':'Add Dataset',
         'buttons':buttons
     }
-
 
     return render(request, 'add-record.html', context)
 
@@ -371,10 +396,7 @@ def add_individual(request, experiment = None):
             extraFieldData = {}
             for f in extra:
                 extraFieldData[f] = form.data[f]
-            print (extraFieldData)
             new_Individual.setExtraFields(extraFieldData)
-            for f in new_Individual.extra_fields():
-                print (f)
             new_Individual.save()
             return redirect('individuals')
     context = {

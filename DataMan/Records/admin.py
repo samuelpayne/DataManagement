@@ -1,3 +1,10 @@
+"""Project DataMan
+
+This defines what can be accessed
+through the default admin site. It is being used 
+primarily for development. End users will
+not use this admin interface."""
+
 from django.contrib import admin
 from Records.models import *
 

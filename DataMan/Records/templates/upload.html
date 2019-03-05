@@ -1,18 +1,17 @@
-<!--page for uploading excel files
-    or at least the page connecting those -->
+<!--Project DataMan
+
+page for uploading excel files-->
 {% extends "generic.html" %}
 {% load staticfiles%}
 
 {% block content %}
 <link rel="stylesheet" href="{% static '/css/upload.css' %}" />
 <h1>UPLOAD DATA</h1>
-<form action="" method="post" enctype="multipart/form-data">
+<form name="entry" action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <a class="nav-block" href="{% static 'download-template.xlsx' %}">
             <p class="nav-block__title"> Download Template</p>
     </a><!--
-    <br>
-    <br>
     <a class="nav-block" href="{% static 'generic-template.xlsx' %}">
         <p class="nav-block__title"> Download Template</p> 
     </a><!---->
@@ -26,10 +25,11 @@
       {{ field }}
     {% endfor %}
     <br><br>
-    <input class="nav-block" type="submit" value="Submit"/>
-</form>
+    <input class="nav-block" type="submit" value="Submit" name="Submit" id="Submit"/>
+    <!-- or end slash form>
 
-<div>
+ (Arrow thing) form name="confirm" action="#" method="get">-->
+
 <h3>{{upload_status}}</h3>
   {% for i in summary %}
     <p>
@@ -38,5 +38,15 @@
     {% endfor %}
     </p>
   {% endfor %}
-</div>
+  {% for b in upload_options %}
+    <!--<button name="option" class="nav-block" type="button">{{b}}</button><!--Fancy interior allowed-->
+    <input type="submit" id ={{b}} name="option" value={{b}} class="nav-block"  />
+  {% endfor %}
+</form>
 {% endblock %}
+
+<script>
+    $('option').click(function () {
+        console.log("IT")
+    })
+</script>
