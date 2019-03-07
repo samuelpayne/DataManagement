@@ -5,7 +5,6 @@
 }
 h1{
         grid-column: 1/5;
-        text-transform: uppercase;
 }
 .nav-block {
     width: 300px;

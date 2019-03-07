@@ -9,7 +9,6 @@ body {
 
 .add-header{
         grid-column: 1/4;
-        text-transform: uppercase;
 }
 
 ul.errorlist {
