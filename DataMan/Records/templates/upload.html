@@ -1,5 +1,4 @@
 <!--Project DataMan
-
 page for uploading excel files-->
 {% extends "generic.html" %}
 {% load staticfiles%}
@@ -26,10 +25,9 @@ page for uploading excel files-->
     {% endfor %}
     <br><br>
     <input class="nav-block" type="submit" value="Submit" name="Submit" id="Submit"/>
-    <!-- or end slash form>
+</form>
 
- (Arrow thing) form name="confirm" action="#" method="get">-->
-
+<form name="confirm" action="#" method="get">
 <h3>{{upload_status}}</h3>
   {% for i in summary %}
     <p>
@@ -39,14 +37,8 @@ page for uploading excel files-->
     </p>
   {% endfor %}
   {% for b in upload_options %}
-    <!--<button name="option" class="nav-block" type="button">{{b}}</button><!--Fancy interior allowed-->
-    <input type="submit" id ={{b}} name="option" value={{b}} class="nav-block"  />
+    <input type="button" id ={{b}} name="option" value={{b}} 
+           onclick="window.location.href=('?option='+this.value)"/>
   {% endfor %}
 </form>
 {% endblock %}
-
-<script>
-    $('option').click(function () {
-        console.log("IT")
-    })
-</script>

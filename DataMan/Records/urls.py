@@ -19,6 +19,7 @@ urlpatterns = [
 
 	#successful entry/upload page
 	path('success/', views.success, name='success'),
+	path('response/', views.success, name='response'),
 
     #add pages with form
 	path('about/', views.about, name='about'),

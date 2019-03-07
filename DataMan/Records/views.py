@@ -74,10 +74,14 @@ def archive(request):
 def create_new(request):
     return render(request, 'create-new.html',)
 
-def success(request):
-	return render(request, 'success.html')
+def success(request, message = 'Successfully recorded'):
+	if request.session.get('message') and request.session['message'] != None:
+		message = request.session['message']
+	context = {'message':message}
+	request.session['message'] = None
+	return render(request, 'success.html', context)
 
-def upload(request):
+def upload(request, option = None):
 	form = forms.UploadFileForm()
 	upload_status = ['']
 	summary = ''
@@ -130,11 +134,17 @@ def upload(request):
 
 	#Cancel options - currently functions 
 	#on keep or delete
-	if request.POST.get('option') == "Confirm":
+
+	if request.GET.get('option') == "Confirm":
 		context['upload_status'] = 'Saved'
 		context['summary'] = ''
-		del request.session['upload_summary']
-	elif request.POST.get('option') == 'Cancel':
+		try: del request.session['upload_summary']
+		except:
+			request.session['message'] = 'Unable to verify save.'
+			return redirect('success')
+		request.session['message'] = 'Saved.'
+		return redirect('success')
+	elif request.GET.get('option') == 'Cancel':
 		try:
 			#get rid of read in data
 			upload_summary = request.session.get('upload_summary')
@@ -162,10 +172,10 @@ def upload(request):
 								s.delete()
 						else:
 							print (v, "Delete Unsuccessful")
-			context['upload_status'] = 'Cancelled'
+			request.session['message'] = 'Upload Cancelled'
 			del request.session['upload_summary']
-		except: context['upload_status'] = 'Cancel Failed.\nPlease check if the uploaded data is in the database and retry if necessary.'
-
+		except: request.session['message'] = 'No upload found.'
+		return redirect('success')
 	return render(request, 'upload.html', context)
 
 def read_data(wb, lead, read_map):
