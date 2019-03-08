@@ -25,6 +25,17 @@
         {{ field }}
       {% endfor %}
       <br><br>
+      <h3>{{secFormHeading}}</h3>
+      {% for field in secForm %}
+        <p class="form-title">{{ field.label }}</p>
+        {% for error in field.errors %}
+          {% if error != 'This field is required.' %}
+            <p class="form-error">{{ error }}</p>
+          {% endif %}
+        {% endfor%}
+        {{ field }}
+      {% endfor %}
+      <br><br>
       <input class="nav-block" type="submit" value="Submit"/>
   </form>
 {% endblock %}

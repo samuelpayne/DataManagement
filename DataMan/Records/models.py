@@ -7,6 +7,7 @@ from django.db import models
 from datetime import datetime
 import json
 from django_mysql.models import ListTextField
+from django.conf import settings
 
 class Dataset(models.Model):
     _datasetName = models.TextField(verbose_name='Dataset Name',
@@ -253,10 +254,10 @@ class Experiment(models.Model):
 
 class detailedField(models.Model):
 	_name = models.CharField(unique=True, primary_key=True,
-			blank=False, null=False, max_length = 20, verbose_name= "Name")
+			blank=False, null=False, max_length = 25, verbose_name= "Name")
 	_description = models.TextField(verbose_name="Description",blank=True, null=True)
 	_file = models.FileField(verbose_name='Related file or images',
-		upload_to = 'files/%Y/%m/%d/', blank=True, null=True)
+		upload_to = settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank=True, null=True)
 	
 	class Meta:# this sets the default sort
 		ordering = ['_name']

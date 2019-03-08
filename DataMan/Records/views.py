@@ -365,17 +365,24 @@ def add_dataset(request):
 
 def add_experiment(request):
     form = forms.AddExperimentForm()
+    desForm = forms.ExperimentalDesignForm()
     if request.method == 'POST':
         form =forms.AddExperimentForm(request.POST)
-        if form.is_valid():
-            new_Experiment = form.save()
+        desForm = forms.ExperimentalDesignForm(request.POST, request.FILES)
+        if form.is_valid() and desForm.is_valid():
+            new_Experiment = form.save(commit = False)
+            newDes = desForm.save()
+            new_Experiment.setExperimentalDesign(newDes)
+            new_Experiment.save()
             return redirect('experiments')
     buttons = {
-        'New Experimental Design': 'add-experimental-design',
+        #'New Experimental Design': 'add-experimental-design',
     }
     context = {
-        'form':form,
         'header':'Add Experiment',
+        'form':form,
+		'secFormHeading':'Experimental Design',
+		'secForm':desForm,
         'buttons':buttons
     }
 
