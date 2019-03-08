@@ -20,6 +20,7 @@ from django.forms import formset_factory
 import openpyxl
 from openpyxl.utils import get_column_letter
 import json
+from os.path import basename
 
 
 NEW = 'NEW'
@@ -394,14 +395,14 @@ def add_individual(request, experiment = None):
                 key = individual.experiment()._experimentID
                 print (key)
             return redirect('add-individual', key)
-        return render(request, 'add-record.html', context)
         extra = []
+        return render(request, 'add-record.html', context)
     else:
-        if True:#try:
+        try:
             experiment_set = Experiment.objects.all()
             exp = experiment_set.get(pk = experiment)
             extra = exp.experimentalDesign().extra_fields()
-        #except: extra = []
+        except: extra = []
     
     form = forms.AddIndividualForm(extraFields = extra)
     if request.method == 'POST':
@@ -632,16 +633,54 @@ Ex: sample 1234, dataset 3"""
 class SampleDetailView(DetailView):
     model = Sample
     template = 'sample_detail.html'
-    #"""
+
+    def get_context_data(self, **kwargs):
+        context = super(SampleDetailView, self).get_context_data(**kwargs)
+        design = context['experiment'].experimentalDesign()
+        context['protocol'] = design
+        context['protocol.description'] = design.description()
+        if design.file():
+            context['protocol_filename'] = basename(design.file().path)
+            context['protocol_download'] =design.file().url
+        return context
 
 class DatasetDetailView(DetailView):
     instrumentSetting = "new"
     model = Dataset
     template = 'dataset_detail.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(DatasetDetailView, self).get_context_data(**kwargs)
+        instrument = context['dataset'].instrument()
+        context['instrument'] = instrument
+
+        context['instrument.description'] = instrument.description()
+        if instrument.file():
+            context['instrument_filename'] = basename(instrument.file().path)
+            context['instrument_download'] =instrument.file().url
+        
+        setting = context['dataset'].instrumentSetting()
+        context['setting'] = setting
+        
+        context['setting.description'] = setting.description()
+        if setting.file():
+            context['setting_filename'] = basename(setting.file().path)
+            context['setting_download'] =setting.file().url
+        return context
+
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ExperimentDetailView, self).get_context_data(**kwargs)
+        design = context['experiment'].experimentalDesign()
+        context['design'] = design
+        context['design.description'] = design.description()
+        if design.file():
+            context['design_filename'] = basename(design.file().path)
+            context['design_download'] =design.file().url
+        return context
 
 class IndividualDetailView(DetailView):
 	model = Individual

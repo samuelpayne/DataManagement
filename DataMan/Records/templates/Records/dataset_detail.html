@@ -4,17 +4,24 @@
 <h2>{{ dataset }}</h2>
 <Strong>Samples:</Strong>
     {% if dataset.sample.all.count != 0 %}
-    <ul style="margin-left: 5px;">
-        {% for Sample in dataset.sample.all %}
-        <li> 
-            <a href="{% url 'sample-detail' Sample.sampleID %}"> {{Sample}} </a>
-        </li>
-        {% endfor %}
-    </ul>
+<ul style="margin-left: 5px;">
+    {% for Sample in dataset.sample.all %}
+    <li>
+        <a href="{% url 'sample-detail' Sample.sampleID %}"> {{Sample}} </a>
+    </li>
+    {% endfor %}
+</ul>
     {% else %}
-     <p> No Samples found. </p>
+<p> No Samples found. </p>
     {% endif %}
-<p><Strong>Instrument:</Strong> {{dataset.instrument}} </p>
+<p>
+    <Strong>Instrument:</Strong> {{instrument}}
+</p>
+    <blockquote>{{instrument.description}}</blockquote>
+<a href={{instrument_download}}>
+    <blockquote>{{instrument_filename}}</blockquote>
+</a>
+
 <p><Strong>Instrument Settings:</Strong> {{dataset.instrumentSetting}} </p>
 <p><Strong>Type of data generated:</Strong> {{dataset.type}} </p>
 <p><Strong>Operator:</Strong> {{dataset.type}}</p>
@@ -27,11 +34,6 @@
 <p><Strong>File Name:</Strong> {{dataset.fileName}}</p>
 <p><Strong>File Location:</Strong> {{dataset.fileLocation}}</p>
 <p><Strong>File Size:</Strong> {{dataset.fileSize}}</p>
-<p><Strong>File Hash:</Strong> {{dataset.fileHash}}</p>
-
-{% for f in dataset.genfields %}
-    <p>{{f.verbose_name}}: {{f.value}}</p>
-{% endfor %}
 
 <p><Strong><a href="{% url 'edit-dataset' dataset.datasetID %}">Edit</a></Strong></p>
 {% endblock %}

@@ -10,10 +10,7 @@ page for uploading excel files-->
     {% csrf_token %}
     <a class="nav-block" href="{% static 'download-template.xlsx' %}">
             <p class="nav-block__title"> Download Template</p>
-    </a><!--
-    <a class="nav-block" href="{% static 'generic-template.xlsx' %}">
-        <p class="nav-block__title"> Download Template</p> 
-    </a><!---->
+    </a>
     {% for field in form %}
       <p class="form-title">{{ field.label }}</p>
       {% for error in field.errors %}

@@ -265,15 +265,15 @@ class detailedField(models.Model):
 		return str(self._name)
 	def name(self):
 		return self._name
-	def name(self, value):
+	def setName(self, value):
 		self._name = value
 	def description(self):
 		return self._description
-	def description(self, value):
+	def setDescription(self, value):
 		self._description = value
 	def file(self):
 		return self._file
-	def file(self, value):
+	def setFile(self, value):
 		self._file = value
 
 class InstrumentSetting(detailedField):
@@ -283,7 +283,7 @@ class InstrumentSetting(detailedField):
 		return self._name
 	def instrument(self):
 		return self._instrument
-	def instrument(self, value):
+	def setInstrument(self, value):
 		self._instrument = value
 
 class Instrument(detailedField):
