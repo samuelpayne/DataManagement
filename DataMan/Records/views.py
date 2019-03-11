@@ -22,7 +22,6 @@ from openpyxl.utils import get_column_letter
 import json
 from os.path import basename
 
-
 NEW = 'NEW'
 EXISTING = '(Existing)'
 
@@ -84,20 +83,23 @@ def success(request, message = 'Successfully recorded'):
 
 def upload(request, option = None):
 	form = forms.UploadFileForm()
-	upload_status = ['']
+	upload_status = ''
 	summary = ''
 	upload_summary = ['']
 	upload_options = {}
 
-	if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
+	print("\n\n\nUpload Page")
 
+	if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
+		
+		print ("\nAttempting Upload")
 		form = forms.UploadFileForm(request.POST, request.FILES)
 		if form.is_valid():
 			file = request.FILES['_File']
 			data = form.save(commit = False)
 			lead = data.lead
-		try: #Catch invalid formats, etc.
-			#if True: #Allows for effective debugging
+		#try: #Catch invalid formats, etc.
+		if True: #Allows for effective debugging
 			wb = openpyxl.load_workbook(file, data_only=True)
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
@@ -114,8 +116,10 @@ def upload(request, option = None):
 				'Cancel': False,
 			}
 			if len(upload_summary) >1: summary = upload_summary[1:]
-		except:
-			upload_status = "Read in error.\nPlease use one of the provided templates."
+			upload_status = upload_summary[0]
+		#except:
+		#	upload_status = "Read in error.\nPlease use one of the provided templates."
+		print("finished Upload")
 		#"""
 
 		#saves summary of changes till delete option
@@ -128,7 +132,7 @@ def upload(request, option = None):
 
 	context = {
 		'form':form,
-		'upload_status':upload_summary[0],
+		'upload_status':upload_status,
 		'summary': summary,
 		'upload_options': upload_options,
 	}
@@ -137,6 +141,7 @@ def upload(request, option = None):
 	#on keep or delete
 
 	if request.GET.get('option') == "Confirm":
+		print ("confirm")
 		context['upload_status'] = 'Saved'
 		context['summary'] = ''
 		try: del request.session['upload_summary']
@@ -146,6 +151,8 @@ def upload(request, option = None):
 		request.session['message'] = 'Saved.'
 		return redirect('success')
 	elif request.GET.get('option') == 'Cancel':
+		context['upload_status'] = 'Cancelling...'
+		print ("cancel")
 		try:
 			#get rid of read in data
 			upload_summary = request.session.get('upload_summary')
@@ -177,6 +184,7 @@ def upload(request, option = None):
 			del request.session['upload_summary']
 		except: request.session['message'] = 'No upload found.'
 		return redirect('success')
+	print ("rendering Page")
 	return render(request, 'upload.html', context)
 
 def read_data(wb, lead, read_map):
@@ -291,14 +299,19 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 		return [NEW, 'Instrument Setting: ', ins]
 
 	summary = []
-	e_n = inst_exists_or_new((wsIn[read_map['instrument_type_loc']].value+' '+wsIn[ read_map['inst_code']].value))
+	ins_code = wsIn[read_map['inst_code']].value
+	if ins_code == None: ins_code = ''
+	else: ins_code = ' '+ins_code
+	e_n = inst_exists_or_new(str(wsIn[read_map['instrument_type_loc']].value)+ins_code)
+	print (e_n)
 	initInstrument = e_n[2]
 	if (e_n[0] == NEW): summary.append(e_n)
 	e_n = setting_exists_or_new(row[read_map['setting_loc']].value)
 	setting = e_n[2]
 
 	dataType = wsIn[read_map['data_type_loc']].value
-	date = datetime.strptime(wsIn[read_map['date_loc']].value, '%M-%d-%Y').strftime('%Y-%m-%d')
+	try: date = datetime.strptime(str(wsIn[read_map['date_loc']].value), '%M-%d-%Y').strftime('%Y-%m-%d')
+	except: date = False
 
 	wsWL = wb[read_map['wsWL']]
 	if read_map['file_extension_from_excel']: extension = str(wlRow[read_map['file_extension']].value)
@@ -312,13 +325,13 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 		_fileLocation = str(wlRow[read_map['file_location']].value),
 		_instrumentSetting = setting,
 		_type = dataType,
-		_dateCreated = date,
 		#Commas after each value
 		#acquisition dates
 		#_status
 		#_size
 		#_fileHash
 	)
+	if date: newDataset.setDateCreated(date)
 	newDataset.save()
 	newDataset._sample.add(sample)
 
@@ -400,10 +413,9 @@ def add_individual(request, experiment = None):
             if form.is_valid():
                 individual = form.save(commit = False)
                 key = individual.experiment()._experimentID
-                print (key)
             return redirect('add-individual', key)
         extra = []
-        return render(request, 'add-record.html', context)
+        return render(request, 'title-form.html', context)
     else:
         try:
             experiment_set = Experiment.objects.all()
@@ -566,20 +578,38 @@ def edit_experiment(request, pk):
 
     return render(request, 'add-record.html', context)
 
-
-
 """(type)Views generate the list view pages
 i.e., the list of samples that's now a table"""
 class SampleView(ListView):
     model = Sample
-    queryset = Sample.objects.all()
+
+    def get_exp(self, context):
+        form = forms.SelectExperiment()
+        if self.request.method == 'GET':
+            form =forms.SelectExperiment(self.request.GET)
+            if form.is_valid():
+                i = form.save(commit = False)
+                context['experiment'] = i.experiment()._experimentID
+        context['filter_by_exp'] = form
+        return context
+	    
+    def get_queryset(self, experiment = None):
+        if experiment == None:
+            queryset = Sample.objects.all()
+        else:
+            queryset = Sample.objects.filter(_experiment = experiment)
+        return queryset
 
     #DataMan\Records\templates\Records\samples_list.html
     template_name = 'samples_list.html'
     context_object_name = 'sample'
     def get_context_data(self, **kwargs):
         context = super(SampleView, self).get_context_data(**kwargs)
-        table = SampleTable(Sample.objects.all().order_by('-pk'))
+        context = self.get_exp(context, **kwargs)
+        if 'experiment' in context:
+            queryset = self.get_queryset(context['experiment'])
+        else: queryset = self.get_queryset()
+        table = SampleTable(queryset.order_by('-pk'))
         RequestConfig(self.request, paginate={'per_page': 25}).configure(table)
         context['table'] = table
         context['Title'] = 'Sample'
@@ -587,12 +617,33 @@ class SampleView(ListView):
 
 class DatasetView(ListView):
     model = Dataset
-    queryset = Dataset.objects.all()
+
+    def get_exp(self, context):
+        form = forms.SelectExperiment()
+        if self.request.method == 'GET':
+            form =forms.SelectExperiment(self.request.GET)
+            if form.is_valid():
+                i = form.save(commit = False)
+                context['experiment'] = i.experiment()._experimentID
+        context['filter_by_exp'] = form
+        return context
+	    
+    def get_queryset(self, experiment = None):
+        if experiment == None:
+            queryset = Dataset.objects.all()
+        else:
+            queryset = Dataset.objects.filter(_experiment = experiment)
+        return queryset
+
     template_name = 'dataset_list.html'
     context_object_name = 'dataset'
     def get_context_data(self, **kwargs):
         context = super(DatasetView, self).get_context_data(**kwargs)
-        table = DatasetTable(Dataset.objects.all().order_by('-pk'))
+        context = self.get_exp(context, **kwargs)
+        if 'experiment' in context:
+            queryset = self.get_queryset(context['experiment'])
+        else: queryset = self.get_queryset()
+        table = DatasetTable(queryset.order_by('-pk'))
         RequestConfig(self.request, paginate={'per_page': 25}).configure(table)
         context['table'] = table
         context['Title'] = 'Dataset'
@@ -643,12 +694,13 @@ class SampleDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(SampleDetailView, self).get_context_data(**kwargs)
-        design = context['experiment'].experimentalDesign()
-        context['protocol'] = design
-        context['protocol.description'] = design.description()
-        if design.file():
-            context['protocol_filename'] = basename(design.file().path)
-            context['protocol_download'] =design.file().url
+        design = context['sample'].treatmentProtocol()
+        if design != None:
+            context['protocol'] = design
+            context['protocol.description'] = design.description()
+            if design.file():
+                context['protocol_filename'] = basename(design.file().path)
+                context['protocol_download'] =design.file().url
         return context
 
 class DatasetDetailView(DetailView):

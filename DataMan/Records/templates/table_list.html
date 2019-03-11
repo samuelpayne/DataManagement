@@ -5,5 +5,18 @@
 {% block content %}
 <link rel="stylesheet" href="{% static '/css/archive.css' %}" />
 <h1>{{Title}}</h1>
+{% if filter_by_exp %}
+<form action="" method="get">
+  {% for field in filter_by_exp %}
+    <p class="form-title">{{ field.label }}</p>
+    {% for error in field.errors %}
+    {% if error != 'This field is required.' %}
+      <p class="form-error">{{ error }}</p>
+    {% endif %}
+    {% endfor%}
+    {{ field }}
+  {% endfor %}
+</form>
+{% endif %}
 {% render_table table %}
 {% endblock %}

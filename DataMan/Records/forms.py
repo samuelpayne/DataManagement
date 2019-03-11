@@ -89,6 +89,7 @@ class AddSampleForm(forms.ModelForm):
         widgets = {'_dateCreated':DateInput()}
 
 class SelectExperiment(forms.ModelForm):
+    _experiment = forms.ModelChoiceField(label='Experiment', queryset=Experiment.objects.all(), widget=forms.Select(attrs={"onChange":'form.submit()'}))
     class Meta:
         model = Individual
         fields = ['_experiment']

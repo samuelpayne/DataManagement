@@ -42,8 +42,9 @@ urlpatterns = [
     path('add/experimental-design/', views.add_experimental_design, name = 'add-experimental-design'),
 
     path('archive/', views.archive, name = 'archive'),
-    #url(regex=r'type=(.*)$', view='views.archive'),
     path('samples/', views.SampleView.as_view(), name = 'samples'),
+	#filtered by experiment
+    path('samples/<int:experiment>', views.SampleView.as_view(), name = 'samples'),
     path('datasets/', views.DatasetView.as_view(), name = 'datasets'),
     path('individuals/', views.IndividualView.as_view(), name = 'individuals'),
     path('experiments/', views.ExperimentView.as_view(), name = 'experiments'),
