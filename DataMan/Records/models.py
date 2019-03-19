@@ -332,8 +332,8 @@ class BackupFile(models.Model):
 	file = models.CharField(blank=False, verbose_name="File Name", max_length=100)
 	date = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
 
-	#def __str__(self):
-	#	return self.date.strftime('%Y-%m-%d')
+	def __str__(self):
+		return self.date.strftime('%Y-%m-%d')
 	def filename(self):
 		print ("File: ", self.file)
 		return self.file

@@ -27,6 +27,10 @@ read_in_map_MS = {
 		#Format: 'Heading: ':cell 
 		'Notebook code: ':'J4',
 	},
+	'in_section_lookup':'A34:D{}',
+	'lookup_column':0,#where sample numbers are defined as used on worklists
+	'lookup_exp':2,
+	'lookup_sample':3,
 	
 	'experiment_global':False, #Are all samples of the same experiment?
 	'experiment_loc':1, #Input row index if local, or cell
@@ -50,6 +54,9 @@ read_in_map_MS = {
 	'wsWL':'Worklist',
 	'wlrowNumInit':1, #one less than the row to start on
 	#				with reference to the worklist sheet
+	'wlRows':'A2:G{}', #Worklist rows to be processed
+	'wl_sample_type':3,#If QC versus defined on input
+	'wl_sample_num':2,
 	'dataset_name':4,#worklist row coordinate
 	'file_location':5,
 	'file_name':4, #worklist row index (optionally same as dataset)
@@ -78,6 +85,11 @@ read_in_map_gen = {
 		#Format: 'Heading: ':cell 
 		'Notebook code: ':'J5',
 	},
+	'in_section_lookup':'A18:D{}', #Which section contains the sample number,
+	#								Name, and experiment name
+	'lookup_column':0,
+	'lookup_exp':2,
+	'lookup_sample':3,
 	
 	'experiment_global':False, #Are all samples of the same experiment?
 	'experiment_loc':0, #input row index or cell if global
@@ -101,6 +113,9 @@ read_in_map_gen = {
 	'wsWL':'Worklist',
 	'wlrowNumInit':1, #one less than the row to start on
 	#				with reference to the worklist sheet
+	'wlRows':'A2:G{}', #Worklist rows to be processed
+	'wl_sample_type':3,#If QC versus defined on input
+	'wl_sample_num':2,
 	'dataset_name':4,#worklist row coordinate
 	'file_location':6,
 	'file_name':4, #worklist row index (optionally same as dataset)

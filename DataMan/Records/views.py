@@ -133,6 +133,8 @@ def backup(request):
 def restore(filename):
 	call_command('loaddata', filename, app_label='Records') 
 
+#this method handles the upload page and
+#directs the sheet to the read-in method
 def upload(request, option = None):
 	form = forms.UploadFileForm()
 	upload_status = ''
@@ -171,7 +173,7 @@ def upload(request, option = None):
 			upload_status = upload_summary[0]
 		#except:
 		#	upload_status = "Read in error.\nPlease use one of the provided templates."
-		print("finished Upload")
+		#print("finished Upload")
 		#"""
 
 		#saves summary of changes till delete option
@@ -250,14 +252,17 @@ def read_data(wb, lead, read_map):
 		rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
 	else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
 
+	#read samples and experiment from Input sheet
+	#then read datasets from "Worklist" sheet
+	#separating out QC
 	for i in rows:
 		# i in wsIn['B34:H63']: #.format(wsIn.max_row):
 		#each record a dataset associated with a sample
 		if i[read_map['sample_name']].value is None:
-			return summary
-			#All done!
-		wlrowNum +=1
-		wlRow = wb[read_map['wsWL']][wlrowNum]
+			break
+			#All done with samples
+		#wlrowNum +=1
+		#wlRow = wb[read_map['wsWL']][wlrowNum]
 
 		#Otherwise read it in
 
@@ -271,12 +276,58 @@ def read_data(wb, lead, read_map):
 		e_n = sample_exists_or_new(i[read_map['sample_name']].value, experiment, i, wsIn, read_map)
 		sample = Sample.objects.all().get(_sampleName = e_n[2])
 		summary.append(e_n)
+
+	wsWL = wb[read_map['wsWL']]
+	wlRows = wsWL[(read_map['wlRows']).format(wsWL.max_row)]
+	inRows = wsIn[(read_map['in_section_lookup']).format(wsIn.max_row)]
+	for wlRow in wlRows:
+		if wlRow[read_map['dataset_name']].value is None:
+			break #there isn't a dataset there
+		#read in datasets
+		sample_type = wlRow[read_map['wl_sample_type']].value
+		if sample_type == 'QC':
+			sample_name = str(lead+" lab QC")
+			if Sample.objects.all().filter(_sampleName = sample_name).exists():
+				sample = Sample.objects.all().get(_sampleName = sample_name)
+				experiment = sample.experiment()
+			else:
+				exp_name = (str(lead+" lab QC"))
+				if Experiment.objects.all().filter(_experimentName = exp_name).exists():
+					experiment = Experiment.objects.all().get(_experimentName =exp_name,  lead = lead)
+				else:
+					experiment = Experiment( _experimentName = exp_name, _projectLead =  lead,)
+				sample = Sample( 
+					_sampleName = sample_name,
+					_storageCondition = "QC",
+					_experiment = experiment,
+					_storageLocation = "QC",
+					_organism = "QC",
+					)
+		else: #Not a QC - it's a sample defined on input
+			sampleNum = wlRow[read_map['wl_sample_num']].value
+			sampleRow = findIn(sampleNum, inRows, read_map['lookup_column'])
+			print ('\n\nSample ', sampleNum, sampleRow)
+			sample_name = sampleRow[read_map['lookup_sample']].value
+			if Sample.objects.all().filter(_sampleName = sample_name).exists():
+				sample = Sample.objects.all().get(_sampleName = sample_name)
+			else: raise ValueError("No known sample")
+			experiment = sample.experiment()
+		#At this point both the sample and the experiment have been defined
+		#"""
 		
 		e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, i, wb, wsIn, wlRow, read_map)
 		summary.append(e_n)
 		
 	wlRow = None
 	wsIn = None
+	return summary
+
+def findIn(val, rows, lookup_column):
+	for line in rows:
+		if line[lookup_column].value == val:
+			return line
+	return []
+	
 
 #overload for additional information
 def exp_exist_or_new(name, lead):
@@ -344,9 +395,13 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 		#it'd look a bit like this.
 		#settings_column = wb[read_map['settings_sheet']][read_map['settings_keyword_column']]
 
-		filename = wlRow[read_map['settings_file']]
+		filename = wlRow[read_map['settings_file']].value
 		try: ins.file = open(filename)
-		except: ins.comments(ins.comments + finename)
+		except: 
+			if ins.comments == None:
+				ins.comments = filename
+			else: 
+				ins.comments = (str(ins.comments) + finename)
 		ins.save()
 		return [NEW, 'Instrument Setting: ', ins]
 
@@ -773,10 +828,11 @@ class DatasetDetailView(DetailView):
         setting = context['dataset'].instrumentSetting()
         context['setting'] = setting
         
-        context['setting.description'] = setting.description()
-        if setting.file():
-            context['setting_filename'] = basename(setting.file().path)
-            context['setting_download'] =setting.file().url
+        if setting != None:
+            context['setting.description'] = setting.description()
+            if setting.file():
+                context['setting_filename'] = basename(setting.file().path)
+                context['setting_download'] =setting.file().url
         return context
 
 class ExperimentDetailView(DetailView):
@@ -787,10 +843,11 @@ class ExperimentDetailView(DetailView):
         context = super(ExperimentDetailView, self).get_context_data(**kwargs)
         design = context['experiment'].experimentalDesign()
         context['design'] = design
-        context['design.description'] = design.description()
-        if design.file():
-            context['design_filename'] = basename(design.file().path)
-            context['design_download'] =design.file().url
+        if design != None: 
+            context['design.description'] = design.description()
+            if design.file():
+                context['design_filename'] = basename(design.file().path)
+                context['design_download'] =design.file().url
         return context
 
 class IndividualDetailView(DetailView):
