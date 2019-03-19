@@ -1,6 +1,6 @@
 .content {
     display: grid;
-    grid-template-rows: 100px 400px auto;
+    grid-template-rows: 100px auto auto;
     grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 h1{

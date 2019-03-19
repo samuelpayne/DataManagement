@@ -778,7 +778,7 @@ class DatasetDetailView(DetailView):
         setting = context['dataset'].instrumentSetting()
         context['setting'] = setting
         
-        context['setting.description'] = setting.description()
+        if setting != None : context['setting.description'] = setting.description()
         if setting.file():
             context['setting_filename'] = basename(setting.file().path)
             context['setting_download'] =setting.file().url
@@ -792,10 +792,11 @@ class ExperimentDetailView(DetailView):
         context = super(ExperimentDetailView, self).get_context_data(**kwargs)
         design = context['experiment'].experimentalDesign()
         context['design'] = design
-        context['design.description'] = design.description()
-        if design.file():
-            context['design_filename'] = basename(design.file().path)
-            context['design_download'] =design.file().url
+        if design != None :
+            context['design.description'] = design.description()
+            if design.file():
+                context['design_filename'] = basename(design.file().path)
+                context['design_download'] =design.file().url
         return context
 
 class IndividualDetailView(DetailView):
