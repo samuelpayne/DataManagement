@@ -17,6 +17,9 @@ urlpatterns = [
 	#upload pages
     path('upload/', views.upload, name = 'upload'),
 
+	#backup page; under development
+	path('backup/', views.backup, name='backup'),
+
 	#successful entry/upload page
 	path('success/', views.success, name='success'),
 	path('response/', views.success, name='response'),

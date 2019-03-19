@@ -19,5 +19,5 @@ admin.site.register(ExperimentalDesign)
 admin.site.register(Protocol)
 admin.site.register(fileStatusOption)
 
-admin.site.register(FileRead)
+admin.site.register(BackupFile)
 admin.site.register(Individual)

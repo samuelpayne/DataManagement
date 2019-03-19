@@ -123,3 +123,18 @@ class AddExperimentForm(forms.ModelForm):
         model = Experiment
         fields = ['_experimentName','_projectLead','_teamMembers',
                   '_IRB', '_comments',]
+
+class BackUpSelectForm(forms.ModelForm):
+    #if backups are force-daily, calender widget makes sense
+    #otherwise we want a dropdown of available backups
+    date = forms.CharField(label='Restore from', widget=DateInput)
+    class Meta:
+        model = BackupFile
+        fields = ['date']
+    
+    def clean(self):
+        data = self.cleaned_data
+        if BackupFile.objects.all().filter(date = data['date']).exists() == False:
+            raise forms.ValidationError('No backup available for that date.')
+        else:
+            return data

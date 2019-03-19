@@ -1,0 +1,30 @@
+<!-- Back for configuring and restoring backups -->
+
+{% extends "generic.html" %}
+{% load staticfiles%}
+
+{% block content %}
+<link rel="stylesheet" href="{% static '/css/about.css' %}" />
+<form name="backup" action="#" method="POST">
+  <h3>{{header}}</h3>
+  {% csrf_token %}
+
+    <p>More options coming soon.</p>
+    <!--This page may evolve as we decide on backup options 
+        that should be allowed for the end-user rather than preset.-->
+
+    <div>{{error}}</div>
+  {{form}}
+
+  <br><br>
+  {% for b in options %}
+    <input class="nav-block" type="submit"id={{b}} name="option" value={{b}}>
+  {% endfor %}
+</form>
+<form name="backup-now" action="#" method="get">
+    <div>
+        <input class="nav-block" type="button" id="backup-now" name="option" value="Backup Now"
+               onclick="window.location.href=('?option='+'backup-now')">
+    </div>
+</form>
+{% endblock %}

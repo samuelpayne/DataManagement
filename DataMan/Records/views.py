@@ -21,6 +21,13 @@ import openpyxl
 from openpyxl.utils import get_column_letter
 import json
 from os.path import basename
+#allows use of command backup functions
+from django.core.management import call_command
+
+from apscheduler.schedulers.background import BackgroundScheduler
+scheduler = BackgroundScheduler()
+job = None
+
 
 NEW = 'NEW'
 EXISTING = '(Existing)'
@@ -81,6 +88,51 @@ def success(request, message = 'Successfully recorded'):
 	request.session['message'] = None
 	return render(request, 'success.html', context)
 
+def make_backup():
+	print ("Tick, making backup.")
+	filename = 'dump-' +datetime.today().strftime('%Y-%m-%d')+'.json'
+	with open(filename, 'w') as file:
+		call_command('dumpdata', 'Records', stdout=file)
+		#BackupFile.objects.all() returns a list of days with available backups
+		if not BackupFile.objects.all().filter(date = datetime.today().strftime('%Y-%m-%d')).exists():
+			backup = BackupFile(file = str(filename), date = datetime.today().strftime('%Y-%m-%d'))
+			backup.save()
+	return True
+
+def start_job():
+	global job
+
+	#Checks if the job has already been assigned so as to avoid duplicates
+	if not 'make_backup_job' in str(scheduler.get_jobs()):
+		job = scheduler.add_job(make_backup, 'interval', hours = 1, id = 'make_backup_job')
+	if not scheduler.running: scheduler.start()
+
+def backup(request):
+	start_job()
+	options = {'Restore',}
+	form = forms.BackUpSelectForm()
+	context = {
+		'header': 'Backup Options',
+		'options':options,
+		'form':form
+	}
+	if request.method == 'POST' and request.POST.get('option') == 'Restore':
+		form = forms.BackUpSelectForm(request.POST)
+		if form.is_valid():
+			data = form.save(commit = False)
+			backupfile = BackupFile.objects.all().get(date = data.date)
+			filename = backupfile.filename()
+			restore(filename)
+		else: context['error'] = 'No backup available for that date.'
+	
+	if request.method == 'GET' and request.GET.get('option') == 'backup-now':
+		make_backup()
+		return redirect('backup')
+	return render(request, 'backup.html', context)
+
+def restore(filename):
+	call_command('loaddata', filename, app_label='Records') 
+
 def upload(request, option = None):
 	form = forms.UploadFileForm()
 	upload_status = ''
@@ -88,7 +140,7 @@ def upload(request, option = None):
 	upload_summary = ['']
 	upload_options = {}
 
-	print("\n\n\nUpload Page")
+	#print("\n\n\nUpload Page")
 
 	if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
 		
