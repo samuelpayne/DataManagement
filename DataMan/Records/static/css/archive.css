@@ -6,6 +6,10 @@
 h1{
         grid-column: 1/5;
 }
+p {
+    padding-right: 20px;
+}
+
 .nav-block {
     width: 300px;
     height: 300px;
@@ -43,7 +47,6 @@ h1{
     grid-row: 2/3;
     grid-column: 1/2;
     margin-right: 20px;
-
 }
 
 .nav-block:hover {
@@ -52,6 +55,7 @@ h1{
 }
 
 table {
+    border-spacing: 0px;
 }
 
 tr,
@@ -61,7 +65,10 @@ td {
     border: solid 1px #002e5d;
     width: 150px;
     height: 50px;
-    border-radius: 4px;
+    border-radius: 0px;
+    padding: 15px;
+    padding-right: 20px;
+    padding-left: 20px;
 }
 
 .table-outer {

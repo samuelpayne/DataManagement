@@ -344,9 +344,14 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 		#it'd look a bit like this.
 		#settings_column = wb[read_map['settings_sheet']][read_map['settings_keyword_column']]
 
-		filename = wlRow[read_map['settings_file']]
+		filename = wlRow[read_map['settings_file']].value
 		try: ins.file = open(filename)
-		except: ins.comments(ins.comments + finename)
+		except:
+			print ("Comments: " + str(ins.comments))
+			if ins.comments == None:
+				ins.comments = filename
+			else:
+				ins.comments = (str(ins.comments) + filename)
 		ins.save()
 		return [NEW, 'Instrument Setting: ', ins]
 

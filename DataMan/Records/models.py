@@ -278,14 +278,15 @@ class detailedField(models.Model):
 		self._file = value
 
 class InstrumentSetting(detailedField):
-	_instrument = models.ForeignKey("Instrument", on_delete=models.CASCADE,
-                                   blank=False, null=True,verbose_name='Instrument')
-	def __str__(self):
-		return self._name
-	def instrument(self):
-		return self._instrument
-	def setInstrument(self, value):
-		self._instrument = value
+    _instrument = models.ForeignKey("Instrument", on_delete=models.CASCADE,
+                                    blank=False, null=True,verbose_name='Instrument')
+    comments = models.TextField(verbose_name="Comments", blank=True, null=True)
+    def __str__(self):
+        return self._name
+    def instrument(self):
+        return self._instrument
+    def setInstrument(self, value):
+        self._instrument = value
 
 class Instrument(detailedField):
 	def __str__(self):
