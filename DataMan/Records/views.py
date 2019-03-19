@@ -291,11 +291,16 @@ def read_data(wb, lead, read_map):
 				sample = Sample.objects.all().get(_sampleName = sample_name)
 				experiment = sample.experiment()
 			else:
-				exp_name = (str(lead+" lab QC"))
+				if not 'QC_exp' in read_map:
+					exp_name = (str(lead+" lab QC"))
+				else: exp_name = str(wsWL[read_map['QC_exp']].value)
+				#or wsIn if that's where QC information is defined'
 				if Experiment.objects.all().filter(_experimentName = exp_name).exists():
 					experiment = Experiment.objects.all().get(_experimentName =exp_name,  lead = lead)
+					summary.append(["(DEFAULT)", 'QC Experiment: ', exp_name])
 				else:
-					experiment = Experiment( _experimentName = exp_name, _projectLead =  lead,)
+					experiment = Experiment( _experimentName = exp_name, _projectLead =  lead)
+					experiment.save()
 				sample = Sample( 
 					_sampleName = sample_name,
 					_storageCondition = "QC",
@@ -303,6 +308,8 @@ def read_data(wb, lead, read_map):
 					_storageLocation = "QC",
 					_organism = "QC",
 					)
+				sample.save()
+				summary.append(["(DEFAULT)", 'QC Sample: ', sample_name])
 		else: #Not a QC - it's a sample defined on input
 			sampleNum = wlRow[read_map['wl_sample_num']].value
 			sampleRow = findIn(sampleNum, inRows, read_map['lookup_column'])
@@ -316,6 +323,7 @@ def read_data(wb, lead, read_map):
 		#"""
 		
 		e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, i, wb, wsIn, wlRow, read_map)
+		if sample_type == 'QC': e_n[1] = "QC Dataset: "
 		summary.append(e_n)
 		
 	wlRow = None
@@ -340,7 +348,7 @@ def exp_exist_or_new(name, lead):
 		_projectLead =  lead,
 	)
 	newExp.save()
-	return [NEW, 'Experiment: ', name, newExp.experimentID()]
+	return [NEW, 'Experiment: ', name]# newExp.experimentID()]
 
 def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 	samples = Sample.objects.all()
