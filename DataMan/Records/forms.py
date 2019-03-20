@@ -66,6 +66,12 @@ class UploadFileForm(forms.ModelForm):
         model = FileRead
         fields = ['_File', 'lead']
 
+    def __init__(self,  *args, extraFields=None, **kwargs,):
+        super(UploadFileForm, self).__init__(*args, **kwargs)
+        if extraFields!=None:
+            for f in extraFields:
+                self.fields[f] = forms.CharField(label=f)
+
     def clean(self):
         data = self.cleaned_data
         if self.readFail: #conditionals from views
@@ -73,6 +79,17 @@ class UploadFileForm(forms.ModelForm):
         else:
             return data
 
+class ListFieldsForm(forms.ModelForm):
+    class Meta:
+        model = FileRead
+        fields = []
+    def __init__(self,  *args, extraFields=None, **kwargs):
+        super(ListFieldsForm, self).__init__(*args, **kwargs)
+        if extraFields!=None:
+            for f in extraFields:
+                self.fields[f] = forms.CharField(label=f)
+    def save(self):
+        return self.cleaned_data
 
 class AddSampleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):

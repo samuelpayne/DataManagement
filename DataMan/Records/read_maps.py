@@ -113,7 +113,7 @@ read_in_map_gen = {
 	'wsWL':'Worklist',
 	'wlrowNumInit':1, #one less than the row to start on
 	#				with reference to the worklist sheet
-	'wlRows':'A2:G{}', #Worklist rows to be processed
+	'wlRows':'A2:J{}', #Worklist rows to be processed
 	'wl_sample_type':3,#If QC versus defined on input
 	'wl_sample_num':2,
 	'dataset_name':4,#worklist row coordinate

@@ -152,13 +152,32 @@ def upload(request, option = None):
 			file = request.FILES['_File']
 			data = form.save(commit = False)
 			lead = data.lead
-		#try: #Catch invalid formats, etc.
-		if True: #Allows for effective debugging
+		try: #Catch invalid formats, etc.
+			#if True: #Allows for effective debugging
 			wb = openpyxl.load_workbook(file, data_only=True)
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
 			if wb['Input']['I3'].value == "Mass spec":
 				upload_summary = read_data(wb, lead, read_in_map_MS) #to be used in template
+				
+				"""
+				#testing not verified
+				if 'missing_field_data' in request.session:
+					#it's been checked and filled out
+					upload_summary = upload_summary #(as above)
+					del request.session['missing_fields']
+					del request.session['missing_field_data']
+				elif 'missing_fields' in request.session:
+					#Checkedd but not yet filled out
+					form = ListFieldsForm(request.POST)
+					request.session['missing_field_data'] = form.data
+				else: #it hasn't been checked yet	
+					request.session['missing_fields'] = get_missing_fields(wb, read_in_map_MS)
+					form = ListFieldsForm(missing_fields)
+					return render(request, 'upload.html', context)
+				##gets missing field data first, then reads in the rest
+				#I think the logic here is sound
+				#"""
 			elif wb['Input']['I3'].value == "Instrument Type":
 				
 				upload_summary = read_data(wb, lead, read_in_map_gen)#"Upload Successful"
@@ -171,8 +190,8 @@ def upload(request, option = None):
 			}
 			if len(upload_summary) >1: summary = upload_summary[1:]
 			upload_status = upload_summary[0]
-		#except:
-		#	upload_status = "Read in error.\nPlease use one of the provided templates."
+		except:
+			upload_status = "Read in error.\nPlease use one of the provided templates."
 		#print("finished Upload")
 		#"""
 
@@ -195,7 +214,7 @@ def upload(request, option = None):
 	#on keep or delete
 
 	if request.GET.get('option') == "Confirm":
-		print ("confirm")
+		#print ("confirm")
 		context['upload_status'] = 'Saved'
 		context['summary'] = ''
 		try: del request.session['upload_summary']
@@ -206,7 +225,7 @@ def upload(request, option = None):
 		return redirect('success')
 	elif request.GET.get('option') == 'Cancel':
 		context['upload_status'] = 'Cancelling...'
-		print ("cancel")
+		#print ("cancel")
 		try:
 			#get rid of read in data
 			upload_summary = request.session.get('upload_summary')
@@ -238,7 +257,7 @@ def upload(request, option = None):
 			del request.session['upload_summary']
 		except: request.session['message'] = 'No upload found.'
 		return redirect('success')
-	print ("rendering Page")
+	#print ("rendering Page")
 	return render(request, 'upload.html', context)
 
 def read_data(wb, lead, read_map):
@@ -335,6 +354,14 @@ def findIn(val, rows, lookup_column):
 		if line[lookup_column].value == val:
 			return line
 	return []
+
+###NOT IMPLEMENTED YET 3-19-19###
+def get_missing_fields(wb, read_map):
+	missing_fields = []
+	if 'missing_fields' in read_map:
+		missing_fields = read_map['missing_fields']
+	#the rest of our checking
+	return missing_fields
 	
 
 #overload for additional information
