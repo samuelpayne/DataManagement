@@ -2,13 +2,17 @@
     display: grid;
     grid-template-rows: 100px auto auto;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    padding-bottom: 20px;
+    padding-bottom: 150px;
 }
 h1{
         grid-column: 1/5;
 }
+
 p {
-    padding-right: 20px;
+    padding: 20px;
+}
+form {
+    padding: 20px;
 }
 
 .nav-block {
