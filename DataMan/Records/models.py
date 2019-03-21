@@ -30,8 +30,8 @@ class Dataset(models.Model):
     _fileLocation = models.TextField(verbose_name='Path to file location')
 	####APPARENTLY THERE ARE FILEPATHFIELDS AND THAT MIGHT BE USEFUL####
     _fileName = models.TextField(verbose_name='File Name', null=True, blank=False)
-    _acquisitionStart = models.DateTimeField(verbose_name='Acquisition Start',default=datetime.now, null=True, blank=True)
-    _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition End", default=datetime.now, null=True, blank=True)
+    _acquisitionStart = models.DateTimeField(verbose_name='Upload Date',default=datetime.now, null=True, blank=True)
+    _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition Date", default=datetime.now, null=True, blank=True)
     _fileSize = models.IntegerField(verbose_name='File Size', null=True, blank=True)
     _fileHash = models.TextField(verbose_name='File Hash', null=True, blank=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)

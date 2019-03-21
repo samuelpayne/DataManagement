@@ -152,8 +152,8 @@ def upload(request, option = None):
 			file = request.FILES['_File']
 			data = form.save(commit = False)
 			lead = data.lead
-		try: #Catch invalid formats, etc.
-			#if True: #Allows for effective debugging
+		#try: #Catch invalid formats, etc.
+		if True: #Allows for effective debugging
 			wb = openpyxl.load_workbook(file, data_only=True)
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
@@ -190,8 +190,8 @@ def upload(request, option = None):
 			}
 			if len(upload_summary) >1: summary = upload_summary[1:]
 			upload_status = upload_summary[0]
-		except:
-			upload_status = "Read in error.\nPlease use one of the provided templates."
+		#except:
+		#	upload_status = "Read in error.\nPlease use one of the provided templates."
 		#print("finished Upload")
 		#"""
 
@@ -329,10 +329,10 @@ def read_data(wb, lead, read_map):
 					)
 				sample.save()
 				summary.append(["(DEFAULT)", 'QC Sample: ', sample_name])
+			sampleRow = []
 		else: #Not a QC - it's a sample defined on input
 			sampleNum = wlRow[read_map['wl_sample_num']].value
 			sampleRow = findIn(sampleNum, inRows, read_map['lookup_column'])
-			print ('\n\nSample ', sampleNum, sampleRow)
 			sample_name = sampleRow[read_map['lookup_sample']].value
 			if Sample.objects.all().filter(_sampleName = sample_name).exists():
 				sample = Sample.objects.all().get(_sampleName = sample_name)
@@ -341,7 +341,7 @@ def read_data(wb, lead, read_map):
 		#At this point both the sample and the experiment have been defined
 		#"""
 		
-		e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, i, wb, wsIn, wlRow, read_map)
+		e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, sampleRow, wb, wsIn, wlRow, read_map)
 		if sample_type == 'QC': e_n[1] = "QC Dataset: "
 		summary.append(e_n)
 		
@@ -392,11 +392,13 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 
 	if read_map['date_global']: date = wsIn[read_map['date_created']].value
 	else: date = row[read_map['date_created']].value
+	print (date)
 
 	try:
-		date = datetime.strptime(date, '%M-%d-%Y').strftime('%Y-%m-%d')
+		date = datetime.strptime(date, '%m-%d-%Y').strftime('%Y-%m-%d')
 	except:
 		date = ''
+	print (date)
 
 	newSample = Sample(
 		_sampleName = name,
@@ -448,11 +450,13 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 	print (e_n)
 	initInstrument = e_n[2]
 	if (e_n[0] == NEW): summary.append(e_n)
-	e_n = setting_exists_or_new(row[read_map['setting_loc']].value)
-	setting = e_n[2]
+	if row != []:
+		e_n = setting_exists_or_new(row[read_map['setting_loc']].value)
+		setting = e_n[2]
+	else: setting = None #wlRow[read_map['settings_file']]
 
 	dataType = wsIn[read_map['data_type_loc']].value
-	try: date = datetime.strptime(str(wsIn[read_map['date_loc']].value), '%M-%d-%Y').strftime('%Y-%m-%d')
+	try: date = datetime.strptime(str(wsIn[read_map['date_loc']].value), '%m-%d-%Y').strftime('%Y-%m-%d')
 	except: date = False
 
 	wsWL = wb[read_map['wsWL']]

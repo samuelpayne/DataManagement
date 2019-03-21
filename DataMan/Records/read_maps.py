@@ -27,7 +27,7 @@ read_in_map_MS = {
 		#Format: 'Heading: ':cell 
 		'Notebook code: ':'J4',
 	},
-	'in_section_lookup':'A34:D{}',
+	'in_section_lookup':'A34:H{}',
 	'lookup_column':0,#where sample numbers are defined as used on worklists
 	'lookup_exp':2,
 	'lookup_sample':3,
@@ -36,7 +36,7 @@ read_in_map_MS = {
 	'experiment_loc':1, #Input row index if local, or cell
 
 	#Input sheet dataset information
-	'setting_loc':5, #Input row coordinate
+	'setting_loc':7, #Input row coordinate
 	'data_type_loc':'I3', #Input sheet cells
 	'instrument_type_loc':'I3',
 	'inst_code':'J3',
@@ -49,7 +49,7 @@ read_in_map_MS = {
 	'settings_file_column':'C',
 	'settings_description':'E',
 
-	'settings_file':5, #in wlrow
+	'settings_file':6, #in wlrow
 	#Worklist fields (about dataset, different rows)
 	'wsWL':'Worklist',
 	'wlrowNumInit':1, #one less than the row to start on

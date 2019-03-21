@@ -126,7 +126,7 @@ class AddDatasetForm(forms.ModelForm):
     class Meta:
         model = Dataset
         fields = ['_datasetName','_sample', '_instrument','_instrumentSetting','_type',
-                  '_operator','_dateCreated','_acquisitionStart','_acquisitionEnd',
+                  '_operator','_dateCreated','_acquisitionStart',#'_acquisitionEnd',
                   '_status','_fileName','_fileLocation',
                   '_fileSize', '_comments']
         widgets = {
