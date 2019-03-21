@@ -1,0 +1,37 @@
+.nav-block {
+    height: 35px;
+    border-radius: 10px;
+    margin: auto;
+    transition: top .3s linear;
+    position: relative;
+    top: 0;
+    margin: 25;
+}
+
+.nav-block__title {
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+.nav-block:hover {
+    top: -2px;
+    cursor: pointer;
+}
+
+a.nav-block {
+    width: 80px;
+    color: #FEFEFE;
+    background: #BABABA;
+    display: inline-block;
+}
+input.nav-block {
+    width: 80px;
+    color: #fff;
+    background: #002e5d;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 18px;
+    border: 0px;
+}

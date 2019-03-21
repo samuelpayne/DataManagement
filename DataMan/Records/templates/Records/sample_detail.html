@@ -1,6 +1,8 @@
 {% extends "generic.html" %}
+{% load staticfiles%}
 
 {% block content %}
+<link rel="stylesheet" href="{% static '/css/detail.css' %}" />
 <h2>{{ sample }}</h2>
 
 <p><Strong>Experiment:</Strong><a href="{% url 'experiment-detail' sample.experiment.experimentID %}">
@@ -30,5 +32,8 @@
     <p>No datasets found.</p>
 {% endif %}
 
-<p><Strong><a href="{% url 'edit-sample' sample.sampleID %}">Edit</a></Strong></p>
+<a class="nav-block" href="{% url 'edit-sample' sample.sampleID %}">
+    <p class="nav-block__title">Edit</p>
+</a>
+</br></br>
 {% endblock %}

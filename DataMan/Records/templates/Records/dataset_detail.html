@@ -1,6 +1,8 @@
 {% extends "generic.html" %}
+{% load staticfiles%}
 
 {% block content %}
+<link rel="stylesheet" href="{% static '/css/detail.css' %}" />
 <h2>{{ dataset }}</h2>
 <Strong>Samples:</Strong>
     {% if dataset.sample.all.count != 0 %}
@@ -35,5 +37,8 @@
 <p><Strong>File Location:</Strong> {{dataset.fileLocation}}</p>
 <p><Strong>File Size:</Strong> {{dataset.fileSize}}</p>
 
-<p><Strong><a href="{% url 'edit-dataset' dataset.datasetID %}">Edit</a></Strong></p>
+<a class="nav-block" href="{% url 'edit-dataset' dataset.datasetID %}">
+    <p class="nav-block__title">Edit</p>
+</a>
+</br></br>
 {% endblock %}

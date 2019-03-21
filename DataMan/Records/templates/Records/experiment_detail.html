@@ -1,15 +1,17 @@
 {% extends "generic.html" %}
+{% load staticfiles%}
 
 {% block content %}
+<link rel="stylesheet" href="{% static '/css/detail.css' %}" />
 <h2>{{ experiment }}</h2>
 <p><Strong>Project Lead:</Strong> {{experiment.projectLead}} </p>
 <p>    Team Members: {{experiment.teamMembers}}</p>
 <p><Strong>IRB Number:</Strong> {{experiment.IRB}} </p>
 <p><Strong>Experimental Design:</Strong> {{experiment.experimentalDesign}} </p>
-<!--<a class="nav-block" href="{% url 'edit-experiment' experiment.experimentID %}">
+<a class="nav-block" href="{% url 'edit-experiment' experiment.experimentID %}">
     <p class="nav-block__title">Edit</p>
-</a>-->
-<p><Strong><a href="{% url 'edit-experiment' experiment.experimentID %}">Edit</a></Strong></p>
+</a>
+</br></br>
 {% if experiment.sample_set.all.count != 0 %}
     <Strong>Samples:</Strong>
     <ul style="margin-left: 5px;">
