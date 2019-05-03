@@ -4,7 +4,7 @@
 
 *.pyo
 
-*/files/
-
+*/media/**
+*/files/**
 *.json
-*/migrations/
+*/migrations/**
