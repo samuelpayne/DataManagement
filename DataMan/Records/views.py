@@ -1017,7 +1017,7 @@ class ExperimentDetailView(DetailView):
             context['design.description'] = design.description()
             if design.file():
                 context['design_filename'] = basename(design.file().path)
-                context['design_download'] =design.file().url
+                context['design_download'] = design.file().url
         return context
 
 class IndividualDetailView(DetailView):
