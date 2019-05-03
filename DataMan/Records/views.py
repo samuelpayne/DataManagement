@@ -21,7 +21,8 @@ import openpyxl
 from openpyxl.utils import get_column_letter
 import json
 from os.path import basename
-#allows use of command backup functions
+from django.conf import settings
+import dropbox
 from django.core.management import call_command
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -89,14 +90,29 @@ def success(request, message = 'Successfully recorded'):
 	return render(request, 'success.html', context)
 
 def make_backup():
-	print ("Tick, making backup.")
+	#print ("Tick, making backup.")
+
 	filename = 'dump-' +datetime.today().strftime('%Y-%m-%d')+'.json'
-	with open(filename, 'w') as file:
+	#creates local backup
+	if settings.BACKUP_LOCATION:
+		filepath = settings.BACKUP_LOCATION + filename
+	with open(filepath, 'w') as file:
 		call_command('dumpdata', 'Records', stdout=file)
-		#BackupFile.objects.all() returns a list of days with available backups
-		if not BackupFile.objects.all().filter(date = datetime.today().strftime('%Y-%m-%d')).exists():
-			backup = BackupFile(file = str(filename), date = datetime.today().strftime('%Y-%m-%d'))
-			backup.save()
+
+	#backs up to box
+	if settings.DROPBOX_ACCESS_TOKEN:
+		# The full path to upload the file to, including the file name
+		box_file = settings.DROPBOX_BACKUP_LOCATION + filename
+		##Not yet the right access token...
+		dbx = dropbox.Dropbox(settings.DROPBOX_ACCESS_TOKEN)
+		with open(filepath, 'rb') as file:
+			dbx.files_upload(file.read(), box_file)
+	
+		link = d.sharing_create_shared_link(targetfile)
+		url = link.url
+		dl_url = re.sub(r"\?dl\=0", "?dl=1", url)
+		print ("\n\n\n",link,'\n',url,'\n',dl_url,'\n')
+
 	return True
 
 def start_job():
@@ -120,9 +136,14 @@ def backup(request):
 		form = forms.BackUpSelectForm(request.POST)
 		if form.is_valid():
 			data = form.save(commit = False)
-			backupfile = BackupFile.objects.all().get(date = data.date)
-			filename = backupfile.filename()
-			restore(filename)
+			filename = 'dump-' +data.date.strftime('%Y-%m-%d')+'.json'
+			filename = settings.BACKUP_LOCATION + filename
+			#backupfile = BackupFile.objects.all().get(date = data.date)
+			#filename = backupfile.filename()
+			try:
+				restore(filename)
+			except:
+				context['error'] = 'No backup was found for that date.'
 		else: context['error'] = 'No backup available for that date.'
 	
 	if request.method == 'GET' and request.GET.get('option') == 'backup-now':
@@ -158,29 +179,12 @@ def upload(request, option = None):
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
 			if wb['Input']['I3'].value == "Mass spec":
-				upload_summary = read_data(wb, lead, read_in_map_MS) #to be used in template
-				
-				"""
-				#testing not verified
-				if 'missing_field_data' in request.session:
-					#it's been checked and filled out
-					upload_summary = upload_summary #(as above)
-					del request.session['missing_fields']
-					del request.session['missing_field_data']
-				elif 'missing_fields' in request.session:
-					#Checkedd but not yet filled out
-					form = ListFieldsForm(request.POST)
-					request.session['missing_field_data'] = form.data
-				else: #it hasn't been checked yet	
-					request.session['missing_fields'] = get_missing_fields(wb, read_in_map_MS)
-					form = ListFieldsForm(missing_fields)
-					return render(request, 'upload.html', context)
-				##gets missing field data first, then reads in the rest
-				#I think the logic here is sound
-				#"""
+				upload_summary = read_data(request, wb, lead, read_in_map_MS) #to be used in template
+				request.session['upload_summary']
+				read_map = read_in_map_MS
 			elif wb['Input']['I3'].value == "Instrument Type":
-				
-				upload_summary = read_data(wb, lead, read_in_map_gen)#"Upload Successful"
+				upload_summary = read_data(request, wb, lead, read_in_map_gen)#"Upload Successful"
+				read_map = read_in_map_gen
 			else: 
 				upload_summary = "Unknown format. Please use one of the provided templates."
 			wb.close()
@@ -188,8 +192,7 @@ def upload(request, option = None):
 				'Confirm': True,
 				'Cancel': False,
 			}
-			if len(upload_summary) >1: summary = upload_summary[1:]
-			upload_status = upload_summary[0]
+			request.session['upload_status'] = upload_status
 		#except:
 		#	upload_status = "Read in error.\nPlease use one of the provided templates."
 		#print("finished Upload")
@@ -202,6 +205,18 @@ def upload(request, option = None):
 			request.session['upload_summary'][i] = report
 			i +=1
 		request.session.modified = True
+		
+		print("read in complete")
+		if 'missing_fields' in request.session:
+			del request.session['missing_fields']
+		if 'missing_fields_data' in request.session:
+			del request.session['missing_fields_data']
+		missing_fields= get_missing_fields(wb, read_map)
+		missing_fields = list(dict.fromkeys(missing_fields))
+		print ('missing_fields: ', missing_fields)
+		
+		request.session['missing_fields'] = missing_fields
+		return redirect ('process_missing_fields')
 
 	context = {
 		'form':form,
@@ -212,55 +227,11 @@ def upload(request, option = None):
 
 	#Cancel options - currently functions 
 	#on keep or delete
-
-	if request.GET.get('option') == "Confirm":
-		#print ("confirm")
-		context['upload_status'] = 'Saved'
-		context['summary'] = ''
-		try: del request.session['upload_summary']
-		except:
-			request.session['message'] = 'Unable to verify save.'
-			return redirect('success')
-		request.session['message'] = 'Saved.'
-		return redirect('success')
-	elif request.GET.get('option') == 'Cancel':
-		context['upload_status'] = 'Cancelling...'
-		#print ("cancel")
-		try:
-			#get rid of read in data
-			upload_summary = request.session.get('upload_summary')
-
-			for i in upload_summary:
-				if int(i) !=0: #
-					v = upload_summary[i]
-					if v[0] == NEW:
-						#was new with this read in 
-						#needs to be deleted
-						if 'Experiment' in v[1]:
-							#it's an experiment
-							experiment = Experiment.objects.all().get(_experimentName = v[2])
-							experiment.delete()
-						elif 'Dataset' in v[1]:
-							#may have been deleted with the experiment
-							if Dataset.objects.all().filter(_datasetName = v[2]).exists():
-								dataset = Dataset.objects.all().get(_datasetName = v[2])
-								dataset.delete()
-						elif 'Sample' in v[1]:
-							#it's a sample -- it may have been deleted with the parent
-							#experiment, so we check if it exists
-							if Sample.objects.all().filter(_sampleName = v[2]).exists():
-								s = Sample.objects.all().get(_sampleName = v[2])
-								s.delete()
-						else:
-							print (v, "Delete Unsuccessful")
-			request.session['message'] = 'Upload Cancelled'
-			del request.session['upload_summary']
-		except: request.session['message'] = 'No upload found.'
-		return redirect('success')
-	#print ("rendering Page")
 	return render(request, 'upload.html', context)
 
-def read_data(wb, lead, read_map):
+def read_data(request, wb, lead, read_map):
+	missing_fields = []
+
 	wsIn = wb[read_map['wsIn']]
 	if wsIn[read_map['start_loc']].value is None:
 		return ["Empty file"]
@@ -270,6 +241,23 @@ def read_data(wb, lead, read_map):
 	if read_map['variable_colums_TF']:
 		rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
 	else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
+
+	#The generic sheet has the option of reading 
+	#in one experiment per sheet with all data
+	if 'exp_name' in read_map:
+		exp_name = wsIn[read_map['exp_name']].value
+		if exp_name:
+			#this is where we start reading and checking
+			lead = wsIn[read_map['lead']].value
+			if lead == None:
+				missing_fields.append('lead')
+			if 'IRB' in read_map:
+				IRB = wsIn[read_map['IRB']].value
+			if 'description' in read_map:
+				des = wsIn[read_map['description']].value
+			e_n = exp_exist_or_new(exp_name,lead,IRB = IRB, description = des)
+		summary.append(e_n)
+			
 
 	#read samples and experiment from Input sheet
 	#then read datasets from "Worklist" sheet
@@ -284,7 +272,6 @@ def read_data(wb, lead, read_map):
 		#wlRow = wb[read_map['wsWL']][wlrowNum]
 
 		#Otherwise read it in
-
 		if read_map['experiment_global']:
 			e_n = exp_exist_or_new(wsIn[read_map['experiment_loc']].value, lead)
 		else:
@@ -295,7 +282,7 @@ def read_data(wb, lead, read_map):
 		e_n = sample_exists_or_new(i[read_map['sample_name']].value, experiment, i, wsIn, read_map)
 		sample = Sample.objects.all().get(_sampleName = e_n[2])
 		summary.append(e_n)
-
+		
 	wsWL = wb[read_map['wsWL']]
 	wlRows = wsWL[(read_map['wlRows']).format(wsWL.max_row)]
 	inRows = wsIn[(read_map['in_section_lookup']).format(wsIn.max_row)]
@@ -355,17 +342,154 @@ def findIn(val, rows, lookup_column):
 			return line
 	return []
 
+def upload_confirm(request, option = None):
+	upload_status = request.session['upload_status']
+	summary = request.session.get('upload_summary')
+	upload_summary = []
+	for i in summary:
+		upload_summary.append(summary[i])
+	print (upload_summary)
+	upload_options = {'Confirm', 'Cancel'}
+	context = {}
+	
+	if request.GET.get('option') == "Confirm":
+		#print ("confirm")
+		context['upload_status'] = 'Saved'
+		context['summary'] = ''
+		try: del request.session['upload_summary']
+		except:
+			request.session['message'] = 'Unable to verify save.'
+			return redirect('success')
+		request.session['upload_status'] = 'Saved.'
+		return redirect('upload')
+	elif request.GET.get('option') == 'Cancel':
+		context['upload_status'] = 'Cancelling...'
+		#print ("cancel")
+		try:
+			#get rid of read in data
+			upload_summary = request.session.get('upload_summary')
+
+			for i in upload_summary:
+				if int(i) !=0: #
+					v = upload_summary[i]
+					if v[0] == NEW:
+						#was new with this read in 
+						#needs to be deleted
+						if 'Experiment' in v[1]:
+							#it's an experiment
+							experiment = Experiment.objects.all().get(_experimentName = v[2])
+							experiment.delete()
+						elif 'Dataset' in v[1]:
+							#may have been deleted with the experiment
+							if Dataset.objects.all().filter(_datasetName = v[2]).exists():
+								dataset = Dataset.objects.all().get(_datasetName = v[2])
+								dataset.delete()
+						elif 'Sample' in v[1]:
+							#it's a sample -- it may have been deleted with the parent
+							#experiment, so we check if it exists
+							if Sample.objects.all().filter(_sampleName = v[2]).exists():
+								s = Sample.objects.all().get(_sampleName = v[2])
+								s.delete()
+						else:
+							print (v, "Delete Unsuccessful")
+			request.session['upload_status'] = 'Upload Cancelled'
+			del request.session['upload_summary']
+		except: request.session['message'] = 'No upload found.'
+		return redirect('upload')
+	
+	if len(upload_summary) >1: summary = upload_summary[1:]
+	upload_status = upload_summary[0]
+	context = {
+		#'form':forms.UploadFileForm(),
+		'upload_status':upload_status,
+		'summary': summary,
+		'upload_options': upload_options,
+	}
+
+	#Cancel options - currently functions 
+	#on keep or delete
+	return render(request, 'upload.html', context)
+	
 ###NOT IMPLEMENTED YET 3-19-19###
 def get_missing_fields(wb, read_map):
 	missing_fields = []
 	if 'missing_fields' in read_map:
 		missing_fields = read_map['missing_fields']
 	#the rest of our checking
+	#Required Fields:
+	#Exp. Name, Project Lead
+	#	Design needs a name (exp does not need design)
+	#
+	#Individual ID, gender, age, health Status & extra_fields
+	#
+	#samples name, exp, storage_condition, location, organism
+	#
+	#dataset name, sample, instrument, file name, extension, path
+
+	wsIn = wb[read_map['wsIn']]
+	wsWL = wb[read_map['wsWL']]
+
+	#bad logic
+	if read_map['experiment_global']:
+		name = wsIn[read_map['experiment_loc']].value
+		if name == None:
+			missing_fields.append('experiment_name')
+		elif not experiments.filter(_experimentName = name).exists():
+			#check for other experiment data
+			if 'lead' in read_map:
+				if wsIn[read_map['lead']].value == None:
+					missing_fields.append('lead')
+			elif not 'lead' in missing_fields: missing_fields.append('lead')
+		elif 'lead' in missing_fields:
+			missing_fields.remove('lead')
+	else: 
+		missing_fields.append('lead')
+		missing_fields.append('IRB')
+		missing_fields.append('description')
+
+	if 'wsIndividual'in read_map:
+		#check individuals
+		if read_map['wsIndividual'] in wb:
+			wsIndividual = wb[read_map['wsIndividual']]
+
+	if read_map['variable_colums_TF']:
+		rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
+	else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
+
+	#Do I now check each sample, the first one, or what?
+	#Maybe the e_n functions report missing data 
+	#and here we just catch overall missing categories of data?
+
+	#Now I'm wondering if I need to ditch this and make it along with the read in?
+
 	return missing_fields
-	
+
+def process_missing_fields(request):
+	#if not 'missing_fields' in request.session:
+	#	return redirect('upload')
+
+	missing_fields = request.session['missing_fields']
+	#"""
+	#testing not verified
+	form = forms.ListFieldsForm(extraFields = missing_fields)
+	if request.method == 'POST':
+		print ("POST")
+		#Checked and sent to form but not yet recorded
+		form = forms.ListFieldsForm(request.POST)
+		request.session['missing_field_data'] = form.data
+		print (form.data)
+
+		upload_summary = request.session['upload_summary'] #to be used in template
+		del request.session['missing_fields']
+		del request.session['missing_field_data']
+		return redirect ('upload_confirm')
+
+	context = {'form':form, 'header':'Please address missing fields'}
+
+	return render(request, 'title-form.html', context)	
 
 #overload for additional information
-def exp_exist_or_new(name, lead):
+def exp_exist_or_new(name, lead, IRB = None, description = None, ):
 	experiments = Experiment.objects.all()
 	if experiments.filter(_experimentName = name).exists():
 		return [EXISTING, 'Experiment: ', name]
@@ -374,6 +498,8 @@ def exp_exist_or_new(name, lead):
 		_experimentName = name,
 		_projectLead =  lead,
 	)
+	if IRB: newExp.setIRB(IRB)
+	if description: newExp.setComments()
 	newExp.save()
 	return [NEW, 'Experiment: ', name]# newExp.experimentID()]
 
@@ -451,6 +577,7 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 	initInstrument = e_n[2]
 	if (e_n[0] == NEW): summary.append(e_n)
 	if row != []:
+		print (row)
 		e_n = setting_exists_or_new(row[read_map['setting_loc']].value)
 		setting = e_n[2]
 	else: setting = None #wlRow[read_map['settings_file']]
@@ -509,6 +636,9 @@ def add_dataset(request):
         form =forms.AddDatasetForm(request.POST)
         if form.is_valid():
             new_Dataset = form.save()
+            exp = new_Dataset.sample()[0].experiment()
+            new_Dataset.setExperiment(exp)
+            new_Dataset.save()
             return redirect('datasets')
     buttons = {
         'New Instrument': 'add-instrument',
@@ -579,6 +709,7 @@ def add_individual(request, experiment = None):
             for f in extra:
                 extraFieldData[f] = form.data[f]
             new_Individual.setExtraFields(extraFieldData)
+            new_Individual.setExperiment(exp)
             new_Individual.save()
             return redirect('individuals')
     context = {

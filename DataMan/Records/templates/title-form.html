@@ -1,21 +1,22 @@
-<!--Template for adding records.-->
+<!--Very generic Template for forms-->
 
 {% extends "generic.html" %}
 {% load staticfiles%}
 
 {% block content %}
-  <h1 class="add-header">{{header}}</h1>
-<form action="" method="post">
-      {% csrf_token %}
+<h1 class="add-header">{{header}}</h1>
+<form name="entry" action="" method="post">
+  {% csrf_token %}
 
-      {% for field in form %}
-        <p class="form-title">{{ field.label }}</p>
-        {% for error in field.errors %}
-          {% if error != 'This field is required.' %}
-            <p class="form-error">{{ error }}</p>
-          {% endif %}
-        {% endfor%}
-        {{ field }}
-      {% endfor %}
+  {% for field in form %}
+    <p class="form-title">{{ field.label }}</p>
+    {% for error in field.errors %}
+      {% if error != 'This field is required.' %}
+        <p class="form-error">{{ error }}</p>
+      {% endif %}
+    {% endfor%}
+    {{ field }}
+  {% endfor %}
+    <input class="nav-block" type="submit" value="Submit" name="Submit" id="Submit">
 </form>
 {% endblock %}

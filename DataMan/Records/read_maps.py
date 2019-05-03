@@ -62,10 +62,17 @@ read_in_map_MS = {
 	'file_name':4, #worklist row index (optionally same as dataset)
 	'file_extension_from_excel':False, #If the extension is specified or assumed
 	'file_extension':'', #absolute (or cell if specified)
+
+	'missing_fields':['lead','storage_condition','storage_location','file_extension'],
 }
 
 read_in_map_gen = {
 	'sheetType':'General',
+
+	'exp_name':'C2',
+	'lead':'C3',
+	'description':'A4',
+	'IRB':'C9',
 
 	'wsIn':'Input', #name of Input worksheet
 	'variable_colums_TF': True, # the number of columns is flexible
@@ -85,8 +92,8 @@ read_in_map_gen = {
 		#Format: 'Heading: ':cell 
 		'Notebook code: ':'J5',
 	},
-	'in_section_lookup':'A18:D{}', #Which section contains the sample number,
-	#								Name, and experiment name
+	'in_section_lookup':'A18:H{}', #Which section contains the sample number,
+	#								Name, and experiment name, and methods
 	'lookup_column':0,
 	'lookup_exp':2,
 	'lookup_sample':3,
@@ -95,7 +102,7 @@ read_in_map_gen = {
 	'experiment_loc':0, #input row index or cell if global
 
 	#Input sheet dataset information
-	'setting_loc':5, #Input row coordinate
+	'setting_loc':7, #Input row coordinate
 	'data_type_loc':'J3', #Input sheet cells
 	'instrument_type_loc':'J3',
 	'inst_code':'J4',

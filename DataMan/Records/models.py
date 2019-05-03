@@ -44,6 +44,10 @@ class Dataset(models.Model):
         return self._datasetID
     def setDatasetID(self, value):
         self._datasetID = value
+    def experiment(self):
+        return self._experiment
+    def setExperiment(self, value):
+        self._experiment = value
     def sample(self):
         return self._sample.all()
     #def setSample(self, value):
@@ -245,6 +249,8 @@ class Experiment(models.Model):
         return self._experimentalDesign
     def setExperimentalDesign(self, value):
         self._experimentalDesign = value
+    def comments(self): return self._comments
+    def setComments(self, v): self._comments = v
 
     def get_absolute_url(self):
         return reverse('experiment-detail', args=[str(self._experimentID)])

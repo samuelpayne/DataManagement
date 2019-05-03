@@ -1,5 +1,10 @@
 *.sqlite3
+
 *.pyc
+
 *.pyo
+
 */files/
-*.json*/migrations/
+
+*.json
+*/migrations/

@@ -126,3 +126,8 @@ STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+###backup folder on box https://byu.box.com/s/67m7w8uo63zlh7l7g9q011xowggua0c5
+BACKUP_LOCATION = os.path.join(BASE_DIR, 'Records/backups/')
+DROPBOX_ACCESS_TOKEN = False
+DROPBOX_BACKUP_LOCATION = "/DataMan TestFiles/backups/"
