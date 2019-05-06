@@ -1,0 +1,7 @@
+django
+django_tables2
+datetime
+openpyxl
+dropbox
+apscheduler
+django_mysql
