@@ -128,4 +128,14 @@ read_in_map_gen = {
 	'file_name':4, #worklist row index (optionally same as dataset)
 	'file_extension_from_excel':True, #If the extension is specified or assumed
 	'file_extension':5, #literal or relative to row
+
+	#Individuals page
+	'wsIndiv':'Individuals',
+	'indivExp':'C2',
+	'indivRows':'A11:{}{}',
+	'indivID':1,
+	'gender':2,
+	'age':3,
+	'health_status':4,
+	'indivComments':5,
 }

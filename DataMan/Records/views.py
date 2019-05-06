@@ -173,8 +173,8 @@ def upload(request, option = None):
 			file = request.FILES['_File']
 			data = form.save(commit = False)
 			lead = data.lead
-		#try: #Catch invalid formats, etc.
-		if True: #Allows for effective debugging
+		try: #Catch invalid formats, etc.
+			#if True: #Allows for effective debugging
 			wb = openpyxl.load_workbook(file, data_only=True)
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
@@ -185,6 +185,7 @@ def upload(request, option = None):
 			elif wb['Input']['I3'].value == "Instrument Type":
 				upload_summary = read_data(request, wb, lead, read_in_map_gen)#"Upload Successful"
 				read_map = read_in_map_gen
+				upload_summary = read_Individuals(wb[read_map['wsIndiv']], read_map, upload_summary)
 			else: 
 				upload_summary = "Unknown format. Please use one of the provided templates."
 			wb.close()
@@ -193,9 +194,9 @@ def upload(request, option = None):
 				'Cancel': False,
 			}
 			request.session['upload_status'] = upload_status
-		#except:
-		#	upload_status = "Read in error.\nPlease use one of the provided templates."
-		#print("finished Upload")
+		except:
+			upload_status = "Read in error.\nPlease use one of the provided templates."
+		print("finished Upload")
 		#"""
 
 		#saves summary of changes till delete option
@@ -206,7 +207,8 @@ def upload(request, option = None):
 			i +=1
 		request.session.modified = True
 		
-		print("read in complete")
+		return redirect ('upload_confirm')
+		"""print("read in complete")
 		if 'missing_fields' in request.session:
 			del request.session['missing_fields']
 		if 'missing_fields_data' in request.session:
@@ -216,7 +218,7 @@ def upload(request, option = None):
 		print ('missing_fields: ', missing_fields)
 		
 		request.session['missing_fields'] = missing_fields
-		return redirect ('process_missing_fields')
+		return redirect ('process_missing_fields')#"""
 
 	context = {
 		'form':form,
@@ -253,6 +255,8 @@ def read_data(request, wb, lead, read_map):
 				missing_fields.append('lead')
 			if 'IRB' in read_map:
 				IRB = wsIn[read_map['IRB']].value
+				try: IRB = int(IRB)
+				except ValueError: IRB = None
 			if 'description' in read_map:
 				des = wsIn[read_map['description']].value
 			e_n = exp_exist_or_new(exp_name,lead,IRB = IRB, description = des)
@@ -409,6 +413,36 @@ def upload_confirm(request, option = None):
 	#Cancel options - currently functions 
 	#on keep or delete
 	return render(request, 'upload.html', context)
+
+def read_Individuals(wsInd, read_map, upload_summary):
+	exp_n = wsInd[read_map['indivExp']].value
+	print (exp_n)
+	
+	if Experiment.objects.all().filter(_experimentName = exp_n).exists():
+		exp = Experiment.objects.all().get(_experimentName = exp_n)
+	else: return upload_summary
+
+	rows =  wsInd[(read_map['indivRows']).format(get_column_letter(wsInd.max_column), wsInd.max_row)]
+
+	indivs = Individual.objects.all()
+	for i in rows:
+		indivID = i[read_map['indivID']].value
+		if not indivID: break
+		new_Ind = Individual(
+			_individualIdentifier = indivID,
+			_experiment = exp,
+			_gender = i[read_map['gender']].value,
+			_age = i[read_map['age']].value,
+			_healthStatus = i[read_map['health_status']].value,
+			_comments = i[read_map['indivComments']].value
+		)
+
+		upload_summary.append([NEW, 'Individual:', indivID])
+
+		new_Ind.save()
+
+	return upload_summary
+		
 	
 ###NOT IMPLEMENTED YET 3-19-19###
 def get_missing_fields(wb, read_map):
@@ -498,8 +532,10 @@ def exp_exist_or_new(name, lead, IRB = None, description = None, ):
 		_experimentName = name,
 		_projectLead =  lead,
 	)
-	if IRB: newExp.setIRB(IRB)
-	if description: newExp.setComments()
+	if IRB: 
+		try: newExp.setIRB(IRB)
+		except ValueError: IRB = None
+	if description: newExp.setComments(description)
 	newExp.save()
 	return [NEW, 'Experiment: ', name]# newExp.experimentID()]
 
