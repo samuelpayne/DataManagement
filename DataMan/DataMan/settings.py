@@ -23,10 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '=)c1j$2t-3x@zw8l4+)e6gg(vkc-9b-pd_-if6kyb5r-&q(884'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+DEBUG = False
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
