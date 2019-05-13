@@ -4,6 +4,10 @@
     grid-template-columns: 1fr 1fr 1fr;
 }
 
+.map {
+    width: 100%;
+    grid-column: 2/3;
+}
 .banner {
     width: 100%;
     grid-column: 1/4;
