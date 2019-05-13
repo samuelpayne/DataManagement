@@ -120,14 +120,14 @@ read_in_map_gen = {
 	'wsWL':'Worklist',
 	'wlrowNumInit':1, #one less than the row to start on
 	#				with reference to the worklist sheet
-	'wlRows':'A2:J{}', #Worklist rows to be processed
+	'wlRows':'A2:M{}', #Worklist rows to be processed
 	'wl_sample_type':3,#If QC versus defined on input
 	'wl_sample_num':2,
 	'dataset_name':4,#worklist row coordinate
-	'file_location':6,
+	'file_location':10,
 	'file_name':4, #worklist row index (optionally same as dataset)
 	'file_extension_from_excel':True, #If the extension is specified or assumed
-	'file_extension':5, #literal or relative to row
+	'file_extension':11, #literal or relative to row
 
 	#Individuals page
 	'wsIndiv':'Individuals',
