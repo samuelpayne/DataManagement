@@ -256,7 +256,7 @@ def read_data(request, wb, lead, read_map):
 			if 'IRB' in read_map:
 				IRB = wsIn[read_map['IRB']].value
 				try: IRB = int(IRB)
-				except ValueError: IRB = None
+				except: IRB = None
 			if 'description' in read_map:
 				des = wsIn[read_map['description']].value
 			e_n = exp_exist_or_new(exp_name,lead,IRB = IRB, description = des)
@@ -347,6 +347,7 @@ def findIn(val, rows, lookup_column):
 	return []
 
 def upload_confirm(request, option = None):
+	#try catch here
 	upload_status = request.session['upload_status']
 	summary = request.session.get('upload_summary')
 	upload_summary = []

@@ -5,3 +5,5 @@ openpyxl
 dropbox
 apscheduler
 django_mysql
+django_excel
+pyexcel
