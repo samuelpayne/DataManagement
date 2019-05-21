@@ -160,7 +160,7 @@ def upload(request, option = None):
 	form = forms.UploadFileForm()
 	upload_status = ''
 	summary = ''
-	upload_summary = ['']
+	upload_summary = [("Upload summary:")]
 	upload_options = {}
 
 	print("\n\n\nUpload Page")
@@ -182,9 +182,9 @@ def upload(request, option = None):
 				upload_summary = read_data(request, wb, lead, read_in_map_MS) #to be used in template
 				read_map = read_in_map_MS
 			elif wb['Input']['I3'].value == "Instrument Type":
-				upload_summary = read_data(request, wb, lead, read_in_map_gen)#"Upload Successful"
-				read_map = read_in_map_gen
 				upload_summary = read_Individuals(wb[read_map['wsIndiv']], read_map, upload_summary)
+				upload_summary = read_data(request, wb, lead, read_in_map_gen, upload_summary)#"Upload Successful"
+				read_map = read_in_map_gen
 			else: 
 				upload_summary = "Unknown format. Please use one of the provided templates."
 			wb.close()
@@ -200,7 +200,7 @@ def upload(request, option = None):
 		#print(upload_summary)
 		#"""
 
-		#saves summary of changes till delete option
+		#saves summary of changes for report till confirm/delete option
 		i = 0 
 		request.session['upload_summary'] = {}
 		for report in upload_summary:
@@ -232,14 +232,14 @@ def upload(request, option = None):
 	#on keep or delete
 	return render(request, 'upload.html', context)
 
-def read_data(request, wb, lead, read_map):
+def read_data(request, wb, lead, read_map, upload_summary):
 	missing_fields = []
+	summary = upload_summary
 
 	wsIn = wb[read_map['wsIn']]
 	if wsIn[read_map['start_loc']].value is None:
 		return ["Empty file"]
 
-	summary = [("Upload summary:")]
 	wlrowNum = read_map['wlrowNumInit']
 	if read_map['variable_colums_TF']:
 		rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
@@ -274,6 +274,7 @@ def read_data(request, wb, lead, read_map):
 			#All done with samples
 
 		#Otherwise read it in
+		#Check the individual... they can't be defined by the name alone so...?
 		if read_map['experiment_global']:
 			e_n = exp_exist_or_new(wsIn[read_map['experiment_loc']].value, lead)
 		else:
@@ -429,6 +430,10 @@ def read_Individuals(wsInd, read_map, upload_summary):
 	for i in rows:
 		indivID = i[read_map['indivID']].value
 		if not indivID: break
+		if Individual.objects.all().filter(_individualIdentifier = indivID).exists():
+			upload_summary.append([EXISTING, 'Individual:', indivID])
+			break
+
 		new_Ind = Individual(
 			_individualIdentifier = indivID,
 			_experiment = exp,
