@@ -566,7 +566,7 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 			return [EXISTING,'Protocol: ', Protocol.objects.all().get(_name = ptName)]
 		prot = Protocol(_name = ptName)
 		prot.save()
-		return prot
+		return [NEW,'Protocol: ',prot]
 		
 	newSample = Sample(
 		_sampleName = name,
