@@ -117,7 +117,7 @@ class Sample(models.Model):
     # preceedingSample = models.TextField(verbose_name='Preceeding Sample')
     _storageCondition = models.TextField(verbose_name='Storage Condition')
     _storageLocation = models.TextField(verbose_name='Storage Location')
-    _treatmentProtocol = models.ForeignKey('Protocol', on_delete=models.SET_NULL, verbose_name='Treatment Protocol',null=True, blank=True)
+    _treatmentProtocol = models.ManyToManyField('Protocol', verbose_name='Treatment Protocol',null=True, blank=True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _organism = models.TextField(verbose_name='Organism')
     _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None', null=True, blank=True)
@@ -334,13 +334,3 @@ class FileRead(models.Model):
 		return self._File()
 	def __str__(self):
 		return self._File()
-
-class BackupFile(models.Model):
-	file = models.CharField(blank=False, verbose_name="File Name", max_length=100)
-	date = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
-
-	def __str__(self):
-		return self.date.strftime('%Y-%m-%d')
-	def filename(self):
-		print ("File: ", self.file)
-		return self.file

@@ -163,7 +163,7 @@ def upload(request, option = None):
 	upload_summary = ['']
 	upload_options = {}
 
-	#print("\n\n\nUpload Page")
+	print("\n\n\nUpload Page")
 
 	if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
 		
@@ -173,14 +173,13 @@ def upload(request, option = None):
 			file = request.FILES['_File']
 			data = form.save(commit = False)
 			lead = data.lead
-		try: #Catch invalid formats, etc.
-			#if True: #Allows for effective debugging
+		#try: #Catch invalid formats, etc.
+		if True: #Allows for effective debugging
 			wb = openpyxl.load_workbook(file, data_only=True)
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
 			if wb['Input']['I3'].value == "Mass spec":
 				upload_summary = read_data(request, wb, lead, read_in_map_MS) #to be used in template
-				request.session['upload_summary']
 				read_map = read_in_map_MS
 			elif wb['Input']['I3'].value == "Instrument Type":
 				upload_summary = read_data(request, wb, lead, read_in_map_gen)#"Upload Successful"
@@ -194,9 +193,11 @@ def upload(request, option = None):
 				'Cancel': False,
 			}
 			request.session['upload_status'] = upload_status
-		except:
-			upload_status = "Read in error.\nPlease use one of the provided templates."
+		#except:
+		#	upload_status = "Read in error.\nPlease use one of the provided templates."
 		print("finished Upload")
+		#print(upload_status)
+		#print(upload_summary)
 		#"""
 
 		#saves summary of changes till delete option
@@ -206,7 +207,7 @@ def upload(request, option = None):
 			request.session['upload_summary'][i] = report
 			i +=1
 		request.session.modified = True
-		
+			
 		return redirect ('upload_confirm')
 		"""print("read in complete")
 		if 'missing_fields' in request.session:
@@ -262,7 +263,6 @@ def read_data(request, wb, lead, read_map):
 			e_n = exp_exist_or_new(exp_name,lead,IRB = IRB, description = des)
 		summary.append(e_n)
 			
-
 	#read samples and experiment from Input sheet
 	#then read datasets from "Worklist" sheet
 	#separating out QC
@@ -272,8 +272,6 @@ def read_data(request, wb, lead, read_map):
 		if i[read_map['sample_name']].value is None:
 			break
 			#All done with samples
-		#wlrowNum +=1
-		#wlRow = wb[read_map['wsWL']][wlrowNum]
 
 		#Otherwise read it in
 		if read_map['experiment_global']:
@@ -347,9 +345,11 @@ def findIn(val, rows, lookup_column):
 	return []
 
 def upload_confirm(request, option = None):
-	#try catch here
-	upload_status = request.session['upload_status']
-	summary = request.session.get('upload_summary')
+	try: upload_status = request.session['upload_status']
+	except: upload_status = []
+	try: summary = request.session.get('upload_summary')
+	except: summary = []
+	print (upload_status)#, summary)
 	upload_summary = []
 	for i in summary:
 		upload_summary.append(summary[i])
@@ -358,7 +358,7 @@ def upload_confirm(request, option = None):
 	context = {}
 	
 	if request.GET.get('option') == "Confirm":
-		#print ("confirm")
+		print ("confirm")
 		context['upload_status'] = 'Saved'
 		context['summary'] = ''
 		try: del request.session['upload_summary']
@@ -369,7 +369,7 @@ def upload_confirm(request, option = None):
 		return redirect('upload')
 	elif request.GET.get('option') == 'Cancel':
 		context['upload_status'] = 'Cancelling...'
-		#print ("cancel")
+		print ("cancel")
 		try:
 			#get rid of read in data
 			upload_summary = request.session.get('upload_summary')
@@ -555,14 +555,19 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 
 	if read_map['date_global']: date = wsIn[read_map['date_created']].value
 	else: date = row[read_map['date_created']].value
-	print (date)
 
 	try:
 		date = datetime.strptime(date, '%m-%d-%Y').strftime('%Y-%m-%d')
 	except:
 		date = ''
-	print (date)
 
+	def protocol_exists_or_new(ptName):
+		if Protocol.objects.all().filter(_name = ptName).exists():
+			return [EXISTING,'Protocol: ', Protocol.objects.all().get(_name = ptName)]
+		prot = Protocol(_name = ptName)
+		prot.save()
+		return prot
+		
 	newSample = Sample(
 		_sampleName = name,
 		_storageCondition = "Processing",
@@ -573,6 +578,15 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 	)
 	if date !='': newSample.setDateCreated(date)
 	newSample.save()
+
+	if read_map['sheetType'] == 'General':
+		protocolNames = str(row[read_map['protocol']].value)
+		protocolNames = protocolNames.split(',')
+
+		for i in protocolNames:
+			p = protocol_exists_or_new(i.strip())[2]
+			newSample._treatmentProtocol.add(p)
+
 	return [NEW, 'Sample: ', name]
 
 def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_map):
@@ -609,12 +623,12 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 	ins_code = wsIn[read_map['inst_code']].value
 	if ins_code == None: ins_code = ''
 	else: ins_code = ' '+ins_code
+	print("\n\n\n", ins_code)
 	e_n = inst_exists_or_new(str(wsIn[read_map['instrument_type_loc']].value)+ins_code)
-	print (e_n)
 	initInstrument = e_n[2]
+	print (initInstrument)
 	if (e_n[0] == NEW): summary.append(e_n)
 	if row != []:
-		print (row)
 		e_n = setting_exists_or_new(row[read_map['setting_loc']].value)
 		setting = e_n[2]
 	else: setting = None #wlRow[read_map['settings_file']]
@@ -1008,8 +1022,9 @@ class SampleDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(SampleDetailView, self).get_context_data(**kwargs)
-        design = context['sample'].treatmentProtocol()
-        if design != None:
+        designSet = context['sample'].treatmentProtocol().all()
+        for design in designSet:
+            print(design)
             context['protocol'] = design
             context['protocol.description'] = design.description()
             if design.file():
@@ -1039,7 +1054,7 @@ class DatasetDetailView(DetailView):
             context['setting.description'] = setting.description()
             if setting.file():
                 context['setting_filename'] = basename(setting.file().path)
-                context['setting_download'] =setting.file().url
+                context['setting_download'] = setting.file().url
         return context
 
 class ExperimentDetailView(DetailView):

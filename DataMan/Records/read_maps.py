@@ -80,9 +80,11 @@ read_in_map_gen = {
 	'in_section':'C18:{}{}', #Where the samples are defined (as rows)
 	'start_loc':'C18', #Required field for first row (empty if empty file)
 	'sample_name':1, #Within a row, required sample name (empty only at the end)
-	'storage_location':8, #within a row, (not intended to be tray pos)
+	'storage_location':9, #within a row, (not intended to be tray pos)
 	'date_global':False,#date will either be absolute or in row
 	'date_created':6, #cell if absolute, index if in row
+	'individualID':7,
+	'protocol':8,
 	'organism':'J2', #absolute cell
 	'comments_row':{ #Any extra information
 		#Format: 'Heading: ':row index

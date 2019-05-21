@@ -9,13 +9,26 @@
     {{sample.experiment}}</a></p>
 <p><Strong>Storage Condition:</Strong> {{sample.storageCondition}}</p>
 <p><Strong>Storage Location:</Strong> {{sample.storageLocation}}</p>
-<p><Strong>Treatment Protocol:</Strong> {{sample.treatmentProtocol}}</p>
+<p><Strong>Treatment Protocols:</Strong> </p>
+  {% if sample.treatmentProtocol.all.count == 0 %}
+  <ul>None</ul>
+  {% else %}
   <ul>
-      {% if sample.treatmentProtocol.description %}
-        <li>Protocol Description: {{sample.treatmentProtocol.description}}</li>
-      {%endif%}
-      {% if sample.treatmentProtocol.file %}<li>File: {{sample.treatmentProtocol.file}}</li>{%endif%}
+    {% for Protocol in sample.treatmentProtocol.all %}
+      <li>{{Protocol}}</li>
+    {% if Protocol.description or Protocol.file%}
+      <ul>
+          {% if Protocol.description %}
+            <li>{{Protocol.description}}</li>
+          {%endif%}
+          {% if sample.treatmentProtocol.file %}
+            <li>File: {{Protocol.file}}</li>
+          {%endif%}
+      </ul>
+    {% endif %}
+    {%endfor%}
   </ul>
+{% endif %}
 <p><Strong>Date Created:</Strong> {{sample.dateCreated|date:'M d, Y'}}</p>
 <p><Strong>Organism:</Strong> {{sample.organism}}</p>
 <p><Strong>Organism Modifications:</Strong> {{sample.organismModifications}}</p>
