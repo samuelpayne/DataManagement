@@ -34,7 +34,8 @@
 <!--<p><Strong>Acquisition End:</Strong> {{dataset.acquisitionEnd|date:'M d, Y'}}</p>-->
 
 <p><Strong>File Name:</Strong> {{dataset.fileName}}</p>
-<p><Strong>File Location:</Strong> {{dataset.fileLocation}}</p>
+<p><Strong>Original File Location:</Strong> {{dataset.fileLocation}}</p>
+<p><Strong>Remote File Location:</Strong> {{dataset.fileLocationRemote}}</p>
 <p><Strong>File Size:</Strong> {{dataset.fileSize}}</p>
 
 <a class="nav-block" href="{% url 'edit-dataset' dataset.datasetID %}">

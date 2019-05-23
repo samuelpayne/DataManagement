@@ -27,14 +27,31 @@ class Dataset(models.Model):
     #_status = models.ForeignKey("fileStatusOptions", on_delete=models.SET_NULL, verbose_name='Status', null=True)
     _status = models.TextField(verbose_name="File Status", null = True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
-    _fileLocation = models.TextField(verbose_name='Path to file location')
-	####APPARENTLY THERE ARE FILEPATHFIELDS AND THAT MIGHT BE USEFUL####
+    
+    _fileLocation = models.TextField(verbose_name='Path to original file location', blank=True, null=True)
+    _fileLocationRemote = models.TextField(verbose_name='Path to remote (supercomputer) file location', blank=True, null=True)
     _fileName = models.TextField(verbose_name='File Name', null=True, blank=False)
+
     _acquisitionStart = models.DateTimeField(verbose_name='Upload Date',default=datetime.now, null=True, blank=True)
     _acquisitionEnd = models.DateTimeField(verbose_name="Acquisition Date", default=datetime.now, null=True, blank=True)
     _fileSize = models.IntegerField(verbose_name='File Size', null=True, blank=True)
     _fileHash = models.TextField(verbose_name='File Hash', null=True, blank=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
+
+    def clean(self):
+
+        remote_path = self._fileLocationRemote
+        local_path = self._fileLocation
+        
+        if not remote_path and not local_path:
+            raise forms.ValidationError("A file path must be specified.")
+        
+
+    def get_absolute_url(self):
+        return reverse('dataset-detail', args=[str(self._datasetID)])
+
+    def __str__(self):
+        return str(self._datasetName)
 
     def datasetName(self):
         return self._datasetName
@@ -80,6 +97,10 @@ class Dataset(models.Model):
         return self._fileLocation
     def setFileLocation(self, value):
         self._fileLocation = value
+    def fileLocationRemote(self):
+        return self._fileLocationRemote
+    def setFileLocationRemote(self, value):
+        self._fileLocationRemote = value
     def fileName(self):
         return self._fileName
     def setFileName(self, value):
@@ -100,12 +121,6 @@ class Dataset(models.Model):
         return self._fileHash
     def setFileHash(self, value):
         self._fileHash = value
-
-    def get_absolute_url(self):
-        return reverse('dataset-detail', args=[str(self._datasetID)])
-
-    def __str__(self):
-        return str(self._datasetName)
 
 class Sample(models.Model):
     _sampleName = models.TextField(verbose_name="Sample Name",

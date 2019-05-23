@@ -652,6 +652,7 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 		_instrument = initInstrument,
 		_fileName = str(wlRow[read_map['file_name']].value)+extension,
 		_fileLocation = str(wlRow[read_map['file_location']].value),
+		_fileLocationRemote = str(wlRow[read_map['file_location_remote']].value),
 		_instrumentSetting = setting,
 		_type = dataType,
 		#Commas after each value

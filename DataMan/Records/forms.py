@@ -127,7 +127,7 @@ class AddDatasetForm(forms.ModelForm):
         model = Dataset
         fields = ['_datasetName','_sample', '_instrument','_instrumentSetting','_type',
                   '_operator','_dateCreated',#'_acquisitionStart',#'_acquisitionEnd',
-                  '_status','_fileName','_fileLocation',
+                  '_status','_fileName','_fileLocation','_fileLocationRemote',
                   '_fileSize', '_comments']
         widgets = {
             '_dateCreated':DateInput(),

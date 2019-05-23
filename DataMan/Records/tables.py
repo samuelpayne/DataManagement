@@ -17,10 +17,7 @@ class DatasetTable(tables.Table):
 
     class Meta:
         model = Dataset
-        fields = ['_experiment','_datasetName', '_instrument', '_instrumentSetting','_type',
-                  '_operator','_status','_dateCreated','_fileLocation',
-                  '_fileName',
-                  '_fileSize', '_comments']
+        exclude = ['_datasetID','_sample','_acquisitionStart','_acquisitionEnd','_fileHash']
 
 class SampleTable(tables.Table):
     _sampleName = tables.LinkColumn('sample-detail', args=[A('pk')])
