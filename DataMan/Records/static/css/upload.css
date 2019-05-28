@@ -63,10 +63,11 @@ table {
 tr,
 th,
 td {
+    font-size: 12px;
     background: white;
     border: solid 1px #002e5d;
     border-radius: 0px;
-    padding: 5px;
-    padding-right: 20px;
-    padding-left: 20px;
+    padding: 2px;
+    padding-right: 15px;
+    padding-left: 15px;
 }
