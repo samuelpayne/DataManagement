@@ -141,11 +141,9 @@ class AddExperimentForm(forms.ModelForm):
         fields = ['_experimentName','_projectLead','_teamMembers',
                   '_IRB', '_comments',]
 
-class BackUpSelectForm(forms.DateInput):
-    #if backups are force-daily, calender widget makes sense
-    #otherwise we want a dropdown of available backups
-    input_type = 'date'
+class BackUpSelectForm(forms.Form):
     date = forms.CharField(label='Restore from', widget=DateInput)
-    
-    def clean(self):
-        data = self.cleaned_data
+
+    #def clean(self):
+    #    data = self.cleaned_data
+    #    return data

@@ -101,6 +101,7 @@ def make_backup():
 
 	#backs up to box
 	if settings.DROPBOX_ACCESS_TOKEN:
+		print ("Trying Upload To Box")
 		# The full path to upload the file to, including the file name
 		box_file = settings.DROPBOX_BACKUP_LOCATION + filename
 		##Not yet the right access token...
@@ -130,16 +131,16 @@ def backup(request):
 	context = {
 		'header': 'Backup Options',
 		'options':options,
-		'form':form
+		'form':form,
 	}
 	if request.method == 'POST' and request.POST.get('option') == 'Restore':
 		form = forms.BackUpSelectForm(request.POST)
 		if form.is_valid():
-			data = form.save(commit = False)
-			filename = 'dump-' +data.date.strftime('%Y-%m-%d')+'.json'
+			data = form.cleaned_data
+			date = data['date']
+			#.strftime('%Y-%m-%d')
+			filename = 'dump-' +date+'.json'
 			filename = settings.BACKUP_LOCATION + filename
-			#backupfile = BackupFile.objects.all().get(date = data.date)
-			#filename = backupfile.filename()
 			try:
 				restore(filename)
 			except:
