@@ -33,12 +33,13 @@ class SampleTable(tables.Table):
 
 class ExperimentTable(tables.Table):
     _experimentName = tables.LinkColumn('experiment-detail', args=[A('pk')])
-    _experimentalDesign = tables.TemplateColumn('{{record.experimentalDesign|slice:":15"}}...')
+    _experimentalDesign = tables.TemplateColumn('{{record.experimentalDesign|slice:":25"}}...')
+    _comments = tables.TemplateColumn('{{record.comments|slice:":25"}}...')
     
     class Meta:
         model = Experiment
         fields = ['_experimentName','_projectLead','_teamMembers',
-                  '_IRB','_experimentalDesign',]
+                  '_IRB','_comments','_experimentalDesign',]
 
 class IndividualTable(tables.Table):
     _individualIdentifier = tables.LinkColumn('individual-detail', args=[A('pk')])

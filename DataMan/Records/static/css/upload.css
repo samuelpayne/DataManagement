@@ -44,3 +44,28 @@ input.nav-block {
     margin-bottom: 18px;
     border: 0px;
 }
+
+.table-outer {
+    overflow-x: scroll;
+    grid-column: 1/4;
+    grid-row: 2/4;
+    border: solid 2px #002e5d;
+    background: #002e5d;
+    border-radius: 1px;
+}
+
+table {
+    border: solid 2px solid black;
+    border-collapse: collapse;
+}
+
+tr,
+th,
+td {
+    background: white;
+    border: solid 1px #002e5d;
+    border-radius: 0px;
+    padding: 5px;
+    padding-right: 20px;
+    padding-left: 20px;
+}

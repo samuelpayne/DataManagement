@@ -180,12 +180,11 @@ def upload(request, option = None):
 			#read_only = True sometimes causes sharing violations 
 			#because it doesn't close fully
 			if wb['Input']['I3'].value == "Mass spec":
-				upload_summary = read_data(request, wb, lead, read_in_map_MS) #to be used in template
 				read_map = read_in_map_MS
+				upload_summary = read_data(request, wb, lead, read_in_map_MS, []) #to be used in template
 			elif wb['Input']['I3'].value == "Instrument Type":
-				upload_summary = read_Individuals(wb[read_map['wsIndiv']], read_map, upload_summary)
+				upload_summary = read_Individuals(wb[read_in_map_gen['wsIndiv']], read_in_map_gen, upload_summary)
 				upload_summary = read_data(request, wb, lead, read_in_map_gen, upload_summary)#"Upload Successful"
-				read_map = read_in_map_gen
 			else: 
 				upload_summary = "Unknown format. Please use one of the provided templates."
 			wb.close()
@@ -353,9 +352,44 @@ def upload_confirm(request, option = None):
 	except: summary = []
 	print (upload_status)#, summary)
 	upload_summary = []
+	upload_by_types = {}
+
 	for i in summary:
 		upload_summary.append(summary[i])
-	print (upload_summary)
+		if (i) != '':
+			record_type = summary[i][1] 
+			if record_type not in upload_by_types:
+				upload_by_types[record_type] = []
+
+			upload_by_types[record_type].append(summary[i])
+
+	for i in upload_by_types:
+		e_n_list = upload_by_types[i]
+		this_all = []
+		for e in e_n_list:
+			this_all.append(e[2])
+		these = []
+		[these.append(x) for x in this_all if x not in these]
+
+		if "QC" in i:
+			print (i, "is't yet a table")
+
+		elif "Experiment" in i:
+			experiment_set = Experiment.objects.all().filter(_experimentName__in=these)
+			exp_table = ExperimentTable(experiment_set.order_by('-_experimentName'))
+		elif "Sample" in i:
+			#separate QC so that doesn't overwrite set
+			queryset = Sample.objects.filter(_sampleName__in = these)
+			sample_table = SampleTable(queryset.order_by('-pk'))
+		elif "Dataset" in i:
+			queryset = Dataset.objects.filter(_datasetName__in = these)
+			dataset_table = DatasetTable(queryset.order_by('-pk'))
+
+		else: print ("\n\nUnknown Type: ", i)
+
+	tables = [exp_table, sample_table, dataset_table]
+
+	#print (upload_summary)
 	upload_options = {'Confirm', 'Cancel'}
 	context = {}
 	
@@ -407,7 +441,7 @@ def upload_confirm(request, option = None):
 	if len(upload_summary) >1: summary = upload_summary[1:]
 	upload_status = upload_summary[0]
 	context = {
-		#'form':forms.UploadFileForm(),
+		'tables':tables,
 		'upload_status':upload_status,
 		'summary': summary,
 		'upload_options': upload_options,
@@ -574,9 +608,12 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 		prot.save()
 		return [NEW,'Protocol: ',prot]
 		
+	if read_map['storage_condition']: condition = str(row[read_map['storage_location']].value)
+	else: condition = "Unspecified"
+
 	newSample = Sample(
 		_sampleName = name,
-		_storageCondition = "Processing",
+		_storageCondition = condition,
 		_experiment = experiment,
 		_storageLocation = str(row[read_map['storage_location']].value),
 		_organism = wsIn[(read_map['organism'])].value,
