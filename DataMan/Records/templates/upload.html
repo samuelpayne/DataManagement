@@ -33,7 +33,7 @@ page for uploading excel files-->
     <br>
   {% endfor %}
   {% for b in upload_options %}
-    <input type="button" id ={{b}} name="option" value={{b}} 
+    <input class ="nav-block" button" id ={{b}} name="option" value={{b}} 
            onclick="window.location.href=('?option='+this.value)"/>
   {% endfor %}
 </form>
