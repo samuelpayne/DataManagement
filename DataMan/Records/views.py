@@ -362,6 +362,11 @@ def upload_confirm(request, option = None):
 				upload_by_types[record_type] = []
 
 			upload_by_types[record_type].append(summary[i])
+			
+	exp_table_exists = False
+	sample_table_exists = False
+	dataset_table_exists = False
+
 
 	for i in upload_by_types:
 		e_n_list = upload_by_types[i]
@@ -377,18 +382,24 @@ def upload_confirm(request, option = None):
 		elif "Experiment" in i:
 			experiment_set = Experiment.objects.all().filter(_experimentName__in=these)
 			exp_table = ExperimentTable(experiment_set.order_by('-_experimentName'))
+			exp_table_exists = True
 		elif "Sample" in i:
 			#separate QC so that doesn't overwrite set
 			queryset = Sample.objects.filter(_sampleName__in = these)
 			sample_table = SampleTable(queryset.order_by('-pk'))
+			sample_table_exists = True
 		elif "Dataset" in i:
 			queryset = Dataset.objects.filter(_datasetName__in = these)
 			dataset_table = DatasetTable(queryset.order_by('-pk'))
+			dataset_table_exists = True
 
 		else: print ("\n\nUnknown Type: ", i)
 
-	tables = [exp_table, sample_table, dataset_table]
-
+	#try if they might not exist.
+	tables=[]
+	if exp_table_exists: tables.append(exp_table)
+	if sample_table_exists: tables.append(sample_table)
+	if dataset_table_exists: tables.append(dataset_table)
 	#print (upload_summary)
 	upload_options = {'Confirm', 'Cancel'}
 	context = {}
@@ -608,7 +619,7 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 		prot.save()
 		return [NEW,'Protocol: ',prot]
 		
-	if read_map['storage_condition']: condition = str(row[read_map['storage_location']].value)
+	if read_map['storage_condition']: condition = str(row[read_map['storage_condition']].value)
 	else: condition = "Unspecified"
 
 	newSample = Sample(
