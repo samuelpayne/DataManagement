@@ -1,3 +1,5 @@
+LOGS_FOLDER = 'logs/'
+
 LOGGING = {
 	'version':1,
 	'disable_existing_loggers': False,
@@ -15,7 +17,15 @@ LOGGING = {
 		       'class':'logging.handlers.TimedRotatingFileHandler',
 			'when':'midnight',
 			'interval':1,
-			'filename':'logs/ErrorLoggers.log',
+			'filename':LOGS_FOLDER+'ErrorLoggers.log',
+			'formatter':'large',
+		},
+		'default_file':{
+			'level':'DEBUG',
+		       'class':'logging.handlers.TimedRotatingFileHandler',
+			'when':'midnight',
+			'interval':1,
+			'filename':LOGS_FOLDER+'DefaultLoggers.log',
 			'formatter':'large',
 		},
 		'info_file':{
@@ -23,7 +33,7 @@ LOGGING = {
 		       'class':'logging.handlers.TimedRotatingFileHandler',
 			'when':'midnight',
 			'interval':1,
-			'filename':'logs/InfoLoggers.log',
+			'filename':LOGS_FOLDER+'InfoLoggers.log',
 			'formatter':'large',
 		},
 		'debug_file':{
@@ -31,19 +41,19 @@ LOGGING = {
 		       'class':'logging.handlers.TimedRotatingFileHandler',
 			'when':'midnight',
 			'interval':1,
-			'filename':'logs/DebugLoggers.log',
+			'filename':LOGS_FOLDER+'DebugLoggers.log',
 			'formatter':'large',
 		},
         'request_handler': {
                 'level':'DEBUG',
                 'class':'logging.handlers.RotatingFileHandler',
-                'filename': 'logs/django_request.log',
+                'filename': LOGS_FOLDER+'django_request.log',
                 'formatter':'large',
 		},
 	},
 	'loggers':{
         '': {
-            'handlers': ['errors_file'],
+            'handlers': ['default_file'],
             'level': 'DEBUG',
             'propagate': True
         },

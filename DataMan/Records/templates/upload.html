@@ -35,14 +35,14 @@ page for uploading excel files-->
 </form>
 
 <form name="confirm" action="#" method="get">
+  <h3>{{upload_status}}
   {% for table in tables %}
     {% render_table table %}
     <br>
   {% endfor %}
   {% for b in upload_options %}
-    <input class ="nav-block" button" id ={{b}} name="option" value={{b}} 
+    <input class ="nav-block" button" id ={{b}} name="option" value={{b}}
            onclick="window.location.href=('?option='+this.value)"/>
   {% endfor %}
 </form>
 {% endblock %}
-

@@ -36,6 +36,8 @@ from boxsdk import Client
 
 import logging
 info_logger = logging.getLogger("info_logger")
+debug_logger = logging.getLogger("debug_logger")
+error_logger = logging.getLogger("error_logger")
 
 NEW = 'NEW'
 EXISTING = '(Existing)'
@@ -89,675 +91,695 @@ def archive(request):
 def create_new(request):
     return render(request, 'create-new.html',)
 def success(request, message = 'Successfully recorded'):
-	if request.session.get('message') and request.session['message'] != None:
-		message = request.session['message']
-	context = {'message':message}
-	request.session['message'] = None
-	return render(request, 'success.html', context)
+    if request.session.get('message') and request.session['message'] != None:
+        message = request.session['message']
+    context = {'message':message}
+    request.session['message'] = None
+    return render(request, 'success.html', context)
 
 def make_backup():
-	filename = 'dump-' +datetime.today().strftime('%Y-%m-%d')+'.json'
-	#creates local backup
-	if settings.BACKUP_LOCATION:
-		filepath = settings.BACKUP_LOCATION + filename
-	file = open(filepath, 'w')
-	call_command('dumpdata', 'Records', stdout=file)
+    filename = 'dump-' +datetime.today().strftime('%Y-%m-%d')+'.json'
+    #creates local backup
+    if settings.BACKUP_LOCATION:
+        filepath = settings.BACKUP_LOCATION + filename
+    file = open(filepath, 'w')
+    call_command('dumpdata', 'Records', stdout=file)
 
-	#backs up to box
-	if settings.BOX_CONFIG:
-		print ("Trying Upload To Box")
+    #backs up to box
+    if settings.BOX_CONFIG:
+        print ("Trying Upload To Box")
 
-		#https://github.com/box/box-python-sdk/blob/master/docs/usage/
-		#c = client.folder(folder_id=folder_id)
-		#.collaborate_with_login("user@byu.edu", CollaborationRole.VIEWER)
+        #https://github.com/box/box-python-sdk/blob/master/docs/usage/
 
-		folder_id = settings.BOX_BACKUP_LOCATION
+        folder_id = settings.BOX_BACKUP_LOCATION
+        sdk = JWTAuth.from_settings_file(settings.BOX_CONFIG)
+        client = Client(sdk)
 
-		sdk = JWTAuth.from_settings_file(settings.BOX_CONFIG)
-		client = Client(sdk)
+        #if it's been uploaded already,
+        #the file by that name will be in the folder
+        #if it hasn't, we won't have problems uploading it
+        file_id = None
+        items = client.folder(folder_id=folder_id).get_items()
+        for i in items:
+            if i.name == filename:
+                file_id = i.id
 
-		#if it's been uploaded already,
-		#the file by that name will be in the folder
-		#if it hasn't, we won't have problems uploading it
-		file_id = None
-		items = client.folder(folder_id=folder_id).get_items()
-		for i in items:
-			if i.name == filename:
-				file_id = i.id
+        if file_id:#it's been uploaded already
+            box_file = client.file(file_id).unlock()
+            box_file.update_contents(filepath)
+        else:
+            box_file = client.folder(folder_id).upload(filepath, filename)
 
-		if file_id:#it's been uploaded already
-			box_file = client.file(file_id).unlock()
-			box_file.update_contents(filepath)
-		else:
-			box_file = client.folder(folder_id).upload(filepath, filename)
+        box_file.lock()
 
-		box_file.lock()
-		link = box_file.get_shared_link(access='open')
+        """Push the error Logs to box as well."""
+        if settings.BOX_LOGS:
+            ###Doesn't yet work, I think because the files are open
+            #I think I can make it work by copying them.
+            log_folder_id = settings.BOX_LOGS
+            for log in settings.LOG_FILES:
+                filename = basename(log)
+                open(filename, 'wb').write(open(log, 'rb').read())
 
-		print ("\n",link,'\n')
+                items = client.folder(folder_id=log_folder_id).get_items()
+                file_id = None
+                for i in items:
+                    if i.name == filename:
+                        file_id = i.id
 
-	return True
+                if file_id:#it's been uploaded already
+                    box_file = client.file(file_id).unlock()
+                    box_file.update_contents(filename)
+                else:
+                    box_file = client.folder(log_folder_id).upload(filename, filename)
+
+                box_file.lock()
+            remove(filename)
+    return True
+
 def start_job():
-	global job
+    global job
 
-	#Checks if the job has already been assigned so as to avoid duplicates
-	if not 'make_backup_job' in str(scheduler.get_jobs()):
-		job = scheduler.add_job(make_backup, 'interval', hours = 1, id = 'make_backup_job')
-	if not scheduler.running: scheduler.start()
+    #Checks if the job has already been assigned so as to avoid duplicates
+    if not 'make_backup_job' in str(scheduler.get_jobs()):
+        job = scheduler.add_job(make_backup, 'interval', hours = 1, id = 'make_backup_job')
+    if not scheduler.running: scheduler.start()
 def backup(request):
-	start_job()
-	options = {'Restore'}
+    start_job()
+    options = {'Restore'}
 
-	if settings.BOX_CONFIG:
-		folder_id = settings.BOX_BACKUP_LOCATION
-		sdk = JWTAuth.from_settings_file(settings.BOX_CONFIG)
-		client = Client(sdk)
-		items = client.folder(folder_id=folder_id).get_items()
-		remote_files = []
-		for i in items: remote_files.append((i.id, i.name))
-	else: remote_files = []
+    if settings.BOX_CONFIG:
+        folder_id = settings.BOX_BACKUP_LOCATION
+        sdk = JWTAuth.from_settings_file(settings.BOX_CONFIG)
+        client = Client(sdk)
+        items = client.folder(folder_id=folder_id).get_items()
+        remote_files = []
+        for i in items: remote_files.append((i.id, i.name))
+    else: remote_files = []
 
-	form = forms.BackUpSelectForm(remote_files=remote_files)
-	context = {
-		'header': 'Backup Options',
-		'options':options,
-		'form':form,
-	}
-	if request.method == 'POST' and request.POST.get('option') == 'Restore':
-		form = forms.BackUpSelectForm(request.POST)
-		if form.is_valid():
-			data = form.data
-			source = data['source']
-			try:
-				if source == 'Local':
-					file = data['file']
-					restore(file)
-				elif source == 'Box' and settings.BOX_CONFIG:
-					remote_file = data['remote_file']
-					box_file = client.file(remote_file)
-					new_name = 'remote-copy-'+ box_file.get().name
-					if settings.BACKUP_LOCATION:
-						new_name = settings.BACKUP_LOCATION + new_name
-					file = open(new_name, 'wb')
-					box_file.download_to(file)
-					file.close()
-					restore(new_name)
-					remove(new_name)
-				else:
-					context['error'] = 'Restore from Box unavailable.'
-			except:
-				context['error'] = 'Error in restore. Please retry.'
-		else: context['error'] = 'Please select a backup.'
+    form = forms.BackUpSelectForm(remote_files=remote_files)
+    context = {
+        'header': 'Backup Options',
+        'options':options,
+        'form':form,
+    }
+    if request.method == 'POST' and request.POST.get('option') == 'Restore':
+        form = forms.BackUpSelectForm(request.POST)
+        if form.is_valid():
+            data = form.data
+            source = data['source']
+            try:
+                if source == 'Local':
+                    file = data['file']
+                    restore(file)
+                elif source == 'Box' and settings.BOX_CONFIG:
+                    remote_file = data['remote_file']
+                    box_file = client.file(remote_file)
+                    new_name = 'remote-copy-'+ box_file.get().name
+                    if settings.BACKUP_LOCATION:
+                        new_name = settings.BACKUP_LOCATION + new_name
+                    file = open(new_name, 'wb')
+                    box_file.download_to(file)
+                    file.close()
+                    restore(new_name)
+                    remove(new_name)
+                else:
+                    context['error'] = 'Restore from Box unavailable.'
+            except:
+                context['error'] = 'Error in restore. Please retry.'
+        else: context['error'] = 'Please select a backup.'
 
-	if request.method == 'GET' and request.GET.get('option') == 'backup-now':
-		make_backup()
-		return redirect('backup')
-	return render(request, 'backup.html', context)
+    if request.method == 'GET' and request.GET.get('option') == 'backup-now':
+        make_backup()
+        return redirect('backup')
+    return render(request, 'backup.html', context)
 def restore(filename):
-	call_command('loaddata', filename, app_label='Records')
+    call_command('loaddata', filename, app_label='Records')
 
 #this method handles the upload page and
 #directs the sheet to the read-in method
 def upload(request, option = None):
-	form = forms.UploadFileForm()
-	upload_status = ''
-	summary = ''
-	upload_summary = [("Upload summary:")]
-	upload_options = {}
+    form = forms.UploadFileForm()
+    upload_status = ''
+    summary = ''
+    upload_summary = [("Upload summary:")]
+    upload_options = {}
 
-	print("\nUpload Page")
+    print("\nUpload Page")
 
-	if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
+    if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
 
-		print ("\nAttempting Upload")
-		form = forms.UploadFileForm(request.POST, request.FILES)
-		if form.is_valid():
-			file = request.FILES['_File']
-			data = form.save(commit = False)
-			lead = data.lead
-		#try: #Catch invalid formats, etc.
-		if True: #Allows for effective debugging
-			wb = openpyxl.load_workbook(file, data_only=True)
-			#read_only = True sometimes causes sharing violations
-			#because it doesn't close fully
-			if wb['Input']['I3'].value == "Mass spec":
-				read_map = read_in_map_MS
-				upload_summary = read_data(request, wb, lead, read_in_map_MS, []) #to be used in template
-			elif wb['Input']['I3'].value == "Instrument Type":
-				upload_summary = read_Individuals(wb[read_in_map_gen['wsIndiv']], read_in_map_gen, upload_summary)
-				upload_summary = read_data(request, wb, lead, read_in_map_gen, upload_summary)#"Upload Successful"
-			else:
-				upload_summary = "Unknown format. Please use one of the provided templates."
-			wb.close()
-			upload_options = {
-				'Confirm': True,
-				'Cancel': False,
-			}
-			request.session['upload_status'] = upload_status
-		#except:
-		#	upload_status = "Read in error.\nPlease use one of the provided templates."
-		print("finished Upload")
-		#print(upload_status)
-		#print(upload_summary)
-		#"""
+        print ("\nAttempting Upload")
+        form = forms.UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES['_File']
+            data = form.save(commit = False)
+            lead = data.lead
+        try: #Catch invalid formats, etc.
+            #if True: #Allows for effective debugging
+            wb = openpyxl.load_workbook(file, data_only=True)
+            #read_only = True sometimes causes sharing violations
+            #because it doesn't close fully
+            if wb['Input']['I3'].value == "Mass spec":
+                read_map = read_in_map_MS
+                upload_summary = read_data(request, wb, lead, read_in_map_MS, []) #to be used in template
+            elif wb['Input']['I3'].value == "Instrument Type":
+                upload_summary = read_Individuals(wb[read_in_map_gen['wsIndiv']], read_in_map_gen, upload_summary)
+                upload_summary = read_data(request, wb, lead, read_in_map_gen, upload_summary)#"Upload Successful"
+            else:
+                upload_summary = ["Unknown format. Please use one of the provided templates."]
+            wb.close()
+            upload_options = {
+                'Confirm': True,
+                'Cancel': False,
+            }
+            request.session['upload_status'] = upload_status
+        except:
+            upload_status = "Read in error.\nPlease use one of the provided templates."
+            upload_summary = ["Unknown format. Please use one of the provided templates."]
+            request.session['upload_status'] = upload_status
+        print("finished Upload")
+        #print(upload_status)
+        #print(upload_summary)
+        #"""
 
-		#saves summary of changes for report till confirm/delete option
-		i = 0
-		request.session['upload_summary'] = {}
-		for report in upload_summary:
-			request.session['upload_summary'][i] = report
-			i +=1
-		request.session.modified = True
+        #saves summary of changes for report till confirm/delete option
+        i = 0
+        request.session['upload_summary'] = {}
+        for report in upload_summary:
+            request.session['upload_summary'][i] = report
+            i +=1
+        request.session.modified = True
 
-		return redirect ('upload_confirm')
-		"""print("read in complete")
-		if 'missing_fields' in request.session:
-			del request.session['missing_fields']
-		if 'missing_fields_data' in request.session:
-			del request.session['missing_fields_data']
-		missing_fields= get_missing_fields(wb, read_map)
-		missing_fields = list(dict.fromkeys(missing_fields))
-		print ('missing_fields: ', missing_fields)
+        return redirect ('upload_confirm')
+        """print("read in complete")
+        if 'missing_fields' in request.session:
+            del request.session['missing_fields']
+        if 'missing_fields_data' in request.session:
+            del request.session['missing_fields_data']
+        missing_fields= get_missing_fields(wb, read_map)
+        missing_fields = list(dict.fromkeys(missing_fields))
+        print ('missing_fields: ', missing_fields)
 
-		request.session['missing_fields'] = missing_fields
-		return redirect ('process_missing_fields')#"""
+        request.session['missing_fields'] = missing_fields
+        return redirect ('process_missing_fields')#"""
 
-	context = {
-		'form':form,
-		'upload_status':upload_status,
-		'summary': summary,
-		'upload_options': upload_options,
-	}
+    context = {
+        'form':form,
+        'upload_status':upload_status,
+        'summary': summary,
+        'upload_options': upload_options,
+    }
 
-	#Cancel options - currently functions
-	#on keep or delete
-	return render(request, 'upload.html', context)
+    #Cancel options - currently functions
+    #on keep or delete
+    return render(request, 'upload.html', context)
 def read_data(request, wb, lead, read_map, upload_summary):
-	missing_fields = []
-	summary = upload_summary
+    missing_fields = []
+    summary = upload_summary
 
-	wsIn = wb[read_map['wsIn']]
-	if wsIn[read_map['start_loc']].value is None:
-		return ["Empty file"]
+    wsIn = wb[read_map['wsIn']]
+    if wsIn[read_map['start_loc']].value is None:
+        return ["Empty file"]
 
-	wlrowNum = read_map['wlrowNumInit']
-	if read_map['variable_colums_TF']:
-		rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
-	else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
+    wlrowNum = read_map['wlrowNumInit']
+    if read_map['variable_colums_TF']:
+        rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
+    else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
 
-	#The generic sheet has the option of reading
-	#in one experiment per sheet with all data
-	if 'exp_name' in read_map:
-		exp_name = wsIn[read_map['exp_name']].value
-		if exp_name:
-			#this is where we start reading and checking
-			lead = wsIn[read_map['lead']].value
-			if lead == None:
-				missing_fields.append('lead')
-			if 'IRB' in read_map:
-				IRB = wsIn[read_map['IRB']].value
-				try: IRB = int(IRB)
-				except: IRB = None
-			else: IRB = None
-			if 'team' in read_map:
-				team = ''
-				for i in read_map['team']:
-					team += str(wsIn[i].value)
-					team += ', '
-			else: team = None
-			if 'description' in read_map:
-				des = wsIn[read_map['description']].value
-			else: des = None
-			e_n = exp_exist_or_new(exp_name,lead,team=team,IRB = IRB, description = des)
-		summary.append(e_n)
+    #The generic sheet has the option of reading
+    #in one experiment per sheet with all data
+    if 'exp_name' in read_map:
+        exp_name = wsIn[read_map['exp_name']].value
+        if exp_name:
+            #this is where we start reading and checking
+            lead = wsIn[read_map['lead']].value
+            if lead == None:
+                missing_fields.append('lead')
+            if 'IRB' in read_map:
+                IRB = wsIn[read_map['IRB']].value
+                try: IRB = int(IRB)
+                except: IRB = None
+            else: IRB = None
+            if 'team' in read_map:
+                team = ''
+                for i in read_map['team']:
+                    if wsIn[i].value != None:
+                        team += str(wsIn[i].value)
+                        team += ', '
+            else: team = None
+            if 'description' in read_map:
+                des = wsIn[read_map['description']].value
+            else: des = None
+            e_n = exp_exist_or_new(exp_name,lead,team=team,IRB = IRB, description = des)
+        summary.append(e_n)
 
-	#read samples and experiment from Input sheet
-	#then read datasets from "Worklist" sheet
-	#separating out QC
-	for i in rows:
-		# i in wsIn['B34:H63']: #.format(wsIn.max_row):
-		#each record a dataset associated with a sample
-		if i[read_map['sample_name']].value is None:
-			break
-			#All done with samples
+    #read samples and experiment from Input sheet
+    #then read datasets from "Worklist" sheet
+    #separating out QC
+    for i in rows:
+        # i in wsIn['B34:H63']: #.format(wsIn.max_row):
+        #each record a dataset associated with a sample
+        if i[read_map['sample_name']].value is None:
+            break
+            #All done with samples
 
-		#Otherwise read it in
-		#Check the individual... they can't be defined by the name alone so...?
-		if read_map['experiment_global']:
-			e_n = exp_exist_or_new(wsIn[read_map['experiment_loc']].value, lead)
-		else:
-			e_n = exp_exist_or_new(i[int(read_map['experiment_loc'])].value, lead)
-		experiment = Experiment.objects.all().get(_experimentName = e_n[2])
-		summary.append(e_n)
+        #Otherwise read it in
+        #Check the individual... they can't be defined by the name alone so...?
+        if read_map['experiment_global']:
+            e_n = exp_exist_or_new(wsIn[read_map['experiment_loc']].value, lead)
+        else:
+            e_n = exp_exist_or_new(i[int(read_map['experiment_loc'])].value, lead)
+        experiment = Experiment.objects.all().get(_experimentName = e_n[2])
+        summary.append(e_n)
 
-		e_n = sample_exists_or_new(i[read_map['sample_name']].value, experiment, i, wsIn, read_map)
-		sample = Sample.objects.all().get(_sampleName = e_n[2])
-		summary.append(e_n)
+        e_n = sample_exists_or_new(i[read_map['sample_name']].value, experiment, i, wsIn, read_map)
+        sample = Sample.objects.all().get(_sampleName = e_n[2])
+        summary.append(e_n)
 
-	wsWL = wb[read_map['wsWL']]
-	wlRows = wsWL[(read_map['wlRows']).format(wsWL.max_row)]
-	inRows = wsIn[(read_map['in_section_lookup']).format(wsIn.max_row)]
-	for wlRow in wlRows:
-		if wlRow[read_map['dataset_name']].value is None:
-			break #there isn't a dataset there
-		#read in datasets
-		sample_type = wlRow[read_map['wl_sample_type']].value
-		if sample_type == 'QC':
-			sample_name = str(lead+" lab QC")
-			if Sample.objects.all().filter(_sampleName = sample_name).exists():
-				sample = Sample.objects.all().get(_sampleName = sample_name)
-				experiment = sample.experiment()
-			else:
-				if not 'QC_exp' in read_map:
-					exp_name = (str(lead+" lab QC"))
-				else: exp_name = str(wsWL[read_map['QC_exp']].value)
-				#or wsIn if that's where QC information is defined'
-				if Experiment.objects.all().filter(_experimentName = exp_name).exists():
-					experiment = Experiment.objects.all().get(_experimentName =exp_name,  lead = lead)
-					summary.append(["(DEFAULT)", 'QC Experiment: ', exp_name])
-				else:
-					experiment = Experiment( _experimentName = exp_name, _projectLead =  lead)
-					experiment.save()
-				sample = Sample(
-					_sampleName = sample_name,
-					_storageCondition = "QC",
-					_experiment = experiment,
-					_storageLocation = "QC",
-					_organism = "QC",
-					)
-				sample.save()
-				summary.append(["(DEFAULT)", 'QC Sample: ', sample_name])
-			sampleRow = []
-		else: #Not a QC - it's a sample defined on input
-			sampleNum = wlRow[read_map['wl_sample_num']].value
-			sampleRow = findIn(sampleNum, inRows, read_map['lookup_column'])
-			sample_name = sampleRow[read_map['lookup_sample']].value
-			if Sample.objects.all().filter(_sampleName = sample_name).exists():
-				sample = Sample.objects.all().get(_sampleName = sample_name)
-			else: raise ValueError("No known sample")
-			experiment = sample.experiment()
-		#At this point both the sample and the experiment have been defined
-		#"""
+    wsWL = wb[read_map['wsWL']]
+    wlRows = wsWL[(read_map['wlRows']).format(wsWL.max_row)]
+    inRows = wsIn[(read_map['in_section_lookup']).format(wsIn.max_row)]
+    for wlRow in wlRows:
+        if wlRow[read_map['dataset_name']].value is None:
+            break #there isn't a dataset there
+        #read in datasets
+        sample_type = wlRow[read_map['wl_sample_type']].value
+        if sample_type == 'QC':
+            sample_name = str(lead+" lab QC")
+            if Sample.objects.all().filter(_sampleName = sample_name).exists():
+                sample = Sample.objects.all().get(_sampleName = sample_name)
+                experiment = sample.experiment()
+            else:
+                if not 'QC_exp' in read_map:
+                    exp_name = (str(lead+" lab QC"))
+                else: exp_name = str(wsWL[read_map['QC_exp']].value)
+                #or wsIn if that's where QC information is defined'
+                if Experiment.objects.all().filter(_experimentName = exp_name).exists():
+                    experiment = Experiment.objects.all().get(_experimentName =exp_name,  lead = lead)
+                    summary.append(["(DEFAULT)", 'QC Experiment: ', exp_name])
+                else:
+                    experiment = Experiment( _experimentName = exp_name, _projectLead =  lead)
+                    experiment.save()
+                sample = Sample(
+                    _sampleName = sample_name,
+                    _storageCondition = "QC",
+                    _experiment = experiment,
+                    _storageLocation = "QC",
+                    _organism = "QC",
+                    )
+                sample.save()
+                summary.append(["(DEFAULT)", 'QC Sample: ', sample_name])
+            sampleRow = []
+        else: #Not a QC - it's a sample defined on input
+            sampleNum = wlRow[read_map['wl_sample_num']].value
+            sampleRow = findIn(sampleNum, inRows, read_map['lookup_column'])
+            sample_name = sampleRow[read_map['lookup_sample']].value
+            if Sample.objects.all().filter(_sampleName = sample_name).exists():
+                sample = Sample.objects.all().get(_sampleName = sample_name)
+            else: raise ValueError("No known sample")
+            experiment = sample.experiment()
+        #At this point both the sample and the experiment have been defined
+        #"""
 
-		e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, sampleRow, wb, wsIn, wlRow, read_map)
-		if sample_type == 'QC': e_n[1] = "QC Dataset: "
-		summary.append(e_n)
+        e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, sampleRow, wb, wsIn, wlRow, read_map)
+        if sample_type == 'QC': e_n[1] = "QC Dataset: "
+        summary.append(e_n)
 
-	wlRow = None
-	wsIn = None
-	return summary
+    wlRow = None
+    wsIn = None
+    return summary
 def findIn(val, rows, lookup_column):
-	for line in rows:
-		if line[lookup_column].value == val:
-			return line
-	return []
+    for line in rows:
+        if line[lookup_column].value == val:
+            return line
+    return []
 def upload_confirm(request, option = None):
-	try: upload_status = request.session['upload_status']
-	except: upload_status = []
-	try: summary = request.session.get('upload_summary')
-	except: summary = []
-	print (upload_status)#, summary)
-	upload_summary = []
-	upload_by_types = {}
+    try: upload_status = request.session['upload_status']
+    except: upload_status = []
+    try: summary = request.session.get('upload_summary')
+    except: summary = []
+    upload_summary = []
+    upload_by_types = {}
 
-	for i in summary:
-		upload_summary.append(summary[i])
-		if (i) != '':
-			record_type = summary[i][1]
-			if record_type not in upload_by_types:
-				upload_by_types[record_type] = []
+    for i in summary:
+        upload_summary.append(summary[i])
+        if (i) != '':
+            record_type = summary[i][1]
+            if record_type not in upload_by_types:
+                upload_by_types[record_type] = []
+            upload_by_types[record_type].append(summary[i])
 
-			upload_by_types[record_type].append(summary[i])
+    if len(upload_summary) >1: summary = upload_summary[1:]
+    upload_status = upload_summary[0]
 
-	exp_table_exists = False
-	sample_table_exists = False
-	dataset_table_exists = False
+    exp_table_exists = False
+    sample_table_exists = False
+    dataset_table_exists = False
 
+    for i in upload_by_types:
+        e_n_list = upload_by_types[i]
+        this_all = []
+        for e in e_n_list:
+            this_all.append(e[2])
+        these = []
+        [these.append(x) for x in this_all if x not in these]
 
-	for i in upload_by_types:
-		e_n_list = upload_by_types[i]
-		this_all = []
-		for e in e_n_list:
-			this_all.append(e[2])
-		these = []
-		[these.append(x) for x in this_all if x not in these]
+        if "QC" in i:
+            print (i, "is't yet a table")
 
-		if "QC" in i:
-			print (i, "is't yet a table")
+        elif "Experiment" in i:
+            experiment_set = Experiment.objects.all().filter(_experimentName__in=these)
+            exp_table = ExperimentTable(experiment_set.order_by('-_experimentName'))
+            exp_table_exists = True
+        elif "Sample" in i:
+            #separate QC so that doesn't overwrite set
+            queryset = Sample.objects.filter(_sampleName__in = these)
+            sample_table = SampleTable(queryset.order_by('-pk'))
+            sample_table_exists = True
+        elif "Dataset" in i:
+            queryset = Dataset.objects.filter(_datasetName__in = these)
+            dataset_table = DatasetTable(queryset.order_by('-pk'))
+            dataset_table_exists = True
 
-		elif "Experiment" in i:
-			experiment_set = Experiment.objects.all().filter(_experimentName__in=these)
-			exp_table = ExperimentTable(experiment_set.order_by('-_experimentName'))
-			exp_table_exists = True
-		elif "Sample" in i:
-			#separate QC so that doesn't overwrite set
-			queryset = Sample.objects.filter(_sampleName__in = these)
-			sample_table = SampleTable(queryset.order_by('-pk'))
-			sample_table_exists = True
-		elif "Dataset" in i:
-			queryset = Dataset.objects.filter(_datasetName__in = these)
-			dataset_table = DatasetTable(queryset.order_by('-pk'))
-			dataset_table_exists = True
+        else: print ("\n\nUnknown Type: ", i)
 
-		else: print ("\n\nUnknown Type: ", i)
+    tables=[]
+    if exp_table_exists: tables.append(exp_table)
+    if sample_table_exists: tables.append(sample_table)
+    if dataset_table_exists: tables.append(dataset_table)
 
-	#try if they might not exist.
-	tables=[]
-	if exp_table_exists: tables.append(exp_table)
-	if sample_table_exists: tables.append(sample_table)
-	if dataset_table_exists: tables.append(dataset_table)
-	#print (upload_summary)
-	upload_options = {'Confirm', 'Cancel'}
-	context = {}
+    upload_options = {'Confirm', 'Cancel'}
+    context = {}
 
-	if request.GET.get('option') == "Confirm":
-		print ("confirm")
-		context['upload_status'] = 'Saved'
-		context['summary'] = ''
-		try: del request.session['upload_summary']
-		except:
-			request.session['message'] = 'Unable to verify save.'
-			return redirect('success')
-		request.session['upload_status'] = 'Saved.'
-		return redirect('upload')
-	elif request.GET.get('option') == 'Cancel':
-		context['upload_status'] = 'Cancelling...'
-		print ("cancel")
-		try:
-			#get rid of read in data
-			upload_summary = request.session.get('upload_summary')
+    if request.GET.get('option') == "Confirm":
+        print ("confirm")
+        context['upload_status'] = 'Saved'
+        context['summary'] = ''
+        try: del request.session['upload_summary']
+        except:
+            request.session['message'] = 'Unable to verify save.'
+            return redirect('success')
+        request.session['upload_status'] = 'Saved.'
+        return redirect('upload')
+    elif request.GET.get('option') == 'Cancel':
+        context['upload_status'] = 'Cancelling...'
+        print ("cancel")
+        try:
+            #get rid of read in data
+            upload_summary = request.session.get('upload_summary')
 
-			for i in upload_summary:
-				if int(i) !=0: #
-					v = upload_summary[i]
-					if v[0] == NEW:
-						#was new with this read in
-						#needs to be deleted
-						if 'Experiment' in v[1]:
-							#it's an experiment
-							experiment = Experiment.objects.all().get(_experimentName = v[2])
-							experiment.delete()
-						elif 'Dataset' in v[1]:
-							#may have been deleted with the experiment
-							if Dataset.objects.all().filter(_datasetName = v[2]).exists():
-								dataset = Dataset.objects.all().get(_datasetName = v[2])
-								dataset.delete()
-						elif 'Sample' in v[1]:
-							#it's a sample -- it may have been deleted with the parent
-							#experiment, so we check if it exists
-							if Sample.objects.all().filter(_sampleName = v[2]).exists():
-								s = Sample.objects.all().get(_sampleName = v[2])
-								s.delete()
-						else:
-							print (v, "Delete Unsuccessful")
-			request.session['upload_status'] = 'Upload Cancelled'
-			del request.session['upload_summary']
-		except: request.session['message'] = 'No upload found.'
-		return redirect('upload')
+            for i in upload_summary:
+                if int(i) !=0: #
+                    v = upload_summary[i]
+                    if v[0] == NEW:
+                        #was new with this read in
+                        #needs to be deleted
+                        if 'Experiment' in v[1]:
+                            #it's an experiment
+                            experiment = Experiment.objects.all().get(_experimentName = v[2])
+                            experiment.delete()
+                        elif 'Dataset' in v[1]:
+                            #may have been deleted with the experiment
+                            if Dataset.objects.all().filter(_datasetName = v[2]).exists():
+                                dataset = Dataset.objects.all().get(_datasetName = v[2])
+                                dataset.delete()
+                        elif 'Sample' in v[1]:
+                            #it's a sample -- it may have been deleted with the parent
+                            #experiment, so we check if it exists
+                            if Sample.objects.all().filter(_sampleName = v[2]).exists():
+                                s = Sample.objects.all().get(_sampleName = v[2])
+                                s.delete()
+                        else: print (v, "Delete Unsuccessful")
+            request.session['upload_status'] = 'Upload Cancelled'
+            del request.session['upload_summary']
+        except Exception as e:
+            error_logger.error(repr(e))
+            request.session['message'] = 'No upload found.'
+        return redirect('upload')
 
-	if len(upload_summary) >1: summary = upload_summary[1:]
-	upload_status = upload_summary[0]
-	context = {
-		'tables':tables,
-		'upload_status':upload_status,
-		'summary': summary,
-		'upload_options': upload_options,
-	}
+    context = {
+        'tables':tables,
+        'summary': summary,
+        'upload_options': upload_options,
+    }
+    if upload_status != "Upload summary:":
+        context['upload_status'] = upload_status
 
-	#Cancel options - currently functions
-	#on keep or delete
-	return render(request, 'upload.html', context)
+    #Cancel options - currently functions
+    #on keep or delete
+    return render(request, 'upload.html', context)
 def read_Individuals(wsInd, read_map, upload_summary):
-	exp_n = wsInd[read_map['indivExp']].value
-	print (exp_n)
+    exp_n = wsInd[read_map['indivExp']].value
+    print (exp_n)
 
-	if Experiment.objects.all().filter(_experimentName = exp_n).exists():
-		exp = Experiment.objects.all().get(_experimentName = exp_n)
-	else: return upload_summary
+    if Experiment.objects.all().filter(_experimentName = exp_n).exists():
+        exp = Experiment.objects.all().get(_experimentName = exp_n)
+    else: return upload_summary
 
-	rows =  wsInd[(read_map['indivRows']).format(get_column_letter(wsInd.max_column), wsInd.max_row)]
+    rows =  wsInd[(read_map['indivRows']).format(get_column_letter(wsInd.max_column), wsInd.max_row)]
 
-	indivs = Individual.objects.all()
-	for i in rows:
-		indivID = i[read_map['indivID']].value
-		if not indivID: break
-		if Individual.objects.all().filter(_individualIdentifier = indivID).exists():
-			upload_summary.append([EXISTING, 'Individual:', indivID])
-			break
+    indivs = Individual.objects.all()
+    for i in rows:
+        indivID = i[read_map['indivID']].value
+        if not indivID: break
+        if Individual.objects.all().filter(_individualIdentifier = indivID).exists():
+            upload_summary.append([EXISTING, 'Individual:', indivID])
+            break
 
-		new_Ind = Individual(
-			_individualIdentifier = indivID,
-			_experiment = exp,
-			_gender = i[read_map['gender']].value,
-			_age = i[read_map['age']].value,
-			_healthStatus = i[read_map['health_status']].value,
-			_comments = i[read_map['indivComments']].value
-		)
+        new_Ind = Individual(
+            _individualIdentifier = indivID,
+            _experiment = exp,
+            _gender = i[read_map['gender']].value,
+            _age = i[read_map['age']].value,
+            _healthStatus = i[read_map['health_status']].value,
+            _comments = i[read_map['indivComments']].value
+        )
 
-		upload_summary.append([NEW, 'Individual:', indivID])
+        upload_summary.append([NEW, 'Individual:', indivID])
 
-		new_Ind.save()
+        new_Ind.save()
 
-	return upload_summary
+    return upload_summary
 
 ###NOT IMPLEMENTED YET 3-19-19###
 def get_missing_fields(wb, read_map):
-	missing_fields = []
-	if 'missing_fields' in read_map:
-		missing_fields = read_map['missing_fields']
-	#the rest of our checking
-	#Required Fields:
-	#Exp. Name, Project Lead
-	#	Design needs a name (exp does not need design)
-	#
-	#Individual ID, gender, age, health Status & extra_fields
-	#
-	#samples name, exp, storage_condition, location, organism
-	#
-	#dataset name, sample, instrument, file name, extension, path
+    missing_fields = []
+    if 'missing_fields' in read_map:
+        missing_fields = read_map['missing_fields']
+    #the rest of our checking
+    #Required Fields:
+    #Exp. Name, Project Lead
+    #    Design needs a name (exp does not need design)
+    #
+    #Individual ID, gender, age, health Status & extra_fields
+    #
+    #samples name, exp, storage_condition, location, organism
+    #
+    #dataset name, sample, instrument, file name, extension, path
 
-	wsIn = wb[read_map['wsIn']]
-	wsWL = wb[read_map['wsWL']]
+    wsIn = wb[read_map['wsIn']]
+    wsWL = wb[read_map['wsWL']]
 
-	#bad logic
-	if read_map['experiment_global']:
-		name = wsIn[read_map['experiment_loc']].value
-		if name == None:
-			missing_fields.append('experiment_name')
-		elif not experiments.filter(_experimentName = name).exists():
-			#check for other experiment data
-			if 'lead' in read_map:
-				if wsIn[read_map['lead']].value == None:
-					missing_fields.append('lead')
-			elif not 'lead' in missing_fields: missing_fields.append('lead')
-		elif 'lead' in missing_fields:
-			missing_fields.remove('lead')
-	else:
-		missing_fields.append('lead')
-		missing_fields.append('IRB')
-		missing_fields.append('description')
+    #bad logic
+    if read_map['experiment_global']:
+        name = wsIn[read_map['experiment_loc']].value
+        if name == None:
+            missing_fields.append('experiment_name')
+        elif not experiments.filter(_experimentName = name).exists():
+            #check for other experiment data
+            if 'lead' in read_map:
+                if wsIn[read_map['lead']].value == None:
+                    missing_fields.append('lead')
+            elif not 'lead' in missing_fields: missing_fields.append('lead')
+        elif 'lead' in missing_fields:
+            missing_fields.remove('lead')
+    else:
+        missing_fields.append('lead')
+        missing_fields.append('IRB')
+        missing_fields.append('description')
 
-	if 'wsIndividual'in read_map:
-		#check individuals
-		if read_map['wsIndividual'] in wb:
-			wsIndividual = wb[read_map['wsIndividual']]
+    if 'wsIndividual'in read_map:
+        #check individuals
+        if read_map['wsIndividual'] in wb:
+            wsIndividual = wb[read_map['wsIndividual']]
 
-	if read_map['variable_colums_TF']:
-		rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
-	else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
+    if read_map['variable_colums_TF']:
+        rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
+    else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
 
-	#Do I now check each sample, the first one, or what?
-	#Maybe the e_n functions report missing data
-	#and here we just catch overall missing categories of data?
+    #Do I now check each sample, the first one, or what?
+    #Maybe the e_n functions report missing data
+    #and here we just catch overall missing categories of data?
 
-	#Now I'm wondering if I need to ditch this and make it along with the read in?
+    #Now I'm wondering if I need to ditch this and make it along with the read in?
 
-	return missing_fields
+    return missing_fields
 def process_missing_fields(request):
-	#if not 'missing_fields' in request.session:
-	#	return redirect('upload')
+    #if not 'missing_fields' in request.session:
+    #    return redirect('upload')
 
-	missing_fields = request.session['missing_fields']
-	#"""
-	#testing not verified
-	form = forms.ListFieldsForm(extraFields = missing_fields)
-	if request.method == 'POST':
-		print ("POST")
-		#Checked and sent to form but not yet recorded
-		form = forms.ListFieldsForm(request.POST)
-		request.session['missing_field_data'] = form.data
-		print (form.data)
+    missing_fields = request.session['missing_fields']
+    #"""
+    #testing not verified
+    form = forms.ListFieldsForm(extraFields = missing_fields)
+    if request.method == 'POST':
+        print ("POST")
+        #Checked and sent to form but not yet recorded
+        form = forms.ListFieldsForm(request.POST)
+        request.session['missing_field_data'] = form.data
+        print (form.data)
 
-		upload_summary = request.session['upload_summary'] #to be used in template
-		del request.session['missing_fields']
-		del request.session['missing_field_data']
-		return redirect ('upload_confirm')
+        upload_summary = request.session['upload_summary'] #to be used in template
+        del request.session['missing_fields']
+        del request.session['missing_field_data']
+        return redirect ('upload_confirm')
 
-	context = {'form':form, 'header':'Please address missing fields'}
+    context = {'form':form, 'header':'Please address missing fields'}
 
-	return render(request, 'title-form.html', context)
+    return render(request, 'title-form.html', context)
 
 #overload for additional information
 def exp_exist_or_new(name, lead, team = None, IRB = None, description = None, ):
-	experiments = Experiment.objects.all()
-	if experiments.filter(_experimentName = name).exists():
-		return [EXISTING, 'Experiment: ', name]
-	#the experiment needs to be created
-	newExp = Experiment(
-		_experimentName = name,
-		_projectLead =  lead,
-	)
-	if team:
-		newExp.setTeamMembers(team)
-	if IRB:
-		try: newExp.setIRB(IRB)
-		except ValueError: IRB = None
-	if description: newExp.setComments(description)
-	newExp.save()
-	return [NEW, 'Experiment: ', name]# newExp.experimentID()]
+    experiments = Experiment.objects.all()
+    if experiments.filter(_experimentName = name).exists():
+        return [EXISTING, 'Experiment: ', name]
+    #the experiment needs to be created
+    newExp = Experiment(
+        _experimentName = name,
+        _projectLead =  lead,
+    )
+    if team:
+        newExp.setTeamMembers(team)
+    if IRB:
+        try: newExp.setIRB(IRB)
+        except ValueError: IRB = None
+    if description: newExp.setComments(description)
+    newExp.save()
+    return [NEW, 'Experiment: ', name]# newExp.experimentID()]
 def sample_exists_or_new(name, experiment, row, wsIn, read_map):
-	samples = Sample.objects.all()
-	if samples.filter(_sampleName = name).exists():
-		return [EXISTING, 'Sample: ', name]
+    samples = Sample.objects.all()
+    if samples.filter(_sampleName = name).exists():
+        return [EXISTING, 'Sample: ', name]
 
-	comment = ""
-	for c in read_map['comments_row']:
-		comment += c
-		comment += str(row[read_map['comments_row'][c]].value)+'\n'
-	for c in read_map['comments_gen']:
-		comment += c
-		comment += str(wsIn[read_map['comments_gen'][c]].value)+'\n'
+    comment = ""
+    for c in read_map['comments_row']:
+        comment += c
+        comment += str(row[read_map['comments_row'][c]].value)+'\n'
+    for c in read_map['comments_gen']:
+        comment += c
+        comment += str(wsIn[read_map['comments_gen'][c]].value)+'\n'
 
-	if read_map['date_global']: date = wsIn[read_map['date_created']].value
-	else: date = row[read_map['date_created']].value
+    if read_map['date_global']: date = wsIn[read_map['date_created']].value
+    else: date = row[read_map['date_created']].value
 
-	try:
-		date = datetime.strptime(date, '%m-%d-%Y').strftime('%Y-%m-%d')
-	except:
-		date = ''
+    try:
+        date = datetime.strptime(date, '%m-%d-%Y').strftime('%Y-%m-%d')
+    except:
+        date = ''
 
-	def protocol_exists_or_new(ptName):
-		if Protocol.objects.all().filter(_name = ptName).exists():
-			return [EXISTING,'Protocol: ', Protocol.objects.all().get(_name = ptName)]
-		prot = Protocol(_name = ptName)
-		prot.save()
-		return [NEW,'Protocol: ',prot]
+    def protocol_exists_or_new(ptName):
+        if Protocol.objects.all().filter(_name = ptName).exists():
+            return [EXISTING,'Protocol: ', Protocol.objects.all().get(_name = ptName)]
+        prot = Protocol(_name = ptName)
+        prot.save()
+        return [NEW,'Protocol: ',prot]
 
-	if read_map['storage_condition']: condition = str(row[read_map['storage_condition']].value)
-	else: condition = "Unspecified"
+    if read_map['storage_condition']: condition = str(row[read_map['storage_condition']].value)
+    else: condition = "Unspecified"
 
-	newSample = Sample(
-		_sampleName = name,
-		_storageCondition = condition,
-		_experiment = experiment,
-		_storageLocation = str(row[read_map['storage_location']].value),
-		_organism = wsIn[(read_map['organism'])].value,
-		_comments = comment,
-	)
-	if date !='': newSample.setDateCreated(date)
-	newSample.save()
+    newSample = Sample(
+        _sampleName = name,
+        _storageCondition = condition,
+        _experiment = experiment,
+        _storageLocation = str(row[read_map['storage_location']].value),
+        _organism = wsIn[(read_map['organism'])].value,
+        _comments = comment,
+    )
+    if date !='': newSample.setDateCreated(date)
+    newSample.save()
 
-	if read_map['sheetType'] == 'General':
-		protocolNames = str(row[read_map['protocol']].value)
-		protocolNames = protocolNames.split(',')
+    if read_map['sheetType'] == 'General':
+        protocolNames = str(row[read_map['protocol']].value)
+        protocolNames = protocolNames.split(',')
 
-		for i in protocolNames:
-			p = protocol_exists_or_new(i.strip())[2]
-			newSample._treatmentProtocol.add(p)
+        for i in protocolNames:
+            p = protocol_exists_or_new(i.strip())[2]
+            newSample._treatmentProtocol.add(p)
 
-	return [NEW, 'Sample: ', name]
+    return [NEW, 'Sample: ', name]
 def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_map):
-	datasets = Dataset.objects.all()
+    datasets = Dataset.objects.all()
 
-	if datasets.filter(_datasetName = name).exists():
-		return [EXISTING, 'Dataset: ', name]
+    if datasets.filter(_datasetName = name).exists():
+        return [EXISTING, 'Dataset: ', name]
 
-	def inst_exists_or_new(insName):
-		if Instrument.objects.all().filter(_name = insName).exists():
-			return [EXISTING,'Instrument: ', Instrument.objects.all().get(_name = insName)]
-		ins = Instrument(_name = insName)
-		ins.save()
-		return [NEW, 'Instrument: ', ins]
-	def setting_exists_or_new(methodName):
-		if InstrumentSetting.objects.all().filter(_name = methodName).exists():
-			return [EXISTING,'Instrument Setting: ',InstrumentSetting.objects.all().get(_name = methodName)]
-		ins = InstrumentSetting(_name = methodName)
-		#If we wanted to try reverse-engineering the lookup function and get the rest of the setting information
-		#it'd look a bit like this.
-		#settings_column = wb[read_map['settings_sheet']][read_map['settings_keyword_column']]
+    def inst_exists_or_new(insName):
+        if Instrument.objects.all().filter(_name = insName).exists():
+            return [EXISTING,'Instrument: ', Instrument.objects.all().get(_name = insName)]
+        ins = Instrument(_name = insName)
+        ins.save()
+        return [NEW, 'Instrument: ', ins]
+    def setting_exists_or_new(methodName):
+        if InstrumentSetting.objects.all().filter(_name = methodName).exists():
+            return [EXISTING,'Instrument Setting: ',InstrumentSetting.objects.all().get(_name = methodName)]
+        ins = InstrumentSetting(_name = methodName)
+        #If we wanted to try reverse-engineering the lookup function and get the rest of the setting information
+        #it'd look a bit like this.
+        #settings_column = wb[read_map['settings_sheet']][read_map['settings_keyword_column']]
 
-		filename = wlRow[read_map['settings_file']].value
-		try: ins.file = open(filename)
-		except:
-			if ins.comments == None:
-				ins.comments = filename
-			else:
-				ins.comments = (str(ins.comments) + finename)
-		ins.save()
-		return [NEW, 'Instrument Setting: ', ins]
+        filename = wlRow[read_map['settings_file']].value
+        try: ins.file = open(filename)
+        except:
+            if ins.comments == None:
+                ins.comments = filename
+            else:
+                ins.comments = (str(ins.comments) + finename)
+        ins.save()
+        return [NEW, 'Instrument Setting: ', ins]
 
-	summary = []
-	ins_code = wsIn[read_map['inst_code']].value
-	if ins_code == None: ins_code = ''
-	else: ins_code = ' '+ins_code
-	print("\n\n\n", ins_code)
-	e_n = inst_exists_or_new(str(wsIn[read_map['instrument_type_loc']].value)+ins_code)
-	initInstrument = e_n[2]
-	print (initInstrument)
-	if (e_n[0] == NEW): summary.append(e_n)
-	if row != []:
-		e_n = setting_exists_or_new(row[read_map['setting_loc']].value)
-		setting = e_n[2]
-	else: setting = None #wlRow[read_map['settings_file']]
+    summary = []
+    ins_code = wsIn[read_map['inst_code']].value
+    if ins_code == None: ins_code = ''
+    else: ins_code = ' '+ins_code
+    print("\n\n\n", ins_code)
+    e_n = inst_exists_or_new(str(wsIn[read_map['instrument_type_loc']].value)+ins_code)
+    initInstrument = e_n[2]
+    print (initInstrument)
+    if (e_n[0] == NEW): summary.append(e_n)
+    if row != []:
+        e_n = setting_exists_or_new(row[read_map['setting_loc']].value)
+        setting = e_n[2]
+    else: setting = None #wlRow[read_map['settings_file']]
 
-	dataType = wsIn[read_map['data_type_loc']].value
-	try: date = datetime.strptime(str(wsIn[read_map['date_loc']].value), '%m-%d-%Y').strftime('%Y-%m-%d')
-	except: date = False
+    dataType = wsIn[read_map['data_type_loc']].value
+    try: date = datetime.strptime(str(wsIn[read_map['date_loc']].value), '%m-%d-%Y').strftime('%Y-%m-%d')
+    except: date = False
 
-	wsWL = wb[read_map['wsWL']]
-	if read_map['file_extension_from_excel']: extension = str(wlRow[read_map['file_extension']].value)
-	else: extension = str(read_map['file_extension'])
+    wsWL = wb[read_map['wsWL']]
+    if read_map['file_extension_from_excel']: extension = str(wlRow[read_map['file_extension']].value)
+    else: extension = str(read_map['file_extension'])
 
-	newDataset = Dataset(
-		_datasetName = name,
-		_experiment = experiment,
-		_instrument = initInstrument,
-		_fileName = str(wlRow[read_map['file_name']].value)+extension,
-		_fileLocation = str(wlRow[read_map['file_location']].value),
-		_fileLocationRemote = str(wlRow[read_map['file_location_remote']].value),
-		_instrumentSetting = setting,
-		_type = dataType,
-		#Commas after each value
-		#acquisition dates
-		#_status
-		#_size
-		#_fileHash
-	)
-	if date: newDataset.setDateCreated(date)
-	newDataset.save()
-	newDataset._sample.add(sample)
+    newDataset = Dataset(
+        _datasetName = name,
+        _experiment = experiment,
+        _instrument = initInstrument,
+        _fileName = str(wlRow[read_map['file_name']].value)+extension,
+        _fileLocation = str(wlRow[read_map['file_location']].value),
+        _fileLocationRemote = str(wlRow[read_map['file_location_remote']].value),
+        _instrumentSetting = setting,
+        _type = dataType,
+        #Commas after each value
+        #acquisition dates
+        #_status
+        #_size
+        #_fileHash
+    )
+    if date: newDataset.setDateCreated(date)
+    newDataset.save()
+    newDataset._sample.add(sample)
 
-	return [NEW, 'Dataset: ', name]
+    return [NEW, 'Dataset: ', name]
 
 """Page to add a sample"""
 def add_sample(request):
@@ -817,8 +839,8 @@ def add_experiment(request):
     context = {
         'header':'Add Experiment',
         'form':form,
-		'secFormHeading':'Experimental Design',
-		'secForm':desForm,
+        'secFormHeading':'Experimental Design',
+        'secForm':desForm,
         'buttons':buttons
     }
 
@@ -865,66 +887,66 @@ def add_individual(request, experiment = None):
 
     return render(request, 'add-record.html', context)
 def add_instrument(request):
-	form = forms.InstrumentForm()
-	if request.method == 'POST':
-		form = forms.InstrumentForm(request.POST, request.FILES)
-		if form.is_valid():
-			new_inst = form.save()
-			return redirect('add-dataset')
-	context = {
-		'form':form,
-		'header':'Add Instrument'
-	}
-	return render(request, 'add-record.html', context)
+    form = forms.InstrumentForm()
+    if request.method == 'POST':
+        form = forms.InstrumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_inst = form.save()
+            return redirect('add-dataset')
+    context = {
+        'form':form,
+        'header':'Add Instrument'
+    }
+    return render(request, 'add-record.html', context)
 def add_instrument_setting(request):
-	form = forms.InstrumentSettingForm()
-	if request.method == 'POST':
-		form = forms.InstrumentSettingForm(request.POST, request.FILES)
-		if form.is_valid():
-			new_inst = form.save()
-			return redirect('add-dataset')
-	context = {
-		'form':form,
-		'header':'Add Instrument Setting'
-	}
-	return render(request, 'add-record.html', context)
+    form = forms.InstrumentSettingForm()
+    if request.method == 'POST':
+        form = forms.InstrumentSettingForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_inst = form.save()
+            return redirect('add-dataset')
+    context = {
+        'form':form,
+        'header':'Add Instrument Setting'
+    }
+    return render(request, 'add-record.html', context)
 
 def add_protocol(request):
-	form = forms.ProtocolForm()
-	if request.method == 'POST':
-		form = forms.ProtocolForm(request.POST, request.FILES)
-		if form.is_valid():
-			new_inst = form.save()
-			return redirect('add-sample')
-	context = {
-		'form':form,
-		'header':'Add Protocol'
-	}
-	return render(request, 'add-record.html', context)
+    form = forms.ProtocolForm()
+    if request.method == 'POST':
+        form = forms.ProtocolForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_inst = form.save()
+            return redirect('add-sample')
+    context = {
+        'form':form,
+        'header':'Add Protocol'
+    }
+    return render(request, 'add-record.html', context)
 def add_file_status(request):
-	form = forms.fileStatusOptionForm()
-	if request.method == 'POST':
-		form = forms.fileStatusOptionForm(request.POST, request.FILES)
-		if form.is_valid():
-			new_inst = form.save()
-			return redirect('add-dataset')
-	context = {
-		'form':form,
-		'header':'Add File Status'
-	}
-	return render(request, 'add-record.html', context)
+    form = forms.fileStatusOptionForm()
+    if request.method == 'POST':
+        form = forms.fileStatusOptionForm(request.POST, request.FILES)
+        if form.is_valid():
+            new_inst = form.save()
+            return redirect('add-dataset')
+    context = {
+        'form':form,
+        'header':'Add File Status'
+    }
+    return render(request, 'add-record.html', context)
 def add_experimental_design(request):
-	form = forms.ExperimentalDesignForm()
-	if request.method == 'POST':
-		form = forms.ExperimentalDesignForm(request.POST, request.FILES)
-		if form.is_valid():
-			newDes = form.save()
-			return redirect('add-experiment')
-	context = {
-		'form':form,
-		'header':'Add Experimental Design'
-	}
-	return render(request, 'add-record.html', context)
+    form = forms.ExperimentalDesignForm()
+    if request.method == 'POST':
+        form = forms.ExperimentalDesignForm(request.POST, request.FILES)
+        if form.is_valid():
+            newDes = form.save()
+            return redirect('add-experiment')
+    context = {
+        'form':form,
+        'header':'Add Experimental Design'
+    }
+    return render(request, 'add-record.html', context)
 
 
 def edit_dataset(request, pk):
@@ -946,7 +968,7 @@ def edit_dataset(request, pk):
         'form':form,
         'header':'Edit Dataset',
         'dataset':dataset,
-		'buttons':buttons
+        'buttons':buttons
     }
 
     return render(request, 'add-record.html', context)
@@ -964,7 +986,7 @@ def edit_sample(request, pk):
                     sample.dataset.save()
             except:
                 DoesNotExist = null #Does nothing but make it not crash
-				#something needs to be here, doesn't matter what
+                #something needs to be here, doesn't matter what
             finally:
                 return redirect('success')
 
@@ -975,7 +997,7 @@ def edit_sample(request, pk):
         'form':form,
         'header':'Edit Sample',
         'sample':sample,
-		'buttons':buttons
+        'buttons':buttons
     }
 
     return render(request, 'add-record.html', context)
@@ -994,7 +1016,7 @@ def edit_experiment(request, pk):
         'form':form,
         'header':'Edit Experiment',
         'experiment':experiment,
-		'buttons':buttons
+        'buttons':buttons
     }
 
     return render(request, 'add-record.html', context)
@@ -1093,14 +1115,14 @@ class IndividualView(ListView):
         context['Title'] = 'Individuals'
         return context
 class InstrumentView(ListView):
-	model = Instrument
-	template_name = 'instrument_list.html'
-	paginate_by = 25
-	def get_context_data(self, **kwargs):
-		context = super(InstrumentView, self).get_context_data(**kwargs)
-		RequestConfig(self.request, paginate={'per_page': 25})
-		context['Title'] = 'Instruments'
-		return context
+    model = Instrument
+    template_name = 'instrument_list.html'
+    paginate_by = 25
+    def get_context_data(self, **kwargs):
+        context = super(InstrumentView, self).get_context_data(**kwargs)
+        RequestConfig(self.request, paginate={'per_page': 25})
+        context['Title'] = 'Instruments'
+        return context
 
 """named (type)-detail, these are the detail view
 pages generated for the specific record
@@ -1159,5 +1181,5 @@ class ExperimentDetailView(DetailView):
                 context['design_download'] = design.file().url
         return context
 class IndividualDetailView(DetailView):
-	model = Individual
-	template = 'individual_detail.html'
+    model = Individual
+    template = 'individual_detail.html'

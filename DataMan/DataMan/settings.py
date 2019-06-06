@@ -25,7 +25,7 @@ from DataMan.log_settings import *
 SECRET_KEY = '=)c1j$2t-3x@zw8l4+)e6gg(vkc-9b-pd_-if6kyb5r-&q(884'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
@@ -134,4 +134,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 ###backup folder on box https://byu.box.com/s/67m7w8uo63zlh7l7g9q011xowggua0c5
 BACKUP_LOCATION = os.path.join(BASE_DIR, 'Records/backups/')
 BOX_CONFIG = False#"C:/Users/M McCown/Downloads/DataMan TestFiles/box_config.json"
-BOX_BACKUP_LOCATION = 0 #FolderID
+BOX_BACKUP_LOCATION = 78431332094 #FolderID
+BOX_LOGS = 78721962708 #FolderID For logs
+
+LOG_FILES = []
+for h in LOGGING['handlers']:
+    if 'filename' in LOGGING['handlers'][h]:
+        LOG_FILES.append(LOGGING['handlers'][h]['filename'])
+#All of the files associated with loggers
