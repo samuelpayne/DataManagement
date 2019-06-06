@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -131,5 +130,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 ###backup folder on box https://byu.box.com/s/67m7w8uo63zlh7l7g9q011xowggua0c5
 BACKUP_LOCATION = os.path.join(BASE_DIR, 'Records/backups/')
-DROPBOX_ACCESS_TOKEN = False
-DROPBOX_BACKUP_LOCATION = "/DataMan TestFiles/backups/"
+BOX_CONFIG = False#"C:/Users/M McCown/Downloads/DataMan TestFiles/box_config.json"
+BOX_BACKUP_LOCATION = 0 #FolderID

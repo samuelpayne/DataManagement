@@ -11,6 +11,8 @@ that the path can be accessed by."""
 from django.urls import path
 from . import views
 
+views.start_job()
+
 urlpatterns = [
     path('', views.records, name = 'records'),
 

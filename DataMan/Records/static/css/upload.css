@@ -2,7 +2,7 @@
     display: grid;
     grid-template-rows: 100px auto auto;
     grid-template-columns: 1fr 1fr 1fr;
-    padding-bottom: 20px;
+    padding-bottom: 10px;
 }
 h1{
         grid-column: 1/4;
@@ -30,9 +30,9 @@ h1{
 }
 
 a.nav-block {
-    width: 160px;
+    width: 200px;
     color: #FEFEFE;
-    background: #BABABA;
+    background: #1d1d1d;
     display: inline-block;
 }
 

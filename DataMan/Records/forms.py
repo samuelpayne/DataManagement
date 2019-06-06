@@ -30,9 +30,33 @@ class InstrumentSettingForm(forms.ModelForm):
         model = InstrumentSetting
         exclude = []
 class ProtocolForm(forms.ModelForm):
+    _file_getter = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}), label = 'Upload New Files')
     class Meta:
         model = Protocol
-        exclude = []
+        fields = ['_name', '_description', '_files']#, '_file_getter']
+
+    def __init__(self, post_data = None, files_data = None):
+        if post_data and files_data:
+            self.files = files_data.get('_file_getter')
+            return super(ProtocolForm, self).__init__(post_data, files_data)
+        return super(ProtocolForm, self).__init__()
+
+    def save(self, *args, **kwargs):
+        """print ('\n\n\n\nGetting Files\n')
+        print (self.files)
+        print ('\n\n')
+        file_list = self.files['_file_getter']#.getlist(key=lambda file: file.name)
+        print (self.files)
+        print (type(file_list))
+        for file in file_list:
+            print(file)
+            print(type(file))
+            f = File(_file = file)
+            f.save()
+			#"""
+        
+        return super().save(*args, **kwargs)
+
 class fileStatusOptionForm(forms.ModelForm):
     class Meta:
         model = fileStatusOption
@@ -142,8 +166,11 @@ class AddExperimentForm(forms.ModelForm):
                   '_IRB', '_comments',]
 
 class BackUpSelectForm(forms.Form):
-    date = forms.CharField(label='Restore from', widget=DateInput)
+	source = forms.CharField(label='Use backup from:', widget=forms.Select(choices=[('Local', 'Local'), ('Box', 'Box')]))
+	file = forms.FilePathField(label='Restore from local', path=settings.BACKUP_LOCATION, allow_folders=False)
 
-    #def clean(self):
-    #    data = self.cleaned_data
-    #    return data
+	def __init__(self, *args, **kwargs):
+		remote_files = kwargs.pop('remote_files', None)
+		super(BackUpSelectForm, self).__init__(*args, **kwargs)
+		if remote_files: 
+			self.fields['remote_file'] = forms.CharField(label='Restore from Box', widget=forms.Select(choices=remote_files))

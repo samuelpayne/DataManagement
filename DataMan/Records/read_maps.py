@@ -71,8 +71,9 @@ read_in_map_gen = {
 
 	'exp_name':'C2',
 	'lead':'C3',
-	'description':'A4',
-	'IRB':'C9',
+	'team':['C4','D4','E4','F4','G4','H4'],
+	'description':'A5',
+	'IRB':'C10',
 
 	'wsIn':'Input', #name of Input worksheet
 	'variable_colums_TF': True, # the number of columns is flexible

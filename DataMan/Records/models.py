@@ -132,7 +132,7 @@ class Sample(models.Model):
     # preceedingSample = models.TextField(verbose_name='Preceeding Sample')
     _storageCondition = models.TextField(verbose_name='Storage Condition')
     _storageLocation = models.TextField(verbose_name='Storage Location')
-    _treatmentProtocol = models.ManyToManyField('Protocol', verbose_name='Treatment Protocol',null=True, blank=True)
+    _treatmentProtocol = models.ManyToManyField('Protocol', verbose_name='Treatment Protocol', blank=True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
     _organism = models.TextField(verbose_name='Organism')
     _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None', null=True, blank=True)
@@ -279,7 +279,8 @@ class detailedField(models.Model):
 	_description = models.TextField(verbose_name="Description",blank=True, null=True)
 	_file = models.FileField(verbose_name='Related file or images',
 		upload_to = settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank=True, null=True)
-	
+	_files = models.ManyToManyField('File', verbose_name="Files", blank=True)
+
 	class Meta:# this sets the default sort
 		ordering = ['_name']
 
@@ -349,3 +350,9 @@ class FileRead(models.Model):
 		return self._File()
 	def __str__(self):
 		return self._File()
+
+class File(models.Model):
+	_file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/%m/%d/')
+
+	def file(self):
+		return self.file

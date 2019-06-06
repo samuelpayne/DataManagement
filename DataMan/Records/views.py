@@ -22,11 +22,15 @@ from openpyxl.utils import get_column_letter
 import json
 from os.path import basename
 from django.conf import settings
-import dropbox
 from django.core.management import call_command
+from django.core.files.storage import default_storage
+from openpyxl.worksheet.datavalidation import DataValidation
+from os import remove
 
 from apscheduler.schedulers.background import BackgroundScheduler
 scheduler = BackgroundScheduler()
+from boxsdk import JWTAuth
+from boxsdk import Client
 job = None
 
 
@@ -90,8 +94,6 @@ def success(request, message = 'Successfully recorded'):
 	return render(request, 'success.html', context)
 
 def make_backup():
-	#print ("Tick, making backup.")
-
 	filename = 'dump-' +datetime.today().strftime('%Y-%m-%d')+'.json'
 	#creates local backup
 	if settings.BACKUP_LOCATION:
@@ -100,19 +102,37 @@ def make_backup():
 		call_command('dumpdata', 'Records', stdout=file)
 
 	#backs up to box
-	if settings.DROPBOX_ACCESS_TOKEN:
+	if settings.BOX_CONFIG:
 		print ("Trying Upload To Box")
-		# The full path to upload the file to, including the file name
-		box_file = settings.DROPBOX_BACKUP_LOCATION + filename
-		##Not yet the right access token...
-		dbx = dropbox.Dropbox(settings.DROPBOX_ACCESS_TOKEN)
-		with open(filepath, 'rb') as file:
-			dbx.files_upload(file.read(), box_file)
-	
-		link = d.sharing_create_shared_link(targetfile)
-		url = link.url
-		dl_url = re.sub(r"\?dl\=0", "?dl=1", url)
-		print ("\n\n\n",link,'\n',url,'\n',dl_url,'\n')
+
+		#https://github.com/box/box-python-sdk/blob/master/docs/usage/
+		#c = client.folder(folder_id=folder_id)
+		#.collaborate_with_login("user@byu.edu", CollaborationRole.VIEWER)
+
+		folder_id = settings.BOX_BACKUP_LOCATION
+
+		sdk = JWTAuth.from_settings_file(settings.BOX_CONFIG)
+		client = Client(sdk)
+		
+		#if it's been uploaded already,
+		#the file by that name will be in the folder
+		#if it hasn't, we won't have problems uploading it
+		file_id = None
+		items = client.folder(folder_id=folder_id).get_items()
+		for i in items:
+			if i.name == filename:
+				file_id = i.id
+
+		if file_id:#it's been uploaded already
+			box_file = client.file(file_id).unlock()
+			box_file.update_contents(filepath)
+		else: 
+			box_file = client.folder(folder_id).upload(filepath, filename)
+			
+		box_file.lock()
+		link = box_file.get_shared_link(access='open')
+
+		print ("\n",link,'\n')
 
 	return True
 
@@ -126,8 +146,18 @@ def start_job():
 
 def backup(request):
 	start_job()
-	options = {'Restore',}
-	form = forms.BackUpSelectForm()
+	options = {'Restore'}
+
+	if settings.BOX_CONFIG:
+		folder_id = settings.BOX_BACKUP_LOCATION
+		sdk = JWTAuth.from_settings_file(settings.BOX_CONFIG)
+		client = Client(sdk)
+		items = client.folder(folder_id=folder_id).get_items()
+		remote_files = []
+		for i in items: remote_files.append((i.id, i.name))
+	else: remote_files = []
+
+	form = forms.BackUpSelectForm(remote_files=remote_files)
 	context = {
 		'header': 'Backup Options',
 		'options':options,
@@ -136,16 +166,28 @@ def backup(request):
 	if request.method == 'POST' and request.POST.get('option') == 'Restore':
 		form = forms.BackUpSelectForm(request.POST)
 		if form.is_valid():
-			data = form.cleaned_data
-			date = data['date']
-			#.strftime('%Y-%m-%d')
-			filename = 'dump-' +date+'.json'
-			filename = settings.BACKUP_LOCATION + filename
+			data = form.data
+			source = data['source']
 			try:
-				restore(filename)
+				if source == 'Local':
+					file = data['file']
+					restore(file)
+				elif source == 'Box' and settings.BOX_CONFIG:
+					remote_file = data['remote_file']
+					box_file = client.file(remote_file)
+					new_name = 'remote-copy-'+ box_file.get().name
+					if settings.BACKUP_LOCATION:
+						new_name = settings.BACKUP_LOCATION + new_name
+					file = open(new_name, 'wb')
+					box_file.download_to(file)
+					file.close()
+					restore(new_name)
+					remove(new_name) 
+				else:
+					context['error'] = 'Restore from Box unavailable.'
 			except:
-				context['error'] = 'No backup was found for that date.'
-		else: context['error'] = 'No backup available for that date.'
+				context['error'] = 'Error in restore. Please retry.'
+		else: context['error'] = 'Please select a backup.'
 	
 	if request.method == 'GET' and request.GET.get('option') == 'backup-now':
 		make_backup()
@@ -164,7 +206,7 @@ def upload(request, option = None):
 	upload_summary = [("Upload summary:")]
 	upload_options = {}
 
-	print("\n\n\nUpload Page")
+	print("\nUpload Page")
 
 	if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
 		
@@ -258,9 +300,17 @@ def read_data(request, wb, lead, read_map, upload_summary):
 				IRB = wsIn[read_map['IRB']].value
 				try: IRB = int(IRB)
 				except: IRB = None
+			else: IRB = None
+			if 'team' in read_map:
+				team = ''
+				for i in read_map['team']:
+					team += str(wsIn[i].value)
+					team += ', '
+			else: team = None
 			if 'description' in read_map:
 				des = wsIn[read_map['description']].value
-			e_n = exp_exist_or_new(exp_name,lead,IRB = IRB, description = des)
+			else: des = None
+			e_n = exp_exist_or_new(exp_name,lead,team=team,IRB = IRB, description = des)
 		summary.append(e_n)
 			
 	#read samples and experiment from Input sheet
@@ -575,7 +625,7 @@ def process_missing_fields(request):
 	return render(request, 'title-form.html', context)	
 
 #overload for additional information
-def exp_exist_or_new(name, lead, IRB = None, description = None, ):
+def exp_exist_or_new(name, lead, team = None, IRB = None, description = None, ):
 	experiments = Experiment.objects.all()
 	if experiments.filter(_experimentName = name).exists():
 		return [EXISTING, 'Experiment: ', name]
@@ -584,6 +634,8 @@ def exp_exist_or_new(name, lead, IRB = None, description = None, ):
 		_experimentName = name,
 		_projectLead =  lead,
 	)
+	if team:
+		newExp.setTeamMembers(team)
 	if IRB: 
 		try: newExp.setIRB(IRB)
 		except ValueError: IRB = None
@@ -849,6 +901,7 @@ def add_instrument_setting(request):
 		'header':'Add Instrument Setting'
 	}
 	return render(request, 'add-record.html', context)
+		
 def add_protocol(request):
 	form = forms.ProtocolForm()
 	if request.method == 'POST':
