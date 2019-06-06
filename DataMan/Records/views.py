@@ -1,7 +1,7 @@
 """Project DataMan
 
 This is the code handling each of the pages.
-    It connects the templates to the urls and 
+    It connects the templates to the urls and
     the information from the database."""
 
 from django.shortcuts import render, redirect
@@ -29,10 +29,13 @@ from os import remove
 
 from apscheduler.schedulers.background import BackgroundScheduler
 scheduler = BackgroundScheduler()
-from boxsdk import JWTAuth
-from boxsdk import Client
 job = None
 
+from boxsdk import JWTAuth
+from boxsdk import Client
+
+import logging
+info_logger = logging.getLogger("info_logger")
 
 NEW = 'NEW'
 EXISTING = '(Existing)'
@@ -45,6 +48,7 @@ def records(request):
     return render(request, 'records.html')
 
 def about(request):
+    info_logger.info(' Someone went to the about page!')
     return render(request, 'about.html')
 
 """Archive home named 'archive'
@@ -82,10 +86,8 @@ def archive(request):
         data[type] = type.objects.all().count()
         #or whatever you want this page to know"""
     return render(request, 'archive.html', context = data)
-
 def create_new(request):
     return render(request, 'create-new.html',)
-
 def success(request, message = 'Successfully recorded'):
 	if request.session.get('message') and request.session['message'] != None:
 		message = request.session['message']
@@ -98,8 +100,8 @@ def make_backup():
 	#creates local backup
 	if settings.BACKUP_LOCATION:
 		filepath = settings.BACKUP_LOCATION + filename
-	with open(filepath, 'w') as file:
-		call_command('dumpdata', 'Records', stdout=file)
+	file = open(filepath, 'w')
+	call_command('dumpdata', 'Records', stdout=file)
 
 	#backs up to box
 	if settings.BOX_CONFIG:
@@ -113,7 +115,7 @@ def make_backup():
 
 		sdk = JWTAuth.from_settings_file(settings.BOX_CONFIG)
 		client = Client(sdk)
-		
+
 		#if it's been uploaded already,
 		#the file by that name will be in the folder
 		#if it hasn't, we won't have problems uploading it
@@ -126,16 +128,15 @@ def make_backup():
 		if file_id:#it's been uploaded already
 			box_file = client.file(file_id).unlock()
 			box_file.update_contents(filepath)
-		else: 
+		else:
 			box_file = client.folder(folder_id).upload(filepath, filename)
-			
+
 		box_file.lock()
 		link = box_file.get_shared_link(access='open')
 
 		print ("\n",link,'\n')
 
 	return True
-
 def start_job():
 	global job
 
@@ -143,7 +144,6 @@ def start_job():
 	if not 'make_backup_job' in str(scheduler.get_jobs()):
 		job = scheduler.add_job(make_backup, 'interval', hours = 1, id = 'make_backup_job')
 	if not scheduler.running: scheduler.start()
-
 def backup(request):
 	start_job()
 	options = {'Restore'}
@@ -182,20 +182,19 @@ def backup(request):
 					box_file.download_to(file)
 					file.close()
 					restore(new_name)
-					remove(new_name) 
+					remove(new_name)
 				else:
 					context['error'] = 'Restore from Box unavailable.'
 			except:
 				context['error'] = 'Error in restore. Please retry.'
 		else: context['error'] = 'Please select a backup.'
-	
+
 	if request.method == 'GET' and request.GET.get('option') == 'backup-now':
 		make_backup()
 		return redirect('backup')
 	return render(request, 'backup.html', context)
-
 def restore(filename):
-	call_command('loaddata', filename, app_label='Records') 
+	call_command('loaddata', filename, app_label='Records')
 
 #this method handles the upload page and
 #directs the sheet to the read-in method
@@ -209,7 +208,7 @@ def upload(request, option = None):
 	print("\nUpload Page")
 
 	if request.method == 'POST' and request.POST.get('Submit') == 'Submit':
-		
+
 		print ("\nAttempting Upload")
 		form = forms.UploadFileForm(request.POST, request.FILES)
 		if form.is_valid():
@@ -219,7 +218,7 @@ def upload(request, option = None):
 		#try: #Catch invalid formats, etc.
 		if True: #Allows for effective debugging
 			wb = openpyxl.load_workbook(file, data_only=True)
-			#read_only = True sometimes causes sharing violations 
+			#read_only = True sometimes causes sharing violations
 			#because it doesn't close fully
 			if wb['Input']['I3'].value == "Mass spec":
 				read_map = read_in_map_MS
@@ -227,7 +226,7 @@ def upload(request, option = None):
 			elif wb['Input']['I3'].value == "Instrument Type":
 				upload_summary = read_Individuals(wb[read_in_map_gen['wsIndiv']], read_in_map_gen, upload_summary)
 				upload_summary = read_data(request, wb, lead, read_in_map_gen, upload_summary)#"Upload Successful"
-			else: 
+			else:
 				upload_summary = "Unknown format. Please use one of the provided templates."
 			wb.close()
 			upload_options = {
@@ -243,13 +242,13 @@ def upload(request, option = None):
 		#"""
 
 		#saves summary of changes for report till confirm/delete option
-		i = 0 
+		i = 0
 		request.session['upload_summary'] = {}
 		for report in upload_summary:
 			request.session['upload_summary'][i] = report
 			i +=1
 		request.session.modified = True
-			
+
 		return redirect ('upload_confirm')
 		"""print("read in complete")
 		if 'missing_fields' in request.session:
@@ -259,7 +258,7 @@ def upload(request, option = None):
 		missing_fields= get_missing_fields(wb, read_map)
 		missing_fields = list(dict.fromkeys(missing_fields))
 		print ('missing_fields: ', missing_fields)
-		
+
 		request.session['missing_fields'] = missing_fields
 		return redirect ('process_missing_fields')#"""
 
@@ -270,10 +269,9 @@ def upload(request, option = None):
 		'upload_options': upload_options,
 	}
 
-	#Cancel options - currently functions 
+	#Cancel options - currently functions
 	#on keep or delete
 	return render(request, 'upload.html', context)
-
 def read_data(request, wb, lead, read_map, upload_summary):
 	missing_fields = []
 	summary = upload_summary
@@ -287,7 +285,7 @@ def read_data(request, wb, lead, read_map, upload_summary):
 		rows = wsIn[(read_map['in_section']).format(get_column_letter(wsIn.max_column), wsIn.max_row)]
 	else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
 
-	#The generic sheet has the option of reading 
+	#The generic sheet has the option of reading
 	#in one experiment per sheet with all data
 	if 'exp_name' in read_map:
 		exp_name = wsIn[read_map['exp_name']].value
@@ -312,7 +310,7 @@ def read_data(request, wb, lead, read_map, upload_summary):
 			else: des = None
 			e_n = exp_exist_or_new(exp_name,lead,team=team,IRB = IRB, description = des)
 		summary.append(e_n)
-			
+
 	#read samples and experiment from Input sheet
 	#then read datasets from "Worklist" sheet
 	#separating out QC
@@ -335,7 +333,7 @@ def read_data(request, wb, lead, read_map, upload_summary):
 		e_n = sample_exists_or_new(i[read_map['sample_name']].value, experiment, i, wsIn, read_map)
 		sample = Sample.objects.all().get(_sampleName = e_n[2])
 		summary.append(e_n)
-		
+
 	wsWL = wb[read_map['wsWL']]
 	wlRows = wsWL[(read_map['wlRows']).format(wsWL.max_row)]
 	inRows = wsIn[(read_map['in_section_lookup']).format(wsIn.max_row)]
@@ -360,7 +358,7 @@ def read_data(request, wb, lead, read_map, upload_summary):
 				else:
 					experiment = Experiment( _experimentName = exp_name, _projectLead =  lead)
 					experiment.save()
-				sample = Sample( 
+				sample = Sample(
 					_sampleName = sample_name,
 					_storageCondition = "QC",
 					_experiment = experiment,
@@ -380,21 +378,19 @@ def read_data(request, wb, lead, read_map, upload_summary):
 			experiment = sample.experiment()
 		#At this point both the sample and the experiment have been defined
 		#"""
-		
+
 		e_n = dataset_exists_or_new(wlRow[read_map['dataset_name']].value, experiment, sample, sampleRow, wb, wsIn, wlRow, read_map)
 		if sample_type == 'QC': e_n[1] = "QC Dataset: "
 		summary.append(e_n)
-		
+
 	wlRow = None
 	wsIn = None
 	return summary
-
 def findIn(val, rows, lookup_column):
 	for line in rows:
 		if line[lookup_column].value == val:
 			return line
 	return []
-
 def upload_confirm(request, option = None):
 	try: upload_status = request.session['upload_status']
 	except: upload_status = []
@@ -407,12 +403,12 @@ def upload_confirm(request, option = None):
 	for i in summary:
 		upload_summary.append(summary[i])
 		if (i) != '':
-			record_type = summary[i][1] 
+			record_type = summary[i][1]
 			if record_type not in upload_by_types:
 				upload_by_types[record_type] = []
 
 			upload_by_types[record_type].append(summary[i])
-			
+
 	exp_table_exists = False
 	sample_table_exists = False
 	dataset_table_exists = False
@@ -453,7 +449,7 @@ def upload_confirm(request, option = None):
 	#print (upload_summary)
 	upload_options = {'Confirm', 'Cancel'}
 	context = {}
-	
+
 	if request.GET.get('option') == "Confirm":
 		print ("confirm")
 		context['upload_status'] = 'Saved'
@@ -475,7 +471,7 @@ def upload_confirm(request, option = None):
 				if int(i) !=0: #
 					v = upload_summary[i]
 					if v[0] == NEW:
-						#was new with this read in 
+						#was new with this read in
 						#needs to be deleted
 						if 'Experiment' in v[1]:
 							#it's an experiment
@@ -498,7 +494,7 @@ def upload_confirm(request, option = None):
 			del request.session['upload_summary']
 		except: request.session['message'] = 'No upload found.'
 		return redirect('upload')
-	
+
 	if len(upload_summary) >1: summary = upload_summary[1:]
 	upload_status = upload_summary[0]
 	context = {
@@ -508,14 +504,13 @@ def upload_confirm(request, option = None):
 		'upload_options': upload_options,
 	}
 
-	#Cancel options - currently functions 
+	#Cancel options - currently functions
 	#on keep or delete
 	return render(request, 'upload.html', context)
-
 def read_Individuals(wsInd, read_map, upload_summary):
 	exp_n = wsInd[read_map['indivExp']].value
 	print (exp_n)
-	
+
 	if Experiment.objects.all().filter(_experimentName = exp_n).exists():
 		exp = Experiment.objects.all().get(_experimentName = exp_n)
 	else: return upload_summary
@@ -544,8 +539,7 @@ def read_Individuals(wsInd, read_map, upload_summary):
 		new_Ind.save()
 
 	return upload_summary
-		
-	
+
 ###NOT IMPLEMENTED YET 3-19-19###
 def get_missing_fields(wb, read_map):
 	missing_fields = []
@@ -578,7 +572,7 @@ def get_missing_fields(wb, read_map):
 			elif not 'lead' in missing_fields: missing_fields.append('lead')
 		elif 'lead' in missing_fields:
 			missing_fields.remove('lead')
-	else: 
+	else:
 		missing_fields.append('lead')
 		missing_fields.append('IRB')
 		missing_fields.append('description')
@@ -593,13 +587,12 @@ def get_missing_fields(wb, read_map):
 	else: rows = wsIn[(read_map['in_section']).format(wsIn.max_row)]
 
 	#Do I now check each sample, the first one, or what?
-	#Maybe the e_n functions report missing data 
+	#Maybe the e_n functions report missing data
 	#and here we just catch overall missing categories of data?
 
 	#Now I'm wondering if I need to ditch this and make it along with the read in?
 
 	return missing_fields
-
 def process_missing_fields(request):
 	#if not 'missing_fields' in request.session:
 	#	return redirect('upload')
@@ -622,7 +615,7 @@ def process_missing_fields(request):
 
 	context = {'form':form, 'header':'Please address missing fields'}
 
-	return render(request, 'title-form.html', context)	
+	return render(request, 'title-form.html', context)
 
 #overload for additional information
 def exp_exist_or_new(name, lead, team = None, IRB = None, description = None, ):
@@ -636,13 +629,12 @@ def exp_exist_or_new(name, lead, team = None, IRB = None, description = None, ):
 	)
 	if team:
 		newExp.setTeamMembers(team)
-	if IRB: 
+	if IRB:
 		try: newExp.setIRB(IRB)
 		except ValueError: IRB = None
 	if description: newExp.setComments(description)
 	newExp.save()
 	return [NEW, 'Experiment: ', name]# newExp.experimentID()]
-
 def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 	samples = Sample.objects.all()
 	if samples.filter(_sampleName = name).exists():
@@ -670,7 +662,7 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 		prot = Protocol(_name = ptName)
 		prot.save()
 		return [NEW,'Protocol: ',prot]
-		
+
 	if read_map['storage_condition']: condition = str(row[read_map['storage_condition']].value)
 	else: condition = "Unspecified"
 
@@ -694,13 +686,12 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
 			newSample._treatmentProtocol.add(p)
 
 	return [NEW, 'Sample: ', name]
-
 def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_map):
 	datasets = Dataset.objects.all()
 
 	if datasets.filter(_datasetName = name).exists():
 		return [EXISTING, 'Dataset: ', name]
-	
+
 	def inst_exists_or_new(insName):
 		if Instrument.objects.all().filter(_name = insName).exists():
 			return [EXISTING,'Instrument: ', Instrument.objects.all().get(_name = insName)]
@@ -717,10 +708,10 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
 
 		filename = wlRow[read_map['settings_file']].value
 		try: ins.file = open(filename)
-		except: 
+		except:
 			if ins.comments == None:
 				ins.comments = filename
-			else: 
+			else:
 				ins.comments = (str(ins.comments) + finename)
 		ins.save()
 		return [NEW, 'Instrument Setting: ', ins]
@@ -787,7 +778,6 @@ def add_sample(request):
     }
 
     return render(request, 'add-record.html', context)
-
 def add_dataset(request):
     form =forms.AddDatasetForm()
     if request.method == 'POST':
@@ -809,7 +799,6 @@ def add_dataset(request):
     }
 
     return render(request, 'add-record.html', context)
-
 def add_experiment(request):
     form = forms.AddExperimentForm()
     desForm = forms.ExperimentalDesignForm()
@@ -834,7 +823,6 @@ def add_experiment(request):
     }
 
     return render(request, 'add-record.html', context)
-
 def add_individual(request, experiment = None):
     if experiment == None:
         form = forms.SelectExperiment()# GetExperForm()
@@ -856,7 +844,7 @@ def add_individual(request, experiment = None):
             exp = experiment_set.get(pk = experiment)
             extra = exp.experimentalDesign().extra_fields()
         except: extra = []
-    
+
     form = forms.AddIndividualForm(extraFields = extra)
     if request.method == 'POST':
         form = forms.AddIndividualForm(request.POST, extraFields = extra)
@@ -876,7 +864,6 @@ def add_individual(request, experiment = None):
     }
 
     return render(request, 'add-record.html', context)
-
 def add_instrument(request):
 	form = forms.InstrumentForm()
 	if request.method == 'POST':
@@ -901,7 +888,7 @@ def add_instrument_setting(request):
 		'header':'Add Instrument Setting'
 	}
 	return render(request, 'add-record.html', context)
-		
+
 def add_protocol(request):
 	form = forms.ProtocolForm()
 	if request.method == 'POST':
@@ -950,7 +937,7 @@ def edit_dataset(request, pk):
             dataset._experiment = dataset.sample()[0].experiment()
             dataset.save()
             return redirect('success')
-    
+
     buttons = {
         'New Instrument':'add-instrument',
         'New Instrument Setting':'add-instrument-setting'
@@ -963,7 +950,6 @@ def edit_dataset(request, pk):
     }
 
     return render(request, 'add-record.html', context)
-
 def edit_sample(request, pk):
     sample = Sample.objects.get(pk=pk)
     form = forms.AddSampleForm(instance = sample)
@@ -981,7 +967,7 @@ def edit_sample(request, pk):
 				#something needs to be here, doesn't matter what
             finally:
                 return redirect('success')
-    
+
     buttons = {
         'New Protocol':'add-protocol',
     }
@@ -993,7 +979,6 @@ def edit_sample(request, pk):
     }
 
     return render(request, 'add-record.html', context)
-
 def edit_experiment(request, pk):
     experiment = Experiment.objects.get(pk=pk)
     form = forms.AddExperimentForm(instance = experiment)
@@ -1028,7 +1013,7 @@ class SampleView(ListView):
                 context['experiment'] = i.experiment()._experimentID
         context['filter_by_exp'] = form
         return context
-	    
+
     def get_queryset(self, experiment = None):
         if experiment == None:
             queryset = Sample.objects.all()
@@ -1050,7 +1035,6 @@ class SampleView(ListView):
         context['table'] = table
         context['Title'] = 'Sample'
         return context
-
 class DatasetView(ListView):
     model = Dataset
 
@@ -1063,7 +1047,7 @@ class DatasetView(ListView):
                 context['experiment'] = i.experiment()._experimentID
         context['filter_by_exp'] = form
         return context
-	    
+
     def get_queryset(self, experiment = None):
         if experiment == None:
             queryset = Dataset.objects.all()
@@ -1084,7 +1068,6 @@ class DatasetView(ListView):
         context['table'] = table
         context['Title'] = 'Dataset'
         return context
-
 class ExperimentView(ListView):
     model = Experiment
     queryset = Experiment.objects.all()
@@ -1097,7 +1080,6 @@ class ExperimentView(ListView):
         context['table'] = table
         context['Title'] = 'Experiment'
         return context
-
 class IndividualView(ListView):
     model = Individual
     queryset = Individual.objects.all()
@@ -1110,7 +1092,6 @@ class IndividualView(ListView):
         context['table'] = table
         context['Title'] = 'Individuals'
         return context
-
 class InstrumentView(ListView):
 	model = Instrument
 	template_name = 'instrument_list.html'
@@ -1139,7 +1120,6 @@ class SampleDetailView(DetailView):
                 context['protocol_filename'] = basename(design.file().path)
                 context['protocol_download'] =design.file().url
         return context
-
 class DatasetDetailView(DetailView):
     instrumentSetting = "new"
     model = Dataset
@@ -1154,17 +1134,16 @@ class DatasetDetailView(DetailView):
         if instrument.file():
             context['instrument_filename'] = basename(instrument.file().path)
             context['instrument_download'] =instrument.file().url
-        
+
         setting = context['dataset'].instrumentSetting()
         context['setting'] = setting
-        
+
         if setting != None:
             context['setting.description'] = setting.description()
             if setting.file():
                 context['setting_filename'] = basename(setting.file().path)
                 context['setting_download'] = setting.file().url
         return context
-
 class ExperimentDetailView(DetailView):
     model = Experiment
     template = 'experiment_detail.html'
@@ -1173,13 +1152,12 @@ class ExperimentDetailView(DetailView):
         context = super(ExperimentDetailView, self).get_context_data(**kwargs)
         design = context['experiment'].experimentalDesign()
         context['design'] = design
-        if design != None: 
+        if design != None:
             context['design.description'] = design.description()
             if design.file():
                 context['design_filename'] = basename(design.file().path)
                 context['design_download'] = design.file().url
         return context
-
 class IndividualDetailView(DetailView):
 	model = Individual
 	template = 'individual_detail.html'
