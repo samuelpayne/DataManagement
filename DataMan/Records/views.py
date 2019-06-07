@@ -235,8 +235,8 @@ def upload(request, option = None):
             file = request.FILES['_File']
             data = form.save(commit = False)
             lead = data.lead
-        try: #Catch invalid formats, etc.
-            #if True: #Allows for effective debugging
+        #try: #Catch invalid formats, etc.
+        if True: #Allows for effective debugging
             wb = openpyxl.load_workbook(file, data_only=True)
             #read_only = True sometimes causes sharing violations
             #because it doesn't close fully
@@ -254,10 +254,10 @@ def upload(request, option = None):
                 'Cancel': False,
             }
             request.session['upload_status'] = upload_status
-        except:
-            upload_status = "Read in error.\nPlease use one of the provided templates."
-            upload_summary = ["Unknown format. Please use one of the provided templates."]
-            request.session['upload_status'] = upload_status
+        #except:
+        #    upload_status = "Read in error.\nPlease use one of the provided templates."
+        #    upload_summary = ["Unknown format. Please use one of the provided templates."]
+        #    request.session['upload_status'] = upload_status
         print("finished Upload")
         #print(upload_status)
         #print(upload_summary)
@@ -365,8 +365,9 @@ def read_data(request, wb, lead, read_map, upload_summary):
             break #there isn't a dataset there
         #read in datasets
         sample_type = wlRow[read_map['wl_sample_type']].value
-        if sample_type == 'QC':
-            sample_name = str(lead+" lab QC")
+        if sample_type.startswith('QC'):
+            qc_type = sample_type[3:]
+            sample_name = str(lead+" lab QC "+qc_type)
             if Sample.objects.all().filter(_sampleName = sample_name).exists():
                 sample = Sample.objects.all().get(_sampleName = sample_name)
                 experiment = sample.experiment()
@@ -376,7 +377,7 @@ def read_data(request, wb, lead, read_map, upload_summary):
                 else: exp_name = str(wsWL[read_map['QC_exp']].value)
                 #or wsIn if that's where QC information is defined'
                 if Experiment.objects.all().filter(_experimentName = exp_name).exists():
-                    experiment = Experiment.objects.all().get(_experimentName =exp_name,  lead = lead)
+                    experiment = Experiment.objects.all().get(_experimentName =exp_name,  _projectLead = lead)
                     summary.append(["(DEFAULT)", 'QC Experiment: ', exp_name])
                 else:
                     experiment = Experiment( _experimentName = exp_name, _projectLead =  lead)
