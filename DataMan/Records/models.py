@@ -27,7 +27,7 @@ class Dataset(models.Model):
     #_status = models.ForeignKey("fileStatusOptions", on_delete=models.SET_NULL, verbose_name='Status', null=True)
     _status = models.TextField(verbose_name="File Status", null = True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
-    
+
     _fileLocation = models.TextField(verbose_name='Path to original file location', blank=True, null=True)
     _fileLocationRemote = models.TextField(verbose_name='Path to remote (supercomputer) file location', blank=True, null=True)
     _fileName = models.TextField(verbose_name='File Name', null=True, blank=False)
@@ -42,10 +42,10 @@ class Dataset(models.Model):
 
         remote_path = self._fileLocationRemote
         local_path = self._fileLocation
-        
+
         if not remote_path and not local_path:
             raise forms.ValidationError("A file path must be specified.")
-        
+
 
     def get_absolute_url(self):
         return reverse('dataset-detail', args=[str(self._datasetID)])
@@ -134,9 +134,17 @@ class Sample(models.Model):
     _storageLocation = models.TextField(verbose_name='Storage Location')
     _treatmentProtocol = models.ManyToManyField('Protocol', verbose_name='Treatment Protocol', blank=True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
+    _individual = models.ManyToManyField('Individual', verbose_name='Individual Identifier', null=True, blank=True)
     _organism = models.TextField(verbose_name='Organism')
     _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None', null=True, blank=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
+
+    _extra_fields = models.TextField(blank=True, null=True)
+
+    def extra_fields(self):
+        return self._extra_fields
+    def setExtraFields(self, value):
+        self._extra_fields = value
 
     def sampleName(self):
         return self._sampleName
@@ -166,6 +174,10 @@ class Sample(models.Model):
         return self._dateCreated
     def setDateCreated(self, value):
         self._dateCreated = value
+    def individual(self):
+        return self._individual
+    def setIndividual(self, value):
+        self._individual.set(value)
     def organism(self):
         return self._organism
     def setOrganism(self, value):
@@ -191,9 +203,9 @@ class Individual(models.Model):
     _individualID = models.AutoField(verbose_name='Individual ID', unique=True, primary_key=True)
     _experiment = models.ForeignKey('Experiment', on_delete=models.CASCADE,
                                     blank=False, null=True, verbose_name='Experiment')
-    _gender = models.TextField(verbose_name='Gender')
-    _age = models.TextField(verbose_name='Age')
-    _healthStatus = models.TextField(verbose_name='Health Status')
+    _gender = models.TextField(verbose_name='Gender', null=True)
+    _age = models.TextField(verbose_name='Age', null=True)
+    _healthStatus = models.TextField(verbose_name='Health Status', null=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details', blank=True, null=True)
 
     _extra_fields = models.TextField(blank=True, null=True)
@@ -235,10 +247,10 @@ class Experiment(models.Model):
     _projectLead = models.TextField(verbose_name='Project Lead')
     _teamMembers = models.TextField(verbose_name='Team Members',blank=True,null=True)
     _IRB = models.IntegerField(verbose_name='IRB Number',blank=True,null=True)
-    _experimentalDesign = models.ForeignKey('ExperimentalDesign', on_delete=models.SET_NULL, 
+    _experimentalDesign = models.ForeignKey('ExperimentalDesign', on_delete=models.SET_NULL,
 		verbose_name='Experimental Design', blank=False, null=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
-	
+
     def experimentName(self):
         return self._experimentName
     def setExperimentName(self, value):
@@ -298,7 +310,6 @@ class detailedField(models.Model):
 		return self._file
 	def setFile(self, value):
 		self._file = value
-
 class InstrumentSetting(detailedField):
     _instrument = models.ForeignKey("Instrument", on_delete=models.CASCADE,
                                     blank=False, null=True,verbose_name='Instrument')
@@ -309,7 +320,6 @@ class InstrumentSetting(detailedField):
         return self._instrument
     def setInstrument(self, value):
         self._instrument = value
-
 class Instrument(detailedField):
 	def __str__(self):
 		return self._name
@@ -318,21 +328,31 @@ class Instrument(detailedField):
 		return self._description
 	def file(self):
 		return self._file
-
 class ExperimentalDesign(detailedField):
 	_extra_fields = ListTextField(
+        verbose_name = 'Extra Fields for Individuals',
 		base_field = models.CharField(blank=True,null=True,max_length=100),
 		null=True, blank=True,
 		#Text fields are not allowed, and these are headers/category names
 	)
+
+	_extra_fields_samples = ListTextField(
+        verbose_name = 'Extra Fields for Samples', null=True, blank=True,
+		base_field = models.CharField(blank=True,null=True,max_length=100),
+	)
+
 	def __str__(self):
 		return str(self._name)
-	
+
 	def extra_fields(self):
 		return self._extra_fields
 	def set_extra_fields(self, value):
 		self._extra_fields = value
 
+	def extra_fields_samples(self):
+		return self._extra_fields_samples
+	def set_extra_fields_samples(self, value):
+		self._extra_fields_samples = value
 class Protocol(detailedField):
 	def __str__(self):
 		return self._name
@@ -350,9 +370,11 @@ class FileRead(models.Model):
 		return self._File()
 	def __str__(self):
 		return self._File()
-
 class File(models.Model):
-	_file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/%m/%d/')
+	_file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank = False)
 
 	def file(self):
-		return self.file
+		return self._file
+
+	def __str__(self):
+		return self._file.name

@@ -5,7 +5,8 @@
 
 {% block content %}
 <h1 class="add-header">{{header}}</h1>
-<form name="entry" action="" method="post">
+<!---->
+<form name="entry" action="" method="post" enctype="multipart/form-data">
   {% csrf_token %}
 
   {% for field in form %}

@@ -32,16 +32,17 @@ urlpatterns = [
 	path('about/', views.about, name='about'),
     path('add/', views.create_new, name = 'create-new'),
     path('add/samples/', views.add_sample, name = 'add-sample'),
+    path('add/samples/<int:experiment>', views.add_sample, name = 'add-samples'),
     path('add/datasets/', views.add_dataset, name = 'add-dataset'),
     path('add/individual/', views.add_individual, name = 'add-individual'),
     path('add/individual/<int:experiment>', views.add_individual, name = 'add-individual'),
     path('add/experiments/', views.add_experiment, name = 'add-experiment'),
 
-	#for editing 
+	#for editing
     path('add/experiments/<int:pk>/', views.edit_experiment, name = 'edit-experiment'),
     path('add/samples/<int:pk>/', views.edit_sample, name = 'edit-sample'),
     path('add/datasets/<int:pk>/', views.edit_dataset, name = 'edit-dataset'),
-	
+
     path('add/instrument/', views.add_instrument, name = 'add-instrument'),
     path('add/instrument/setting', views.add_instrument_setting, name = 'add-instrument-setting'),
     path('add/protocol/', views.add_protocol, name = 'add-protocol'),
@@ -55,7 +56,13 @@ urlpatterns = [
     path('datasets/', views.DatasetView.as_view(), name = 'datasets'),
     path('individuals/', views.IndividualView.as_view(), name = 'individuals'),
     path('experiments/', views.ExperimentView.as_view(), name = 'experiments'),
+
     path('instruments/', views.InstrumentView.as_view(), name = 'instruments'),
+    path('settings/', views.SettingsView.as_view(), name = 'settings'),
+    path('protocols/', views.ProtocolView.as_view(), name = 'protocols'),
+    path('experimint-designs/', views.ExpDesignView.as_view()),
+    path('exp-designs/', views.ExpDesignView.as_view()),
+    path('experimintal-designs/', views.ExpDesignView.as_view(), name = 'exp-designs'),
 
     path('samples/<int:pk>/', views.SampleDetailView.as_view(),
          name = 'sample-detail'),

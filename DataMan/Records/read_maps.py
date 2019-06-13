@@ -24,14 +24,14 @@ read_in_map_MS = {
 		'Concentration: ':5,
 	},
 	'comments_gen':{ #Information not on the row
-		#Format: 'Heading: ':cell 
+		#Format: 'Heading: ':cell
 		'Notebook code: ':'J4',
 	},
 	'in_section_lookup':'A34:H{}',
 	'lookup_column':0,#where sample numbers are defined as used on worklists
 	'lookup_exp':2,
 	'lookup_sample':3,
-	
+
 	'experiment_global':False, #Are all samples of the same experiment?
 	'experiment_loc':1, #Input row index if local, or cell
 
@@ -76,6 +76,9 @@ read_in_map_gen = {
 	'IRB':'C10',
 
 	'wsIn':'Input', #name of Input worksheet
+    'extra_fields_sample_headers':'N18:{}18',#Extra stuff about the samples
+    'extra_f_s_start': 11,
+        #will be listed after the ordinary columns
 	'variable_colums_TF': True, # the number of columns is flexible
 	#		meaning that users can add columns and views needs to format the section with rows and columns
 	'in_section':'C18:{}{}', #Where the samples are defined (as rows)
@@ -93,7 +96,7 @@ read_in_map_gen = {
 		'Concentration: ':4,
 	},
 	'comments_gen':{ #Information not on the row
-		#Format: 'Heading: ':cell 
+		#Format: 'Heading: ':cell
 		'Notebook code: ':'J5',
 	},
 	'in_section_lookup':'A18:H{}', #Which section contains the sample number,
@@ -101,7 +104,7 @@ read_in_map_gen = {
 	'lookup_column':0,
 	'lookup_exp':2,
 	'lookup_sample':3,
-	
+
 	'experiment_global':False, #Are all samples of the same experiment?
 	'experiment_loc':0, #input row index or cell if global
 
@@ -111,13 +114,13 @@ read_in_map_gen = {
 	'instrument_type_loc':'J3',
 	'inst_code':'J4',
 	'date_loc':'J6',
-	
+
 	#Instrument Settings file upload
 	'settings_sheet':'Methods',
 	'settings_keyword_column':'B',
 	'settings_file_column':'C',
 	'settings_description':'E',
-	
+
 	'settings_file':7,#relative to wlrow
 
 	#Worklist fields (about dataset, different rows)

@@ -331,8 +331,10 @@ def read_data(request, wb, lead, read_map, upload_summary):
             if 'description' in read_map:
                 des = wsIn[read_map['description']].value
             else: des = None
-            e_n = exp_exist_or_new(exp_name,lead,team=team,IRB = IRB, description = des)
+            e_n = exp_exist_or_new(exp_name, lead, team=team, IRB = IRB, description = des)
         summary.append(e_n)
+
+    #Get the extra fields...
 
     #read samples and experiment from Input sheet
     #then read datasets from "Worklist" sheet
@@ -345,7 +347,6 @@ def read_data(request, wb, lead, read_map, upload_summary):
             #All done with samples
 
         #Otherwise read it in
-        #Check the individual... they can't be defined by the name alone so...?
         if read_map['experiment_global']:
             e_n = exp_exist_or_new(wsIn[read_map['experiment_loc']].value, lead)
         else:
@@ -447,7 +448,7 @@ def upload_confirm(request, option = None):
         [these.append(x) for x in this_all if x not in these]
 
         if "QC" in i:
-            print (i, "is't yet a table")
+            print (i, "isn't yet a table")
 
         elif "Experiment" in i:
             experiment_set = Experiment.objects.all().filter(_experimentName__in=these)
@@ -658,18 +659,30 @@ def exp_exist_or_new(name, lead, team = None, IRB = None, description = None, ):
     if description: newExp.setComments(description)
     newExp.save()
     return [NEW, 'Experiment: ', name]# newExp.experimentID()]
-def sample_exists_or_new(name, experiment, row, wsIn, read_map):
+def sample_exists_or_new(name, experiment, row, wsIn, read_map, extra_fields = None):
     samples = Sample.objects.all()
     if samples.filter(_sampleName = name).exists():
         return [EXISTING, 'Sample: ', name]
 
     comment = ""
     for c in read_map['comments_row']:
-        comment += c
-        comment += str(row[read_map['comments_row'][c]].value)+'\n'
+        c_val = str(row[read_map['comments_row'][c]].value)
+        if c_val != None and c_val !="None":
+            comment += c
+            comment += c_val +'\n'
     for c in read_map['comments_gen']:
-        comment += c
-        comment += str(wsIn[read_map['comments_gen'][c]].value)+'\n'
+        c_val = str(wsIn[read_map['comments_gen'][c]].value)
+        if c_val != None and c_val !="None":
+            comment += c
+            comment += c_val+'\n'
+
+    #read in the extra fields
+    if extra_fields:
+        extraFieldData = {}
+        i = read_map['extra_f_s_start']
+        for f in extra_fields:
+            extraFieldData[f] = str(row[i].value)
+            i += 1
 
     if read_map['date_global']: date = wsIn[read_map['date_created']].value
     else: date = row[read_map['date_created']].value
@@ -678,6 +691,16 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
         date = datetime.strptime(date, '%m-%d-%Y').strftime('%Y-%m-%d')
     except:
         date = ''
+
+    #Check the individual
+    if row[read_map['individualID']] != None:
+        indivID = row[read_map['individualID']].value
+        if Individual.objects.all().filter(_individualIdentifier = indivID).exists():
+            ind = Individual.objects.all().get(_individualIdentifier = indivID)
+        else:
+            ind = Individual(_individualIdentifier = indivID)
+            ind.save()
+    else: ind = None
 
     def protocol_exists_or_new(ptName):
         if Protocol.objects.all().filter(_name = ptName).exists():
@@ -698,6 +721,9 @@ def sample_exists_or_new(name, experiment, row, wsIn, read_map):
         _comments = comment,
     )
     if date !='': newSample.setDateCreated(date)
+    if extra_fields: newSample.setExtraFields(extraFieldData)
+    newSample.save()
+    if ind: newSample.setIndividual([ind])
     newSample.save()
 
     if read_map['sheetType'] == 'General':
@@ -783,13 +809,40 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
     return [NEW, 'Dataset: ', name]
 
 """Page to add a sample"""
-def add_sample(request):
+def add_sample(request, experiment = None):
+    if experiment == None:
+        form = forms.SelectExperiment()# GetExperForm()
+        context = {
+            'form':form,
+            'header':'Add Sample',
+        }
+        if request.method == 'POST':
+            form = forms.SelectExperiment(request.POST)
+            if form.is_valid():
+                f = form.save(commit = False)
+                key = f.experiment()._experimentID
+            return redirect('add-samples', key)
+        extra = []
+        return render(request, 'title-form.html', context)
+    else:
+        try:
+            experiment_set = Experiment.objects.all()
+            exp = experiment_set.get(pk = experiment)
+            extra = exp.experimentalDesign().extra_fields_samples()
+        except: extra = []
     #check anything you want checked
-    form =forms.AddSampleForm()
+    form =forms.AddSampleForm(extraFields = extra)
     if request.method == 'POST':
-        form =forms.AddSampleForm(request.POST)
+        form =forms.AddSampleForm(request.POST, extraFields = extra)
         if form.is_valid():
-            new_Sample = form.save()
+            new_Sample = form.save(commit = False)
+            #parses to JSON
+            extraFieldData = {}
+            for f in extra:
+                extraFieldData[f] = form.data[f]
+            new_Sample.setExtraFields(extraFieldData)
+            new_Sample.setExperiment(exp)
+            new_Sample.save()
             return redirect('samples')
     buttons = {
         'New Protocol': 'add-protocol',
@@ -913,15 +966,27 @@ def add_instrument_setting(request):
     return render(request, 'add-record.html', context)
 
 def add_protocol(request):
-    form = forms.ProtocolForm()
+    #form = forms.ProtocolForm()
+    secForm = forms.FileForm()
     if request.method == 'POST':
-        form = forms.ProtocolForm(request.POST, request.FILES)
-        if form.is_valid():
-            new_inst = form.save()
+        #form = forms.ProtocolForm(request.POST, request.FILES)
+        secForm = forms.FileForm(request.POST, request.FILES)
+        if secForm.is_valid(): # form.is_valid() and
+            #new_inst = form.save()
+
+            #This is getting the files, but tends to read
+            #it as a bytes stream rather than multiple files
+            #only last is being saved
+            print("\n\n\n\nFiles")
+            print (request.FILES)
+            for i in request.FILES:
+                print (request.FILES[i])
+            #f = secForm.save()
             return redirect('add-sample')
     context = {
-        'form':form,
-        'header':'Add Protocol'
+        #'form':form,
+        'header':'Add Protocol',
+        'secForm':secForm,
     }
     return render(request, 'add-record.html', context)
 def add_file_status(request):
@@ -1123,6 +1188,33 @@ class InstrumentView(ListView):
         context = super(InstrumentView, self).get_context_data(**kwargs)
         RequestConfig(self.request, paginate={'per_page': 25})
         context['Title'] = 'Instruments'
+        return context
+class SettingsView(ListView):
+    model = InstrumentSetting
+    template_name = 'instrumentsetting_list.html'
+    paginate_by = 25
+    def get_context_data(self, **kwargs):
+        context = super(SettingsView, self).get_context_data(**kwargs)
+        RequestConfig(self.request, paginate={'per_page': 25})
+        context['Title'] = 'Instrument Settings'
+        return context
+class ProtocolView(ListView):
+    model = Protocol
+    template_name = 'protocol_list.html'
+    paginate_by = 25
+    def get_context_data(self, **kwargs):
+        context = super(ProtocolView, self).get_context_data(**kwargs)
+        RequestConfig(self.request, paginate={'per_page': 25})
+        context['Title'] = 'Sample Treatment Protocols'
+        return context
+class ExpDesignView(ListView):
+    model = ExperimentalDesign
+    template_name = 'instrument_list.html'
+    paginate_by = 25
+    def get_context_data(self, **kwargs):
+        context = super(ExpDesignView, self).get_context_data(**kwargs)
+        RequestConfig(self.request, paginate={'per_page': 25})
+        context['Title'] = 'Experimental Designs'
         return context
 
 """named (type)-detail, these are the detail view

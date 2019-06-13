@@ -29,13 +29,13 @@ class SampleTable(tables.Table):
         model = Sample
         fields = ['_experiment','_sampleName',
                   '_storageCondition', '_storageLocation', '_treatmentProtocol',
-                  '_dateCreated', '_organism', '_organismModifications', '_comments']
+                  '_dateCreated', '_individual', '_organism', '_organismModifications', '_comments']
 
 class ExperimentTable(tables.Table):
     _experimentName = tables.LinkColumn('experiment-detail', args=[A('pk')])
     _experimentalDesign = tables.TemplateColumn('{{record.experimentalDesign|slice:":25"}}...')
     _comments = tables.TemplateColumn('{{record.comments|slice:":25"}}...')
-    
+
     class Meta:
         model = Experiment
         fields = ['_experimentName','_projectLead','_teamMembers',
@@ -44,7 +44,7 @@ class ExperimentTable(tables.Table):
 class IndividualTable(tables.Table):
     _individualIdentifier = tables.LinkColumn('individual-detail', args=[A('pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
-    
+
     class Meta:
         model = Individual
         exclude = ['_individualID', '_extra_fields']

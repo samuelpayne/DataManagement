@@ -20,7 +20,11 @@ STATUS_OPTIONS = [#Probably eventually replace with something not hard coded in
     ('Revoked','Revoked'),
     ('Replaced','Replaced')
     ]
-
+class FileForm(forms.ModelForm):
+    _file = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}), label = 'Upload New Files')
+    class Meta:
+        model = File
+        exclude = []
 class InstrumentForm(forms.ModelForm):
     class Meta:
         model = Instrument
@@ -30,31 +34,20 @@ class InstrumentSettingForm(forms.ModelForm):
         model = InstrumentSetting
         exclude = []
 class ProtocolForm(forms.ModelForm):
-    _file_getter = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}), label = 'Upload New Files')
     class Meta:
         model = Protocol
-        fields = ['_name', '_description', '_files']#, '_file_getter']
+        fields = ['_name', '_description', '_files']
 
     def __init__(self, post_data = None, files_data = None):
         if post_data and files_data:
-            self.files = files_data.get('_file_getter')
+            #self.files = files_data.get('_file_getter')
+            #print ('\n\n\n\nFiles\n')
+            #print (self.files)
+            #for i in self.files: print(i,'\t', type(i))
             return super(ProtocolForm, self).__init__(post_data, files_data)
         return super(ProtocolForm, self).__init__()
 
     def save(self, *args, **kwargs):
-        """print ('\n\n\n\nGetting Files\n')
-        print (self.files)
-        print ('\n\n')
-        file_list = self.files['_file_getter']#.getlist(key=lambda file: file.name)
-        print (self.files)
-        print (type(file_list))
-        for file in file_list:
-            print(file)
-            print(type(file))
-            f = File(_file = file)
-            f.save()
-			#"""
-        
         return super().save(*args, **kwargs)
 
 class fileStatusOptionForm(forms.ModelForm):
@@ -71,7 +64,6 @@ class DateInput(forms.DateInput):
     input_type = 'date'
 class TimeInput(forms.TimeInput):
     input_type = 'time'
-    #make it look nice here
 class DateTimeInput(forms.MultiWidget):
     def __init__(self, attrs = None,date_format=None, time_format='%H:%M'):
         widgets=(DateInput(attrs=attrs),
@@ -116,18 +108,21 @@ class ListFieldsForm(forms.ModelForm):
         return self.cleaned_data
 
 class AddSampleForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(AddSampleForm, self).__init__(*args, **kwargs)
-
     def __name__(self, *args, **kwargs):
         super(AddSampleForm, self).__name__
 
     class Meta:
         model = Sample
-        fields = ['_sampleName',  '_experiment',
+        fields = ['_sampleName',
                   '_storageCondition', '_storageLocation', '_treatmentProtocol',
                   '_dateCreated','_organism', '_organismModifications', '_comments']
         widgets = {'_dateCreated':DateInput()}
+
+    def __init__(self, *args, extraFields=None, **kwargs):
+        super(AddSampleForm, self).__init__(*args, **kwargs)
+        if extraFields!=None:
+            for f in extraFields:
+                self.fields[f] = forms.CharField(label=f)
 
 class SelectExperiment(forms.ModelForm):
     _experiment = forms.ModelChoiceField(label='Experiment', queryset=Experiment.objects.all(), widget=forms.Select(attrs={"onChange":'form.submit()'}))
@@ -139,7 +134,7 @@ class AddIndividualForm(forms.ModelForm):
     class Meta:
         model = Individual
         exclude = ['_individualID','_extra_fields', '_experiment']
-    def __init__(self,  *args,extraFields=None, **kwargs,):
+    def __init__(self,  *args, extraFields=None, **kwargs,):
         super(AddIndividualForm, self).__init__(*args, **kwargs)
         if extraFields!=None:
             for f in extraFields:
@@ -172,5 +167,5 @@ class BackUpSelectForm(forms.Form):
 	def __init__(self, *args, **kwargs):
 		remote_files = kwargs.pop('remote_files', None)
 		super(BackUpSelectForm, self).__init__(*args, **kwargs)
-		if remote_files: 
+		if remote_files:
 			self.fields['remote_file'] = forms.CharField(label='Restore from Box', widget=forms.Select(choices=remote_files))

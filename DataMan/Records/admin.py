@@ -1,7 +1,7 @@
 """Project DataMan
 
 This defines what can be accessed
-through the default admin site. It is being used 
+through the default admin site. It is being used
 primarily for development. End users will
 not use this admin interface."""
 
@@ -18,5 +18,6 @@ admin.site.register(Instrument)
 admin.site.register(ExperimentalDesign)
 admin.site.register(Protocol)
 admin.site.register(fileStatusOption)
+admin.site.register(File)
 
 admin.site.register(Individual)

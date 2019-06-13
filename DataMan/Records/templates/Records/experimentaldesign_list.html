@@ -1,0 +1,14 @@
+{% extends "generic.html" %}
+{% load staticfiles %}
+
+{% load django_tables2 %}
+{% block content %}
+<h1>{{Title}}</h1>
+{% for i in experimentaldesign_list %}
+  <h3>Name: {{i}}</h3>
+  <ul>
+      <li>Description: {{i.description}}</li>
+      <li> File: {{i.file}}</li>
+  </ul>
+{% endfor %}
+{% endblock %}
