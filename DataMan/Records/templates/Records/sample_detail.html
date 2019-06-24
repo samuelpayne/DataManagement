@@ -33,6 +33,10 @@
 <p><Strong>Organism:</Strong> {{sample.organism}}</p>
 <p><Strong>Organism Modifications:</Strong> {{sample.organismModifications}}</p>
 
+{% for i, val in extra_fields.items %}
+  <p><Strong>{{i}}:</Strong> {{val }} </p>
+{%endfor%}
+
 {% if sample.dataset_set.all.count != 0 %}
     <Strong>Datasets: </Strong>
     <ul style="margin-left: 5px;">

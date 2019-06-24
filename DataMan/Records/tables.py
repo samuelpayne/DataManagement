@@ -17,7 +17,16 @@ class DatasetTable(tables.Table):
 
     class Meta:
         model = Dataset
-        exclude = ['_datasetID','_sample','_acquisitionStart','_acquisitionEnd','_fileHash']
+        exclude = ['_datasetID','_sample','_acquisitionStart','_acquisitionEnd','_fileHash', '_extra_fields']
+
+
+    def __init__(self, *args, new_or_existing=None, **kwargs):
+        super(DatasetTable, self).__init__(*args, **kwargs)
+        if new_or_existing:
+            self.row_attrs = {
+                'new-or-existing': lambda record: new_or_existing[record._datasetName]
+            }
+        else: self.row_attrs = {'new-or-existing':'EXISTING'}
 
 class SampleTable(tables.Table):
     _sampleName = tables.LinkColumn('sample-detail', args=[A('pk')])
@@ -31,6 +40,14 @@ class SampleTable(tables.Table):
                   '_storageCondition', '_storageLocation', '_treatmentProtocol',
                   '_dateCreated', '_individual', '_organism', '_organismModifications', '_comments']
 
+    def __init__(self, *args, new_or_existing=None, **kwargs):
+        super(SampleTable, self).__init__(*args, **kwargs)
+        if new_or_existing:
+            self.row_attrs = {
+                'new-or-existing': lambda record: new_or_existing[record._sampleName]
+            }
+        else: self.row_attrs = {'new-or-existing':'EXISTING'}
+
 class ExperimentTable(tables.Table):
     _experimentName = tables.LinkColumn('experiment-detail', args=[A('pk')])
     _experimentalDesign = tables.TemplateColumn('{{record.experimentalDesign|slice:":25"}}...')
@@ -41,6 +58,14 @@ class ExperimentTable(tables.Table):
         fields = ['_experimentName','_projectLead','_teamMembers',
                   '_IRB','_comments','_experimentalDesign',]
 
+    def __init__(self, *args, new_or_existing=None, **kwargs):
+        super(ExperimentTable, self).__init__(*args, **kwargs)
+        if new_or_existing:
+            self.row_attrs = {
+                'new-or-existing': lambda record: new_or_existing[record._experimentName]
+            }
+        else: self.row_attrs = {'new-or-existing':'EXISTING'}
+
 class IndividualTable(tables.Table):
     _individualIdentifier = tables.LinkColumn('individual-detail', args=[A('pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
@@ -48,3 +73,11 @@ class IndividualTable(tables.Table):
     class Meta:
         model = Individual
         exclude = ['_individualID', '_extra_fields']
+
+        def __init__(self, *args, new_or_existing=None, **kwargs):
+            super(IndividualTable, self).__init__(*args, **kwargs)
+            if new_or_existing:
+                self.row_attrs = {
+                    'new-or-existing': lambda record: new_or_existing[record._individualIdentifier]
+                }
+            else: self.row_attrs = {'new-or-existing':'EXISTING'}

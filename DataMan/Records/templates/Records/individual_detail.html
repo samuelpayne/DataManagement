@@ -1,8 +1,15 @@
 {% extends "generic.html" %}
-var extra = JSON.parse(individual.extra_fields)
+{% load staticfiles%}
+
 {% block content %}
+<link rel="stylesheet" href="{% static '/css/detail.css' %}" />
 <h2>{{ individual }}</h2>
 <p><Strong>Experiment:</Strong> {{individual.experiment}} </p>
 <p><Strong>Comments:</Strong> {{individual.comments}} </p>
-<p><Strong>{{extra}}</Strong>{{individual.extra_fields}} </p>
+{% for i, val in extra_fields.items %}
+  <p><Strong>{{i}}:</Strong> {{ val }} </p>
+{%endfor%}
+<a class="nav-block" href="{% url 'edit-individual' individual.individualID %}">
+    <p class="nav-block__title">Edit</p>
+</a>
 {% endblock %}

@@ -6,4 +6,6 @@
 
 *.json
 *.log
+*.log.*
 DataMan/Records/media/*
+DataMan/Records/media/**

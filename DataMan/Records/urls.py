@@ -34,20 +34,29 @@ urlpatterns = [
     path('add/samples/', views.add_sample, name = 'add-sample'),
     path('add/samples/<int:experiment>', views.add_sample, name = 'add-samples'),
     path('add/datasets/', views.add_dataset, name = 'add-dataset'),
+    path('add/datasets/<int:experiment>', views.add_dataset, name = 'add-dataset'),
     path('add/individual/', views.add_individual, name = 'add-individual'),
     path('add/individual/<int:experiment>', views.add_individual, name = 'add-individual'),
     path('add/experiments/', views.add_experiment, name = 'add-experiment'),
 
 	#for editing
     path('add/experiments/<int:pk>/', views.edit_experiment, name = 'edit-experiment'),
+    path('add/individual/<int:pk>/', views.edit_individual, name = 'edit-individual'),
     path('add/samples/<int:pk>/', views.edit_sample, name = 'edit-sample'),
     path('add/datasets/<int:pk>/', views.edit_dataset, name = 'edit-dataset'),
 
     path('add/instrument/', views.add_instrument, name = 'add-instrument'),
-    path('add/instrument/setting', views.add_instrument_setting, name = 'add-instrument-setting'),
+    path('add/instrument-setting/', views.add_instrument_setting, name = 'add-instrument-setting'),
     path('add/protocol/', views.add_protocol, name = 'add-protocol'),
     path('add/file-status/', views.add_file_status, name = 'add-file-status'),
     path('add/experimental-design/', views.add_experimental_design, name = 'add-experimental-design'),
+
+
+    path('add/instrument/<str:pk>', views.add_instrument, name = 'add-instrument'),
+    path('add/instrument-setting/<str:pk>', views.add_instrument_setting, name = 'add-instrument-setting'),
+    path('add/protocol/<str:pk>', views.add_protocol, name = 'add-protocol'),
+    path('add/file-status/<str:pk>', views.add_file_status, name = 'add-file-status'),
+    path('add/experimental-design/<str:pk>', views.add_experimental_design, name = 'add-experimental-design'),
 
     path('archive/', views.archive, name = 'archive'),
     path('samples/', views.SampleView.as_view(), name = 'samples'),

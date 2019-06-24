@@ -38,6 +38,10 @@
 <p><Strong>Remote File Location:</Strong> {{dataset.fileLocationRemote}}</p>
 <p><Strong>File Size:</Strong> {{dataset.fileSize}}</p>
 
+{% for i, val in extra_fields.items %}
+  <p><Strong>{{i}}:</Strong> {{val }} </p>
+{%endfor%}
+
 <a class="nav-block" href="{% url 'edit-dataset' dataset.datasetID %}">
     <p class="nav-block__title">Edit</p>
 </a>

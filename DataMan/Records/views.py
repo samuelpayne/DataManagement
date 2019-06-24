@@ -26,6 +26,7 @@ from django.core.management import call_command
 from django.core.files.storage import default_storage
 from openpyxl.worksheet.datavalidation import DataValidation
 from os import remove
+import json
 
 from apscheduler.schedulers.background import BackgroundScheduler
 scheduler = BackgroundScheduler()
@@ -216,6 +217,7 @@ def backup(request):
 def restore(filename):
     call_command('loaddata', filename, app_label='Records')
 
+start_job()
 #this method handles the upload page and
 #directs the sheet to the read-in method
 def upload(request, option = None):
@@ -235,8 +237,8 @@ def upload(request, option = None):
             file = request.FILES['_File']
             data = form.save(commit = False)
             lead = data.lead
-        #try: #Catch invalid formats, etc.
-        if True: #Allows for effective debugging
+        try: #Catch invalid formats, etc.
+            #if True: #Allows for effective debugging
             wb = openpyxl.load_workbook(file, data_only=True)
             #read_only = True sometimes causes sharing violations
             #because it doesn't close fully
@@ -254,10 +256,10 @@ def upload(request, option = None):
                 'Cancel': False,
             }
             request.session['upload_status'] = upload_status
-        #except:
-        #    upload_status = "Read in error.\nPlease use one of the provided templates."
-        #    upload_summary = ["Unknown format. Please use one of the provided templates."]
-        #    request.session['upload_status'] = upload_status
+        except:
+            upload_status = "Read in error.\nPlease use one of the provided templates."
+            upload_summary = ["Unknown format. Please use one of the provided templates."]
+            request.session['upload_status'] = upload_status
         print("finished Upload")
         #print(upload_status)
         #print(upload_summary)
@@ -442,8 +444,10 @@ def upload_confirm(request, option = None):
     for i in upload_by_types:
         e_n_list = upload_by_types[i]
         this_all = []
+        exi_new = {}
         for e in e_n_list:
             this_all.append(e[2])
+            exi_new[e[2]]=e[0]
         these = []
         [these.append(x) for x in this_all if x not in these]
 
@@ -452,16 +456,16 @@ def upload_confirm(request, option = None):
 
         elif "Experiment" in i:
             experiment_set = Experiment.objects.all().filter(_experimentName__in=these)
-            exp_table = ExperimentTable(experiment_set.order_by('-_experimentName'))
+            exp_table = ExperimentTable(experiment_set.order_by('-_experimentName'), new_or_existing=exi_new)
             exp_table_exists = True
         elif "Sample" in i:
             #separate QC so that doesn't overwrite set
             queryset = Sample.objects.filter(_sampleName__in = these)
-            sample_table = SampleTable(queryset.order_by('-pk'))
+            sample_table = SampleTable(queryset.order_by('-pk'), new_or_existing=exi_new)
             sample_table_exists = True
         elif "Dataset" in i:
             queryset = Dataset.objects.filter(_datasetName__in = these)
-            dataset_table = DatasetTable(queryset.order_by('-pk'))
+            dataset_table = DatasetTable(queryset.order_by('-pk'), new_or_existing=exi_new)
             dataset_table_exists = True
 
         else: print ("\n\nUnknown Type: ", i)
@@ -809,6 +813,30 @@ def dataset_exists_or_new(name, experiment, sample, row, wb, wsIn, wlRow, read_m
     return [NEW, 'Dataset: ', name]
 
 """Page to add a sample"""
+def add_experiment(request):
+    form = forms.AddExperimentForm()
+    desForm = forms.ExperimentalDesignForm()
+    if request.method == 'POST':
+        form =forms.AddExperimentForm(request.POST)
+        desForm = forms.ExperimentalDesignForm(request.POST, request.FILES)
+        if form.is_valid() and desForm.is_valid():
+            new_Experiment = form.save(commit = False)
+            newDes = desForm.save()
+            new_Experiment.setExperimentalDesign(newDes)
+            new_Experiment.save()
+            return redirect('experiments')
+    buttons = {
+        #'New Experimental Design': 'add-experimental-design',
+    }
+    context = {
+        'header':'Add Experiment',
+        'form':form,
+        'secFormHeading':'Experimental Design',
+        'secForm':desForm,
+        'buttons':buttons
+    }
+
+    return render(request, 'add-record.html', context)
 def add_sample(request, experiment = None):
     if experiment == None:
         form = forms.SelectExperiment()# GetExperForm()
@@ -840,9 +868,10 @@ def add_sample(request, experiment = None):
             extraFieldData = {}
             for f in extra:
                 extraFieldData[f] = form.data[f]
-            new_Sample.setExtraFields(extraFieldData)
+            new_Sample.setExtraFields(json.dumps(extraFieldData))
             new_Sample.setExperiment(exp)
             new_Sample.save()
+            form.save_m2m()
             return redirect('samples')
     buttons = {
         'New Protocol': 'add-protocol',
@@ -854,13 +883,41 @@ def add_sample(request, experiment = None):
     }
 
     return render(request, 'add-record.html', context)
-def add_dataset(request):
-    form =forms.AddDatasetForm()
+def add_dataset(request, experiment = None):
+    if experiment == None:
+        form = forms.SelectExperiment()# GetExperForm()
+        context = {
+            'form':form,
+            'header':'Add Dataset',
+        }
+        if request.method == 'POST':
+            form = forms.SelectExperiment(request.POST)
+            if form.is_valid():
+                f = form.save(commit = False)
+                key = f.experiment()._experimentID
+            return redirect('add-dataset', key)
+        extra = []
+        return render(request, 'title-form.html', context)
+    else:
+        try:
+            experiment_set = Experiment.objects.all()
+            exp = experiment_set.get(pk = experiment)
+            extra = exp.experimentalDesign().extra_fields_datasets()
+        except: extra = []
+
+    form =forms.AddDatasetForm(extraFields = extra)
     if request.method == 'POST':
         form =forms.AddDatasetForm(request.POST)
         if form.is_valid():
             new_Dataset = form.save()
+            #parses to JSON
+            extraFieldData = {}
+            for f in extra:
+                extraFieldData[f] = form.data[f]
+            new_Dataset.setExtraFields(json.dumps(extraFieldData))
             exp = new_Dataset.sample()[0].experiment()
+            if exp != experiment:
+                error_logger.error("The samples selected did not belong to the same exp chosen for the dataset. Overidding previous selection of experiment.")
             new_Dataset.setExperiment(exp)
             new_Dataset.save()
             return redirect('datasets')
@@ -875,33 +932,9 @@ def add_dataset(request):
     }
 
     return render(request, 'add-record.html', context)
-def add_experiment(request):
-    form = forms.AddExperimentForm()
-    desForm = forms.ExperimentalDesignForm()
-    if request.method == 'POST':
-        form =forms.AddExperimentForm(request.POST)
-        desForm = forms.ExperimentalDesignForm(request.POST, request.FILES)
-        if form.is_valid() and desForm.is_valid():
-            new_Experiment = form.save(commit = False)
-            newDes = desForm.save()
-            new_Experiment.setExperimentalDesign(newDes)
-            new_Experiment.save()
-            return redirect('experiments')
-    buttons = {
-        #'New Experimental Design': 'add-experimental-design',
-    }
-    context = {
-        'header':'Add Experiment',
-        'form':form,
-        'secFormHeading':'Experimental Design',
-        'secForm':desForm,
-        'buttons':buttons
-    }
-
-    return render(request, 'add-record.html', context)
 def add_individual(request, experiment = None):
     if experiment == None:
-        form = forms.SelectExperiment()# GetExperForm()
+        form = forms.SelectExperiment()
         context = {
             'form':form,
             'header':'Add Individual',
@@ -930,9 +963,10 @@ def add_individual(request, experiment = None):
             extraFieldData = {}
             for f in extra:
                 extraFieldData[f] = form.data[f]
-            new_Individual.setExtraFields(extraFieldData)
+            new_Individual.setExtraFields(json.dumps(extraFieldData))
             new_Individual.setExperiment(exp)
             new_Individual.save()
+            form.save_m2m()
             return redirect('individuals')
     context = {
         'form':form,
@@ -940,80 +974,122 @@ def add_individual(request, experiment = None):
     }
 
     return render(request, 'add-record.html', context)
-def add_instrument(request):
-    form = forms.InstrumentForm()
-    if request.method == 'POST':
-        form = forms.InstrumentForm(request.POST, request.FILES)
-        if form.is_valid():
-            new_inst = form.save()
-            return redirect('add-dataset')
+def add_instrument(request, pk=None):
+    if pk:
+        inst = Instrument.objects.get(pk=pk or None)
+        form = forms.InstrumentForm(instance=inst)
+        if request.method == 'POST':
+            form = forms.InstrumentForm(request.POST, request.FILES, instance=inst)
+            if form.is_valid():
+                new_inst = form.save()
+                return redirect('add-dataset')
+    else:
+        form = forms.InstrumentForm()
+        if request.method == 'POST':
+            form = forms.InstrumentForm(request.POST, request.FILES)
+            if form.is_valid():
+                new_inst = form.save()
+                return redirect('add-dataset')
     context = {
         'form':form,
         'header':'Add Instrument'
     }
     return render(request, 'add-record.html', context)
-def add_instrument_setting(request):
-    form = forms.InstrumentSettingForm()
-    if request.method == 'POST':
-        form = forms.InstrumentSettingForm(request.POST, request.FILES)
-        if form.is_valid():
-            new_inst = form.save()
-            return redirect('add-dataset')
+def add_instrument_setting(request, pk=None):
+    if pk:
+        inst = InstrumentSetting.objects.get(pk=pk or None)
+        form = forms.InstrumentSettingForm(instance=inst)
+        if request.method == 'POST':
+            form = forms.InstrumentSettingForm(request.POST, request.FILES, instance=inst)
+            if form.is_valid():
+                new_inst = form.save()
+                return redirect('add-dataset')
+    else:
+        form = forms.InstrumentSettingForm()
+        if request.method == 'POST':
+            form = forms.InstrumentSettingForm(request.POST, request.FILES)
+            if form.is_valid():
+                new_inst = form.save()
+                return redirect('add-dataset')
     context = {
         'form':form,
         'header':'Add Instrument Setting'
     }
     return render(request, 'add-record.html', context)
 
-def add_protocol(request):
-    #form = forms.ProtocolForm()
-    secForm = forms.FileForm()
-    if request.method == 'POST':
-        #form = forms.ProtocolForm(request.POST, request.FILES)
-        secForm = forms.FileForm(request.POST, request.FILES)
-        if secForm.is_valid(): # form.is_valid() and
-            #new_inst = form.save()
+def add_protocol(request, pk=None):
+    if pk:
+        inst = Protocol.objects.get(pk=pk or None)
+        form = forms.ProtocolForm(instance=inst)
+        if request.method == 'POST':
+            form = forms.ProtocolForm(request.POST, request.FILES, instance=inst)
+            if form.is_valid():
+                new_inst = form.save()
+                return redirect('add-sample')
+    else:
+        form = forms.ProtocolForm()
+        secForm = forms.FileForm()
+        if request.method == 'POST':
+            form = forms.ProtocolForm(request.POST, request.FILES)
+            files_list = []
+            if form.is_valid():
+                new_inst = form.save()
+                if request.FILES:
+                    for f in request.FILES.getlist('_file'):
+                        files_list.append(f)
+                        obj = File.objects.create(_file=f)
+                        new_inst.addFile(obj)
+                    #add the files to the protocol
 
-            #This is getting the files, but tends to read
-            #it as a bytes stream rather than multiple files
-            #only last is being saved
-            print("\n\n\n\nFiles")
-            print (request.FILES)
-            for i in request.FILES:
-                print (request.FILES[i])
-            #f = secForm.save()
-            return redirect('add-sample')
+                return redirect('add-sample')
     context = {
-        #'form':form,
+        'form':form,
         'header':'Add Protocol',
         'secForm':secForm,
     }
     return render(request, 'add-record.html', context)
-def add_file_status(request):
-    form = forms.fileStatusOptionForm()
-    if request.method == 'POST':
-        form = forms.fileStatusOptionForm(request.POST, request.FILES)
-        if form.is_valid():
-            new_inst = form.save()
-            return redirect('add-dataset')
+def add_file_status(request, pk=None):
+    if pk:
+        inst = fileStatusOption.objects.get(pk=pk or None)
+        form = forms.fileStatusOptionForm(instance=inst)
+        if request.method == 'POST':
+            form = forms.fileStatusOptionForm(request.POST, request.FILES, instance=inst)
+            if form.is_valid():
+                new_inst = form.save()
+                return redirect('add-dataset')
+    else:
+        form = forms.fileStatusOptionForm()
+        if request.method == 'POST':
+            form = forms.fileStatusOptionForm(request.POST, request.FILES)
+            if form.is_valid():
+                new_inst = form.save()
+                return redirect('add-dataset')
     context = {
         'form':form,
         'header':'Add File Status'
     }
     return render(request, 'add-record.html', context)
-def add_experimental_design(request):
-    form = forms.ExperimentalDesignForm()
-    if request.method == 'POST':
-        form = forms.ExperimentalDesignForm(request.POST, request.FILES)
-        if form.is_valid():
-            newDes = form.save()
-            return redirect('add-experiment')
+def add_experimental_design(request, pk=None):
+    if pk:
+        inst = ExperimentalDesign.objects.get(pk=pk or None)
+        form = forms.ExperimentalDesignForm(instance=inst)
+        if request.method == 'POST':
+            form = forms.ExperimentalDesignForm(request.POST, request.FILES, instance=inst)
+            if form.is_valid():
+                new_inst = form.save()
+                return redirect('add-dataset')
+    else:
+        form = forms.ExperimentalDesignForm()
+        if request.method == 'POST':
+            form = forms.ExperimentalDesignForm(request.POST, request.FILES)
+            if form.is_valid():
+                newDes = form.save()
+                return redirect('add-experiment')
     context = {
         'form':form,
         'header':'Add Experimental Design'
     }
     return render(request, 'add-record.html', context)
-
 
 def edit_dataset(request, pk):
     dataset = Dataset.objects.get(pk=pk or None)
@@ -1024,6 +1100,7 @@ def edit_dataset(request, pk):
             dataset = form.save(commit = False)
             dataset._experiment = dataset.sample()[0].experiment()
             dataset.save()
+            form.save_m2m()
             return redirect('success')
 
     buttons = {
@@ -1067,11 +1144,27 @@ def edit_sample(request, pk):
     }
 
     return render(request, 'add-record.html', context)
+def edit_individual(request, pk):
+    indiv = Individual.objects.get(pk=pk)
+    form = forms.AddIndividualForm(instance = indiv)
+    if request.method == 'POST':
+        form =forms.AddIndividualForm(request.POST, instance = indiv)
+        if form.is_valid():
+            indiv = form.save()
+            return redirect('success')
+    context = {
+        'form':form,
+        'header':'Edit Individual',
+        'individual':indiv,
+        'buttons':{}
+    }
+
+    return render(request, 'add-record.html', context)
 def edit_experiment(request, pk):
     experiment = Experiment.objects.get(pk=pk)
-    form = forms.AddExperimentForm(instance = experiment)
+    form = forms.AddExperimentForm(instance = experiment, ask_design=True)
     if request.method == 'POST':
-        form =forms.AddExperimentForm(request.POST, instance = experiment)
+        form =forms.AddExperimentForm(request.POST, instance = experiment, ask_design=True)
         if form.is_valid():
             experiment = form.save()
             return redirect('success')
@@ -1234,6 +1327,12 @@ class SampleDetailView(DetailView):
             if design.file():
                 context['protocol_filename'] = basename(design.file().path)
                 context['protocol_download'] =design.file().url
+
+        extra = json.loads(context['sample'].extra_fields())
+        context['extra_fields'] = {}
+        for i in extra:
+            context['extra_fields'][i] = extra[i]
+
         return context
 class DatasetDetailView(DetailView):
     instrumentSetting = "new"
@@ -1258,6 +1357,12 @@ class DatasetDetailView(DetailView):
             if setting.file():
                 context['setting_filename'] = basename(setting.file().path)
                 context['setting_download'] = setting.file().url
+
+        extra = json.loads(context['dataset'].extra_fields())
+        context['extra_fields'] = {}
+        for i in extra:
+            context['extra_fields'][i] = extra[i]
+
         return context
 class ExperimentDetailView(DetailView):
     model = Experiment
@@ -1276,3 +1381,12 @@ class ExperimentDetailView(DetailView):
 class IndividualDetailView(DetailView):
     model = Individual
     template = 'individual_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(IndividualDetailView, self).get_context_data(**kwargs)
+        extra = json.loads(context['individual'].extra_fields())
+        context['extra_fields'] = {}
+        for i in extra:
+            context['extra_fields'][i] = extra[i]
+
+        return context

@@ -63,10 +63,16 @@ table {
     border-spacing: 0px;
 }
 
+tr[new-or-existing='NEW'] {
+  background: #6ce6f6;
+}
+tr[new-or-existing='EXISTING']{
+  background: white;
+}
+
 tr,
 th,
 td {
-    background: white;
     border: solid 1px #002e5d;
     width: 150px;
     height: 50px;

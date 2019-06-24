@@ -25,6 +25,7 @@ class FileForm(forms.ModelForm):
     class Meta:
         model = File
         exclude = []
+
 class InstrumentForm(forms.ModelForm):
     class Meta:
         model = Instrument
@@ -59,7 +60,6 @@ class ExperimentalDesignForm(forms.ModelForm):
         model = ExperimentalDesign
         exclude = []
 
-
 class DateInput(forms.DateInput):
     input_type = 'date'
 class TimeInput(forms.TimeInput):
@@ -74,7 +74,6 @@ class DateTimeInput(forms.MultiWidget):
         if value:
             return [value.date(), value.time().replace(second = 0, microsecond=0)]
         return [None, None]
-
 
 class UploadFileForm(forms.ModelForm):
     readFail = False
@@ -113,7 +112,7 @@ class AddSampleForm(forms.ModelForm):
 
     class Meta:
         model = Sample
-        fields = ['_sampleName',
+        fields = ['_sampleName', '_individual',
                   '_storageCondition', '_storageLocation', '_treatmentProtocol',
                   '_dateCreated','_organism', '_organismModifications', '_comments']
         widgets = {'_dateCreated':DateInput()}
@@ -139,7 +138,6 @@ class AddIndividualForm(forms.ModelForm):
         if extraFields!=None:
             for f in extraFields:
                 self.fields[f] = forms.CharField(label=f)
-
 class AddDatasetForm(forms.ModelForm):
     _status = forms.CharField(label='File Status', widget=forms.Select(choices=STATUS_OPTIONS))
     class Meta:
@@ -154,11 +152,23 @@ class AddDatasetForm(forms.ModelForm):
             '_acquisitionEnd':DateTimeInput(),
         }
 
+    def __init__(self, *args, extraFields=None, **kwargs):
+        super(AddDatasetForm, self).__init__(*args, **kwargs)
+        if extraFields!=None:
+            for f in extraFields:
+                self.fields[f] = forms.CharField(label=f)
+
 class AddExperimentForm(forms.ModelForm):
     class Meta:
         model = Experiment
         fields = ['_experimentName','_projectLead','_teamMembers',
-                  '_IRB', '_comments',]
+                  '_IRB', '_comments', '_experimentalDesign']
+
+    def __init__(self, *args, ask_design=False, **kwargs):
+        super(AddExperimentForm, self).__init__(*args, **kwargs)
+        if not ask_design:
+            self.fields["_experimentalDesign"].widget = forms.widgets.HiddenInput()
+            self.fields["_experimentalDesign"].label = ''
 
 class BackUpSelectForm(forms.Form):
 	source = forms.CharField(label='Use backup from:', widget=forms.Select(choices=[('Local', 'Local'), ('Box', 'Box')]))

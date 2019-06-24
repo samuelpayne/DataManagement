@@ -38,6 +38,13 @@ class Dataset(models.Model):
     _fileHash = models.TextField(verbose_name='File Hash', null=True, blank=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
 
+    _extra_fields = models.TextField(blank=True, null=True)
+
+    def extra_fields(self):
+        return self._extra_fields
+    def setExtraFields(self, value):
+        self._extra_fields = value
+
     def clean(self):
 
         remote_path = self._fileLocationRemote
@@ -134,7 +141,7 @@ class Sample(models.Model):
     _storageLocation = models.TextField(verbose_name='Storage Location')
     _treatmentProtocol = models.ManyToManyField('Protocol', verbose_name='Treatment Protocol', blank=True)
     _dateCreated = models.DateTimeField(verbose_name='Date Created', default=datetime.now)
-    _individual = models.ManyToManyField('Individual', verbose_name='Individual Identifier', null=True, blank=True)
+    _individual = models.ManyToManyField('Individual', verbose_name='Individual Identifier', blank=True)
     _organism = models.TextField(verbose_name='Organism')
     _organismModifications = models.TextField(verbose_name='Organism Modifications', default='None', null=True, blank=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
@@ -248,7 +255,7 @@ class Experiment(models.Model):
     _teamMembers = models.TextField(verbose_name='Team Members',blank=True,null=True)
     _IRB = models.IntegerField(verbose_name='IRB Number',blank=True,null=True)
     _experimentalDesign = models.ForeignKey('ExperimentalDesign', on_delete=models.SET_NULL,
-		verbose_name='Experimental Design', blank=False, null=True)
+        verbose_name='Experimental Design', blank=True, null=True)
     _comments = models.TextField(verbose_name='Comments, Notes, or Details',blank=True,null=True)
 
     def experimentName(self):
@@ -285,31 +292,44 @@ class Experiment(models.Model):
     def __str__(self):
         return str(self._experimentName)
 
+class File(models.Model):
+    _file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank = False)
+
+    def file(self):
+        return self._file
+
+    def __str__(self):
+        return self._file.name
 class detailedField(models.Model):
-	_name = models.CharField(unique=True, primary_key=True,
-			blank=False, null=False, max_length = 25, verbose_name= "Name")
-	_description = models.TextField(verbose_name="Description",blank=True, null=True)
-	_file = models.FileField(verbose_name='Related file or images',
-		upload_to = settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank=True, null=True)
-	_files = models.ManyToManyField('File', verbose_name="Files", blank=True)
+    _name = models.CharField(unique=True, primary_key=True,
+            blank=False, null=False, max_length = 25, verbose_name= "Name")
+    _description = models.TextField(verbose_name="Description",blank=True, null=True)
+    _file = models.FileField(verbose_name='Related file or images',
+        upload_to = settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank=True, null=True)
+    _files = models.ManyToManyField('File', verbose_name="Files", blank=True)
 
-	class Meta:# this sets the default sort
-		ordering = ['_name']
+    class Meta:# this sets the default sort
+        ordering = ['_name']
 
-	def __str__(self):
-		return str(self._name)
-	def name(self):
-		return self._name
-	def setName(self, value):
-		self._name = value
-	def description(self):
-		return self._description
-	def setDescription(self, value):
-		self._description = value
-	def file(self):
-		return self._file
-	def setFile(self, value):
-		self._file = value
+    def __str__(self):
+        return str(self._name)
+    def name(self):
+        return self._name
+    def setName(self, value):
+        self._name = value
+    def description(self):
+        return self._description
+    def setDescription(self, value):
+        self._description = value
+    def file(self):
+        return self._file
+    def setFile(self, value):
+        self._file = value
+    def files(self):
+        return self._files
+    def addFile(self, file):
+        self._files.add(file)
+
 class InstrumentSetting(detailedField):
     _instrument = models.ForeignKey("Instrument", on_delete=models.CASCADE,
                                     blank=False, null=True,verbose_name='Instrument')
@@ -321,60 +341,60 @@ class InstrumentSetting(detailedField):
     def setInstrument(self, value):
         self._instrument = value
 class Instrument(detailedField):
-	def __str__(self):
-		return self._name
-	#redefined for the html template
-	def description(self):
-		return self._description
-	def file(self):
-		return self._file
+    def __str__(self):
+        return self._name
+    #redefined for the html template
+    def description(self):
+        return self._description
+    def file(self):
+        return self._file
 class ExperimentalDesign(detailedField):
-	_extra_fields = ListTextField(
-        verbose_name = 'Extra Fields for Individuals',
-		base_field = models.CharField(blank=True,null=True,max_length=100),
-		null=True, blank=True,
-		#Text fields are not allowed, and these are headers/category names
-	)
+    _extra_fields = ListTextField(
+        verbose_name = 'Extra Fields for Individuals', null=True, blank=True,
+        base_field = models.CharField(blank=True,null=True,max_length=100),
+        #Text fields are not allowed, and these are headers/category names
+    )
 
-	_extra_fields_samples = ListTextField(
+    _extra_fields_samples = ListTextField(
         verbose_name = 'Extra Fields for Samples', null=True, blank=True,
-		base_field = models.CharField(blank=True,null=True,max_length=100),
-	)
+        base_field = models.CharField(blank=True,null=True,max_length=100),
+    )
+    _extra_fields_datasets = ListTextField(
+        verbose_name = 'Extra Fields for Datasets', null=True, blank=True,
+        base_field = models.CharField(blank=True,null=True,max_length=100)
+    )
 
-	def __str__(self):
-		return str(self._name)
+    def __str__(self):
+        return str(self._name)
 
-	def extra_fields(self):
-		return self._extra_fields
-	def set_extra_fields(self, value):
-		self._extra_fields = value
+    def extra_fields(self):
+        return self._extra_fields
+    def set_extra_fields(self, value):
+        self._extra_fields = value
 
-	def extra_fields_samples(self):
-		return self._extra_fields_samples
-	def set_extra_fields_samples(self, value):
-		self._extra_fields_samples = value
+    def extra_fields_samples(self):
+        return self._extra_fields_samples
+    def set_extra_fields_samples(self, value):
+        self._extra_fields_samples = value
+
+    def extra_fields_datasets(self):
+        return self._extra_fields_datasets
+    def set_extra_fields_datasets(self, value):
+        self._extra_fields_datasets = value
 class Protocol(detailedField):
-	def __str__(self):
-		return self._name
+    def __str__(self):
+        return self._name
 
 class fileStatusOption(models.Model):
-	_option = models.CharField(unique=True, primary_key=True,
-		blank=False, null=False, max_length = 20, verbose_name="Status")
-	def __str__(self):
-		return self._option
+    _option = models.CharField(unique=True, primary_key=True,
+        blank=False, null=False, max_length = 20, verbose_name="Status")
+    def __str__(self):
+        return self._option
 
 class FileRead(models.Model):
-	lead = models.CharField(blank=False, max_length = 200, verbose_name='Project Lead')
-	_File = models.FileField(blank=False, upload_to='files/')
-	def file(self):
-		return self._File()
-	def __str__(self):
-		return self._File()
-class File(models.Model):
-	_file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank = False)
-
-	def file(self):
-		return self._file
-
-	def __str__(self):
-		return self._file.name
+    lead = models.CharField(blank=False, max_length = 200, verbose_name='Project Lead')
+    _File = models.FileField(blank=False, upload_to='files/')
+    def file(self):
+        return self._File()
+    def __str__(self):
+        return self._File()

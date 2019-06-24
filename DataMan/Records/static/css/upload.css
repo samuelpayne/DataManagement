@@ -60,11 +60,17 @@ table {
     border-collapse: collapse;
 }
 
+tr[new-or-existing='NEW'] {
+  background: #6ce6f6;
+}
+tr[new-or-existing='EXISTING']{
+  background: white;
+}
+
 tr,
 th,
 td {
     font-size: 12px;
-    background: white;
     border: solid 1px #002e5d;
     border-radius: 0px;
     padding: 2px;
