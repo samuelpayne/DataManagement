@@ -297,10 +297,11 @@ class Experiment(models.Model):
         return str(self._experimentName)
 
 class CheckDuplicateStorage(FileSystemStorage):
-    def get_available_name(self, name, max_length=100):
+    """def get_available_name(self, name, max_length=100):
         if self.exists(name):
             name = str(name+' 1')
         return name
+        #"""
 
     def save(self, name, content, max_length=None):
         print ("\n\nSaving File")
