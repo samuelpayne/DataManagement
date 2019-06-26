@@ -864,6 +864,7 @@ def add_sample(request, experiment = None):
     #check anything you want checked
     form =forms.AddSampleForm(extraFields = extra)
     if request.method == 'POST':
+        if extra==None:extra = []
         form =forms.AddSampleForm(request.POST, extraFields = extra)
         if form.is_valid():
             new_Sample = form.save(commit = False)
@@ -910,6 +911,7 @@ def add_dataset(request, experiment = None):
 
     form =forms.AddDatasetForm(extraFields = extra)
     if request.method == 'POST':
+        if extra==None:extra = []
         form =forms.AddDatasetForm(request.POST)
         if form.is_valid():
             new_Dataset = form.save()
