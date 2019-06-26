@@ -8,6 +8,10 @@ from datetime import datetime
 import json
 from django_mysql.models import ListTextField
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from os.path import basename
+import tkinter as tk
+from tkinter import messagebox
 
 class Dataset(models.Model):
     _datasetName = models.TextField(verbose_name='Dataset Name',
@@ -292,8 +296,31 @@ class Experiment(models.Model):
     def __str__(self):
         return str(self._experimentName)
 
+class CheckDuplicateStorage(FileSystemStorage):
+    def get_available_name(self, name, max_length=100):
+        if self.exists(name):
+            name = str(name+' 1')
+        return name
+
+    def save(self, name, content, max_length=None):
+        print ("\n\nSaving File")
+        if self.exists(name):
+            old_copy = self.open(name, 'rb')
+            if old_copy.size==content.size:
+                if old_copy.read()==content.read():
+                    print("True duplicate")
+                    #tk.messagebox.showinfo('Duplicate File', "This file is already in our system and will not be uploaded again.")
+                    return name
+            #Same name, not the same file
+            msg_box = tk.messagebox.askquestion ('Warning: Duplicate Name','A file exists by this name, but is not the same file. Change name or cancel upload?',icon = 'warning')
+            if msg_box == 'yes': print ("Yes was selected.")
+
+        return super(CheckDuplicateStorage, self)._save(name, content)
+
+
+
 class File(models.Model):
-    _file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank = False)
+    _file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank = False, storage=CheckDuplicateStorage())
 
     def file(self):
         return self._file
@@ -305,7 +332,7 @@ class detailedField(models.Model):
             blank=False, null=False, max_length = 25, verbose_name= "Name")
     _description = models.TextField(verbose_name="Description",blank=True, null=True)
     _file = models.FileField(verbose_name='Related file or images',
-        upload_to = settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank=True, null=True)
+        upload_to = settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank=True, null=True, storage=CheckDuplicateStorage())
     _files = models.ManyToManyField('File', verbose_name="Files", blank=True)
 
     class Meta:# this sets the default sort

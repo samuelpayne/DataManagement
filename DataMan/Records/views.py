@@ -88,6 +88,7 @@ def archive(request):
     for type in RecordTypes:
         data[type] = type.objects.all().count()
         #or whatever you want this page to know"""
+    start_job()
     return render(request, 'archive.html', context = data)
 def create_new(request):
     return render(request, 'create-new.html',)
@@ -159,14 +160,15 @@ def make_backup():
     return True
 
 def start_job():
+    print ("Starting Backup")
     global job
-
     #Checks if the job has already been assigned so as to avoid duplicates
     if not 'make_backup_job' in str(scheduler.get_jobs()):
-        job = scheduler.add_job(make_backup, 'interval', hours = 1, id = 'make_backup_job')
+        job = scheduler.add_job(make_backup, 'interval', minutes=15, id = 'make_backup_job')
     if not scheduler.running: scheduler.start()
 def backup(request):
     start_job()
+    print("Tick, making backup")
     options = {'Restore'}
 
     if settings.BOX_CONFIG:
@@ -295,6 +297,7 @@ def upload(request, option = None):
 
     #Cancel options - currently functions
     #on keep or delete
+    make_backup()
     return render(request, 'upload.html', context)
 def read_data(request, wb, lead, read_map, upload_summary):
     missing_fields = []
