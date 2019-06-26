@@ -320,7 +320,7 @@ class CheckDuplicateStorage(FileSystemStorage):
 
 
 class File(models.Model):
-    _file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank = False, storage=CheckDuplicateStorage())
+    _file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/', blank = False, storage=CheckDuplicateStorage())
 
     def file(self):
         return self._file
@@ -332,7 +332,7 @@ class detailedField(models.Model):
             blank=False, null=False, max_length = 25, verbose_name= "Name")
     _description = models.TextField(verbose_name="Description",blank=True, null=True)
     _file = models.FileField(verbose_name='Related file or images',
-        upload_to = settings.MEDIA_ROOT+'/files/%Y/%m/%d/', blank=True, null=True, storage=CheckDuplicateStorage())
+        upload_to = settings.MEDIA_ROOT+'/files/%Y/', blank=True, null=True, storage=CheckDuplicateStorage())
     _files = models.ManyToManyField('File', verbose_name="Files", blank=True)
 
     class Meta:# this sets the default sort
