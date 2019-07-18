@@ -841,11 +841,16 @@ def add_experiment(request):
 
     return render(request, 'add-record.html', context)
 def add_sample(request, experiment = None):
+
     if experiment == None:
         form = forms.SelectExperiment()# GetExperForm()
+        buttons = {
+            'New Protocol': 'add-protocol',
+        }
         context = {
             'form':form,
             'header':'Add Sample',
+            'buttons':buttons
         }
         if request.method == 'POST':
             form = forms.SelectExperiment(request.POST)
@@ -890,9 +895,14 @@ def add_sample(request, experiment = None):
 def add_dataset(request, experiment = None):
     if experiment == None:
         form = forms.SelectExperiment()# GetExperForm()
+        buttons = {
+            'New Instrument': 'add-instrument',
+            'New Instrument Setting': 'add-instrument-setting'
+        }
         context = {
             'form':form,
             'header':'Add Dataset',
+            'buttons':buttons
         }
         if request.method == 'POST':
             form = forms.SelectExperiment(request.POST)

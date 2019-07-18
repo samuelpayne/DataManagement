@@ -11,7 +11,9 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from os.path import basename
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox
+#from pynotify.notify import notify
 
 class Dataset(models.Model):
     _datasetName = models.TextField(verbose_name='Dataset Name',
@@ -228,6 +230,10 @@ class Individual(models.Model):
     def experiment(self):
         return self._experiment
 
+    def age(self): return self._age
+    def gender(self): return self._gender
+    def healthStatus(self): return self._healthStatus
+
     def extra_fields(self):
         return self._extra_fields
     def setExtraFields(self, value):
@@ -310,15 +316,23 @@ class CheckDuplicateStorage(FileSystemStorage):
             if old_copy.size==content.size:
                 if old_copy.read()==content.read():
                     print("True duplicate")
-                    #tk.messagebox.showinfo('Duplicate File', "This file is already in our system and will not be uploaded again.")
+                    tk.messagebox.showinfo('Duplicate File', "This file is already in our system and will not be uploaded again.")
+
                     return name
             #Same name, not the same file
-            msg_box = tk.messagebox.askquestion ('Warning: Duplicate Name','A file exists by this name, but is not the same file. Change name or cancel upload?',icon = 'warning')
-            if msg_box == 'yes': print ("Yes was selected.")
+            #notify(title='Hello!')
+            """popup = tk.Tk()
+            popup.wm_title("!")
+            label = ttk.Label(popup, text="Duplicate Name", font=("Verdana", 10))
+            label.pack(side="top", fill="x", pady=10)
+            B1 = ttk.Button(popup, text="Okay", command = popup.destroy)
+            B1.pack()
+            popup.mainloop()
+            #"""
+            #msg_box = tk.messagebox.askquestion ('Warning: Duplicate Name','A file exists by this name, but is not the same file. Change name or cancel upload?',icon = 'warning')
+            #if popup == 'yes': print ("Yes was selected.")
 
         return super(CheckDuplicateStorage, self)._save(name, content)
-
-
 
 class File(models.Model):
     _file = models.FileField('File', upload_to=settings.MEDIA_ROOT+'/files/%Y/', blank = False, storage=CheckDuplicateStorage())

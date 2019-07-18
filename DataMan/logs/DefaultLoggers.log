@@ -1,0 +1,7 @@
+2019-07-17 07:47:21,663  DEBUG  18120  C:\Users\MMCCOW~1\Envs\DJANGO~1\lib\site-packages\apscheduler\schedulers\base.py  _process_jobs  937  Looking for jobs to run  
+2019-07-17 07:47:21,663  WARNING  18120  C:\Users\MMCCOW~1\Envs\DJANGO~1\lib\site-packages\apscheduler\executors\base.py  run_job  120  Run time of job "make_backup (trigger: interval[0:15:00], next run at: 2019-07-16 22:35:29 MDT)" was missed by 0:11:51.806754  
+2019-07-17 07:47:21,663  DEBUG  18120  C:\Users\MMCCOW~1\Envs\DJANGO~1\lib\site-packages\apscheduler\schedulers\base.py  _process_jobs  1017  Next wakeup is due at 2019-07-17 07:50:29.856520-06:00 (in 188.193246 seconds)  
+2019-07-17 07:50:29,862  DEBUG  18120  C:\Users\MMCCOW~1\Envs\DJANGO~1\lib\site-packages\apscheduler\schedulers\base.py  _process_jobs  937  Looking for jobs to run  
+2019-07-17 07:50:29,862  INFO  18120  C:\Users\MMCCOW~1\Envs\DJANGO~1\lib\site-packages\apscheduler\executors\base.py  run_job  123  Running job "make_backup (trigger: interval[0:15:00], next run at: 2019-07-17 07:50:29 MDT)" (scheduled at 2019-07-17 07:50:29.856520-06:00)  
+2019-07-17 07:50:29,862  DEBUG  18120  C:\Users\MMCCOW~1\Envs\DJANGO~1\lib\site-packages\apscheduler\schedulers\base.py  _process_jobs  1017  Next wakeup is due at 2019-07-17 08:05:29.856520-06:00 (in 899.994185 seconds)  
+2019-07-17 07:50:30,033  INFO  18120  C:\Users\MMCCOW~1\Envs\DJANGO~1\lib\site-packages\apscheduler\executors\base.py  run_job  144  Job "make_backup (trigger: interval[0:15:00], next run at: 2019-07-17 08:05:29 MDT)" executed successfully  

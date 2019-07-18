@@ -31,6 +31,7 @@ class DatasetTable(tables.Table):
 class SampleTable(tables.Table):
     _sampleName = tables.LinkColumn('sample-detail', args=[A('pk')])
     _experiment = tables.LinkColumn('experiment-detail', args=[A('_experiment.pk')])
+    #_individual = tables.LinkColumn('individual-detail', args=[A('_individual.pk')], empty_values=())
 
     _dateCreated = tables.DateTimeColumn(format ='M d, Y')
 
